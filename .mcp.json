@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "next-devtools": {
+      "command": "bun",
+      "args": ["run", "./node_modules/next-devtools-mcp/start.js"]
+    },
+    "shadcn-ui": {
+      "command": "bun",
+      "args": ["x", "@shadcn/ui-mcp-server"]
+    }
+  }
+}
