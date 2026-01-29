@@ -2,11 +2,36 @@
   "mcpServers": {
     "next-devtools": {
       "command": "bun",
-      "args": ["run", "./node_modules/next-devtools-mcp/start.js"]
+      "args": ["x", "next-devtools-mcp"]
     },
     "shadcn-ui": {
       "command": "bun",
       "args": ["x", "@shadcn/ui-mcp-server"]
+    },
+    "prisma": {
+      "command": "bun",
+      "args": ["x", "@modelcontextprotocol/server-prisma"]
+    },
+    "github": {
+      "command": "bun",
+      "args": ["x", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    },
+    "postgres": {
+      "supabase": {
+        "type": "http",
+        "url": "https://mcp.supabase.com/mcp?project_ref=lhnpulnjmvnfvvodqozq"
+      }
+    },
+    "filesystem": {
+      "command": "bun",
+      "args": [
+        "x",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/vindyanggiono/Documents/coding/GitHub/planr"
+      ]
     }
   }
 }
