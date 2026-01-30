@@ -1,0 +1,218 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Enums
+
+enum UserRole {
+  STUDENT
+  COORDINATOR
+  ADMIN
+}
+
+enum CourseStatus {
+  COMPLETED
+  IN_PROGRESS
+  PLANNED
+}
+
+enum PrerequisiteType {
+  HARD
+  SOFT
+  COREQUISITE
+}
+
+enum PlanStatus {
+  PLANNED
+  ENROLLED
+  DROPPED
+}
+
+enum University {
+  SMU
+  NUS
+  NTU
+  SUTD
+  SUSS
+}
+
+// Models
+
+model user {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  name              String
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  image             String?
+  role              UserRole  @default(STUDENT)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  student  student?
+  sessions session[]
+  accounts account[]
+
+  @@map("users")
+}
+
+model student {
+  id                     String     @id @default(uuid())
+  userId                 String     @unique @map("user_id")
+  studentId              String?    @map("student_id")
+  university             University
+  major                  String
+  secondMajor            String?    @map("second_major")
+  minor                  String?
+  year                   Int
+  enrollmentYear         Int        @map("enrollment_year")
+  expectedGraduationYear Int        @map("expected_graduation_year")
+  gpa                    Float      @default(0)
+
+  user             user              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completedCourses completedCourse[]
+  semesterPlans    semesterPlan[]
+
+  @@map("students")
+}
+
+model course {
+  id           String     @id @default(uuid())
+  code         String
+  university   University
+  title        String
+  description  String     @db.Text
+  units        Int
+  termsOffered String[]   @map("terms_offered")
+  tags         String[]
+  isActive     Boolean    @default(true) @map("is_active")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  prerequisites    prerequisite[]    @relation("CoursePrerequisites")
+  prerequisiteFor  prerequisite[]    @relation("PrerequisiteCourses")
+  completedCourses completedCourse[]
+  plannedCourses   plannedCourse[]
+
+  @@unique([code, university])
+  @@map("courses")
+}
+
+model prerequisite {
+  id                   String           @id @default(uuid())
+  courseId             String           @map("course_id")
+  prerequisiteCourseId String           @map("prerequisite_course_id")
+  type                 PrerequisiteType
+  notes                String?
+
+  course             course @relation("CoursePrerequisites", fields: [courseId], references: [id], onDelete: Cascade)
+  prerequisiteCourse course @relation("PrerequisiteCourses", fields: [prerequisiteCourseId], references: [id], onDelete: Cascade)
+
+  @@map("prerequisites")
+}
+
+model completedCourse {
+  id        String       @id @default(uuid())
+  studentId String       @map("student_id")
+  courseId  String       @map("course_id")
+  grade     String
+  term      String
+  status    CourseStatus @default(COMPLETED)
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  student student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("completed_courses")
+}
+
+model semesterPlan {
+  id        String   @id @default(uuid())
+  studentId String   @map("student_id")
+  term      String
+  year      Int
+  isActive  Boolean  @default(false) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  student        student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  plannedCourses plannedCourse[]
+
+  @@map("semester_plans")
+}
+
+model plannedCourse {
+  id             String     @id @default(uuid())
+  semesterPlanId String     @map("semester_plan_id")
+  courseId       String     @map("course_id")
+  status         PlanStatus @default(PLANNED)
+  addedAt        DateTime   @default(now()) @map("added_at")
+
+  semesterPlan semesterPlan @relation(fields: [semesterPlanId], references: [id], onDelete: Cascade)
+  course       course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("planned_courses")
+}
+
+model graduationRequirement {
+  id               String     @id @default(uuid())
+  university       University
+  major            String
+  requirementType  String     @map("requirement_type")
+  requirementValue Json       @map("requirement_value")
+
+  @@map("graduation_requirements")
+}
+
+
+model session {
+  id        String   @id
+  expiresAt DateTime @map("expires_at")
+  token     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
+}

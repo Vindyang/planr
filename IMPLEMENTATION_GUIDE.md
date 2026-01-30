@@ -1,6 +1,7 @@
 # Planr - Complete Implementation Guide
 
 ## Table of Contents
+
 1. [Prerequisites](#prerequisites)
 2. [Project Setup](#project-setup)
 3. [Step 1: Database Setup & Prisma Configuration](#step-1-database-setup--prisma-configuration)
@@ -21,12 +22,14 @@
 ## Prerequisites
 
 ### Required Software
+
 - **Bun** (v1.0+): Install from https://bun.sh
 - **PostgreSQL** (v14+): Install from https://www.postgresql.org/download/
 - **Git**: For version control
 - **Code Editor**: VS Code recommended with Prisma extension
 
 ### Verify Installations
+
 ```bash
 bun --version
 psql --version
@@ -38,12 +41,14 @@ git --version
 ## Project Setup
 
 ### 1. Clone and Initialize
+
 ```bash
 cd /Users/vindyanggiono/Documents/coding/GitHub/planr
 bun install
 ```
 
 ### 2. Install All Dependencies
+
 ```bash
 # Database & ORM
 bun add prisma @prisma/client bcryptjs
@@ -66,7 +71,9 @@ bun add -d vitest @testing-library/react @testing-library/jest-dom
 ```
 
 ### 3. Create Environment File
+
 Create `.env.local` in project root:
+
 ```env
 # Database (update with your PostgreSQL credentials)
 DATABASE_URL="postgresql://postgres:password@localhost:5432/planr"
@@ -80,11 +87,13 @@ NEXTAUTH_SECRET="your-secret-here-generate-with-openssl-rand-base64-32"
 ```
 
 **Generate NEXTAUTH_SECRET:**
+
 ```bash
 openssl rand -base64 32
 ```
 
 ### 4. Setup PostgreSQL Database
+
 ```bash
 # Connect to PostgreSQL
 psql -U postgres
@@ -101,11 +110,13 @@ CREATE DATABASE planr;
 ## Step 1: Database Setup & Prisma Configuration
 
 ### 1.1 Initialize Prisma
+
 ```bash
 bunx prisma init
 ```
 
 ### 1.2 Create Prisma Schema
+
 Create/update `prisma/schema.prisma`:
 
 ```prisma
@@ -278,191 +289,249 @@ model GraduationRequirement {
 ```
 
 ### 1.3 Create Prisma Client Singleton
+
 Create `lib/prisma.ts`:
 
 ```typescript
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+  prisma: PrismaClient | undefined;
+};
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-})
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
+  });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 ```
 
 ### 1.4 Run Initial Migration
+
 ```bash
 bunx prisma migrate dev --name init
 ```
 
 ### 1.5 Create Seed Script
+
 Create `prisma/seed.ts`:
 
 ```typescript
-import { PrismaClient, University, PrerequisiteType } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { PrismaClient, University, PrerequisiteType } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting seed...')
+  console.log("🌱 Starting seed...");
 
   // Clear existing data
-  await prisma.plannedCourse.deleteMany()
-  await prisma.semesterPlan.deleteMany()
-  await prisma.completedCourse.deleteMany()
-  await prisma.prerequisite.deleteMany()
-  await prisma.course.deleteMany()
-  await prisma.student.deleteMany()
-  await prisma.user.deleteMany()
+  await prisma.plannedCourse.deleteMany();
+  await prisma.semesterPlan.deleteMany();
+  await prisma.completedCourse.deleteMany();
+  await prisma.prerequisite.deleteMany();
+  await prisma.course.deleteMany();
+  await prisma.student.deleteMany();
+  await prisma.user.deleteMany();
 
   // Create test users
-  const hashedPassword = await bcrypt.hash('password123', 10)
+  const hashedPassword = await bcrypt.hash("password123", 10);
 
   const studentUser = await prisma.user.create({
     data: {
-      email: 'student@smu.edu.sg',
+      email: "student@smu.edu.sg",
       passwordHash: hashedPassword,
-      name: 'Rachel Lim',
-      role: 'STUDENT',
+      name: "Rachel Lim",
+      role: "STUDENT",
       emailVerified: true,
     },
-  })
+  });
 
   const student = await prisma.student.create({
     data: {
       userId: studentUser.id,
-      studentId: 'SMU001',
-      university: 'SMU',
-      major: 'Computer Science',
+      studentId: "SMU001",
+      university: "SMU",
+      major: "Computer Science",
       year: 2,
       enrollmentYear: 2023,
       expectedGraduationYear: 2027,
       gpa: 3.67,
     },
-  })
+  });
 
-  console.log('✅ Created test student:', studentUser.email)
+  console.log("✅ Created test student:", studentUser.email);
 
   // Create SMU CS courses
   const courses = [
     {
-      code: 'CS101',
-      title: 'Introduction to Programming',
-      description: 'Fundamental programming concepts using Python. Covers variables, control structures, functions, and basic data structures.',
+      code: "CS101",
+      title: "Introduction to Programming",
+      description:
+        "Fundamental programming concepts using Python. Covers variables, control structures, functions, and basic data structures.",
       units: 4,
-      termsOffered: ['Fall', 'Spring'],
-      tags: ['Core', 'Programming'],
-      university: 'SMU' as University,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Programming"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS102',
-      title: 'Data Structures',
-      description: 'Study of common data structures including arrays, linked lists, stacks, queues, trees, and graphs.',
+      code: "CS102",
+      title: "Data Structures",
+      description:
+        "Study of common data structures including arrays, linked lists, stacks, queues, trees, and graphs.",
       units: 4,
-      termsOffered: ['Fall', 'Spring'],
-      tags: ['Core', 'Data Structures'],
-      university: 'SMU' as University,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Data Structures"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS201',
-      title: 'Algorithms',
-      description: 'Design and analysis of algorithms. Sorting, searching, dynamic programming, greedy algorithms.',
+      code: "CS201",
+      title: "Algorithms",
+      description:
+        "Design and analysis of algorithms. Sorting, searching, dynamic programming, greedy algorithms.",
       units: 4,
-      termsOffered: ['Fall', 'Spring'],
-      tags: ['Core', 'Algorithms'],
-      university: 'SMU' as University,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Algorithms"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS202',
-      title: 'Database Systems',
-      description: 'Database design, SQL, normalization, transactions, and database management systems.',
+      code: "CS202",
+      title: "Database Systems",
+      description:
+        "Database design, SQL, normalization, transactions, and database management systems.",
       units: 4,
-      termsOffered: ['Fall', 'Spring'],
-      tags: ['Core', 'Database'],
-      university: 'SMU' as University,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Database"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS203',
-      title: 'Software Engineering',
-      description: 'Software development lifecycle, design patterns, testing, agile methodologies.',
+      code: "CS203",
+      title: "Software Engineering",
+      description:
+        "Software development lifecycle, design patterns, testing, agile methodologies.",
       units: 4,
-      termsOffered: ['Fall', 'Spring'],
-      tags: ['Core', 'Software Engineering'],
-      university: 'SMU' as University,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Software Engineering"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS301',
-      title: 'Machine Learning',
-      description: 'Introduction to machine learning algorithms, supervised and unsupervised learning, neural networks.',
+      code: "CS301",
+      title: "Machine Learning",
+      description:
+        "Introduction to machine learning algorithms, supervised and unsupervised learning, neural networks.",
       units: 4,
-      termsOffered: ['Fall'],
-      tags: ['Elective', 'AI', 'ML'],
-      university: 'SMU' as University,
+      termsOffered: ["Fall"],
+      tags: ["Elective", "AI", "ML"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS302',
-      title: 'Web Development',
-      description: 'Modern web development with React, Node.js, databases, and deployment.',
+      code: "CS302",
+      title: "Web Development",
+      description:
+        "Modern web development with React, Node.js, databases, and deployment.",
       units: 4,
-      termsOffered: ['Spring'],
-      tags: ['Elective', 'Web'],
-      university: 'SMU' as University,
+      termsOffered: ["Spring"],
+      tags: ["Elective", "Web"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS303',
-      title: 'Mobile App Development',
-      description: 'Building mobile applications for iOS and Android using React Native.',
+      code: "CS303",
+      title: "Mobile App Development",
+      description:
+        "Building mobile applications for iOS and Android using React Native.",
       units: 4,
-      termsOffered: ['Fall'],
-      tags: ['Elective', 'Mobile'],
-      university: 'SMU' as University,
+      termsOffered: ["Fall"],
+      tags: ["Elective", "Mobile"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS304',
-      title: 'Computer Networks',
-      description: 'Network protocols, TCP/IP, HTTP, network security, and distributed systems.',
+      code: "CS304",
+      title: "Computer Networks",
+      description:
+        "Network protocols, TCP/IP, HTTP, network security, and distributed systems.",
       units: 4,
-      termsOffered: ['Spring'],
-      tags: ['Elective', 'Networks'],
-      university: 'SMU' as University,
+      termsOffered: ["Spring"],
+      tags: ["Elective", "Networks"],
+      university: "SMU" as University,
     },
     {
-      code: 'CS305',
-      title: 'Cybersecurity',
-      description: 'Security principles, cryptography, network security, secure coding practices.',
+      code: "CS305",
+      title: "Cybersecurity",
+      description:
+        "Security principles, cryptography, network security, secure coding practices.",
       units: 4,
-      termsOffered: ['Fall', 'Spring'],
-      tags: ['Elective', 'Security'],
-      university: 'SMU' as University,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Elective", "Security"],
+      university: "SMU" as University,
     },
-  ]
+  ];
 
   const createdCourses = await Promise.all(
-    courses.map(course => prisma.course.create({ data: course }))
-  )
+    courses.map((course) => prisma.course.create({ data: course })),
+  );
 
-  console.log(`✅ Created ${createdCourses.length} courses`)
+  console.log(`✅ Created ${createdCourses.length} courses`);
 
   // Create prerequisites
-  const courseMap = new Map(createdCourses.map(c => [c.code, c]))
+  const courseMap = new Map(createdCourses.map((c) => [c.code, c]));
 
   const prerequisites = [
-    { course: 'CS102', prerequisite: 'CS101', type: 'HARD' as PrerequisiteType },
-    { course: 'CS201', prerequisite: 'CS102', type: 'HARD' as PrerequisiteType },
-    { course: 'CS202', prerequisite: 'CS102', type: 'HARD' as PrerequisiteType },
-    { course: 'CS203', prerequisite: 'CS102', type: 'HARD' as PrerequisiteType },
-    { course: 'CS301', prerequisite: 'CS201', type: 'HARD' as PrerequisiteType },
-    { course: 'CS301', prerequisite: 'CS202', type: 'SOFT' as PrerequisiteType },
-    { course: 'CS302', prerequisite: 'CS203', type: 'HARD' as PrerequisiteType },
-    { course: 'CS303', prerequisite: 'CS203', type: 'HARD' as PrerequisiteType },
-    { course: 'CS304', prerequisite: 'CS201', type: 'HARD' as PrerequisiteType },
-    { course: 'CS305', prerequisite: 'CS304', type: 'SOFT' as PrerequisiteType },
-  ]
+    {
+      course: "CS102",
+      prerequisite: "CS101",
+      type: "HARD" as PrerequisiteType,
+    },
+    {
+      course: "CS201",
+      prerequisite: "CS102",
+      type: "HARD" as PrerequisiteType,
+    },
+    {
+      course: "CS202",
+      prerequisite: "CS102",
+      type: "HARD" as PrerequisiteType,
+    },
+    {
+      course: "CS203",
+      prerequisite: "CS102",
+      type: "HARD" as PrerequisiteType,
+    },
+    {
+      course: "CS301",
+      prerequisite: "CS201",
+      type: "HARD" as PrerequisiteType,
+    },
+    {
+      course: "CS301",
+      prerequisite: "CS202",
+      type: "SOFT" as PrerequisiteType,
+    },
+    {
+      course: "CS302",
+      prerequisite: "CS203",
+      type: "HARD" as PrerequisiteType,
+    },
+    {
+      course: "CS303",
+      prerequisite: "CS203",
+      type: "HARD" as PrerequisiteType,
+    },
+    {
+      course: "CS304",
+      prerequisite: "CS201",
+      type: "HARD" as PrerequisiteType,
+    },
+    {
+      course: "CS305",
+      prerequisite: "CS304",
+      type: "SOFT" as PrerequisiteType,
+    },
+  ];
 
   await Promise.all(
     prerequisites.map(({ course, prerequisite, type }) =>
@@ -472,48 +541,49 @@ async function main() {
           prerequisiteCourseId: courseMap.get(prerequisite)!.id,
           type,
         },
-      })
-    )
-  )
+      }),
+    ),
+  );
 
-  console.log(`✅ Created ${prerequisites.length} prerequisites`)
+  console.log(`✅ Created ${prerequisites.length} prerequisites`);
 
   // Add completed courses for test student
   await prisma.completedCourse.create({
     data: {
       studentId: student.id,
-      courseId: courseMap.get('CS101')!.id,
-      grade: 'A',
-      term: '2024-Fall',
-      status: 'COMPLETED',
+      courseId: courseMap.get("CS101")!.id,
+      grade: "A",
+      term: "2024-Fall",
+      status: "COMPLETED",
     },
-  })
+  });
 
   await prisma.completedCourse.create({
     data: {
       studentId: student.id,
-      courseId: courseMap.get('CS102')!.id,
-      grade: 'B+',
-      term: '2025-Spring',
-      status: 'COMPLETED',
+      courseId: courseMap.get("CS102")!.id,
+      grade: "B+",
+      term: "2025-Spring",
+      status: "COMPLETED",
     },
-  })
+  });
 
-  console.log('✅ Added completed courses for test student')
-  console.log('🎉 Seed completed successfully!')
+  console.log("✅ Added completed courses for test student");
+  console.log("🎉 Seed completed successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed failed:', e)
-    process.exit(1)
+    console.error("❌ Seed failed:", e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });
 ```
 
 ### 1.6 Update package.json for Seed
+
 Add to `package.json`:
 
 ```json
@@ -525,16 +595,19 @@ Add to `package.json`:
 ```
 
 ### 1.7 Run Seed
+
 ```bash
 bunx prisma db seed
 ```
 
 ### 1.8 Verify with Prisma Studio
+
 ```bash
 bunx prisma studio
 ```
 
 Open http://localhost:5555 and verify:
+
 - Users table has test student
 - Courses table has 10 courses
 - Prerequisites table has relationships
@@ -545,13 +618,14 @@ Open http://localhost:5555 and verify:
 ## Step 2: Authentication System
 
 ### 2.1 Create Auth Configuration
+
 Create `lib/auth-options.ts`:
 
 ```typescript
-import { NextAuthOptions } from "next-auth"
-import CredentialsProvider from "next-auth/providers/credentials"
-import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/prisma"
+import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -559,33 +633,33 @@ export const authOptions: NextAuthOptions = {
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Invalid credentials")
+          throw new Error("Invalid credentials");
         }
 
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email
+            email: credentials.email,
           },
           include: {
-            student: true
-          }
-        })
+            student: true,
+          },
+        });
 
         if (!user) {
-          throw new Error("Invalid credentials")
+          throw new Error("Invalid credentials");
         }
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
-          user.passwordHash
-        )
+          user.passwordHash,
+        );
 
         if (!isPasswordValid) {
-          throw new Error("Invalid credentials")
+          throw new Error("Invalid credentials");
         }
 
         return {
@@ -593,27 +667,27 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          studentId: user.student?.id
-        }
-      }
-    })
+          studentId: user.student?.id,
+        };
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
-        token.studentId = user.studentId
+        token.role = user.role;
+        token.studentId = user.studentId;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.sub!
-        session.user.role = token.role as string
-        session.user.studentId = token.studentId as string
+        session.user.id = token.sub!;
+        session.user.role = token.role as string;
+        session.user.studentId = token.studentId as string;
       }
-      return session
-    }
+      return session;
+    },
   },
   pages: {
     signIn: "/login",
@@ -622,61 +696,64 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   secret: process.env.NEXTAUTH_SECRET,
-}
+};
 ```
 
 ### 2.2 Create NextAuth Types
+
 Create `types/next-auth.d.ts`:
 
 ```typescript
-import { UserRole } from "@prisma/client"
-import "next-auth"
+import { UserRole } from "@prisma/client";
+import "next-auth";
 
 declare module "next-auth" {
   interface User {
-    role?: UserRole
-    studentId?: string
+    role?: UserRole;
+    studentId?: string;
   }
 
   interface Session {
     user: {
-      id: string
-      email: string
-      name: string
-      role: string
-      studentId?: string
-    }
+      id: string;
+      email: string;
+      name: string;
+      role: string;
+      studentId?: string;
+    };
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
-    role?: string
-    studentId?: string
+    role?: string;
+    studentId?: string;
   }
 }
 ```
 
 ### 2.3 Create Auth API Route
+
 Create `app/api/auth/[...nextauth]/route.ts`:
 
 ```typescript
-import NextAuth from "next-auth"
-import { authOptions } from "@/lib/auth-options"
+import NextAuth from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
-const handler = NextAuth(authOptions)
+const handler = NextAuth(authOptions);
 
-export { handler as GET, handler as POST }
+export { handler as GET, handler as POST };
 ```
 
 ### 2.4 Create Signup API Route
+
 Create `app/api/auth/signup/route.ts`:
 
 ```typescript
-import { NextRequest, NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/prisma"
-import { z } from "zod"
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -686,27 +763,27 @@ const signupSchema = z.object({
   major: z.string().min(2, "Major is required"),
   year: z.number().min(1).max(4),
   enrollmentYear: z.number(),
-})
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const validatedData = signupSchema.parse(body)
+    const body = await request.json();
+    const validatedData = signupSchema.parse(body);
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email },
-    })
+    });
 
     if (existingUser) {
       return NextResponse.json(
         { error: "Email already registered" },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash(validatedData.password, 10)
+    const passwordHash = await bcrypt.hash(validatedData.password, 10);
 
     // Create user and student profile
     const user = await prisma.user.create({
@@ -725,7 +802,7 @@ export async function POST(request: NextRequest) {
           },
         },
       },
-    })
+    });
 
     return NextResponse.json(
       {
@@ -736,76 +813,78 @@ export async function POST(request: NextRequest) {
           name: user.name,
         },
       },
-      { status: 201 }
-    )
+      { status: 201 },
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors[0].message },
-        { status: 400 }
-      )
+        { status: 400 },
+      );
     }
 
-    console.error("Signup error:", error)
+    console.error("Signup error:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
-      { status: 500 }
-    )
+      { status: 500 },
+    );
   }
 }
 ```
 
 ### 2.5 Create Auth Helper Functions
+
 Create `lib/auth.ts`:
 
 ```typescript
-import { getServerSession } from "next-auth"
-import { authOptions } from "./auth-options"
-import { redirect } from "next/navigation"
+import { getServerSession } from "next-auth";
+import { authOptions } from "./auth-options";
+import { redirect } from "next/navigation";
 
 export async function getCurrentUser() {
-  const session = await getServerSession(authOptions)
-  return session?.user
+  const session = await getServerSession(authOptions);
+  return session?.user;
 }
 
 export async function requireAuth() {
-  const user = await getCurrentUser()
+  const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/login")
+    redirect("/login");
   }
 
-  return user
+  return user;
 }
 
 export async function requireStudent() {
-  const user = await requireAuth()
+  const user = await requireAuth();
 
   if (user.role !== "STUDENT" || !user.studentId) {
-    redirect("/dashboard")
+    redirect("/dashboard");
   }
 
-  return user
+  return user;
 }
 ```
 
 ### 2.6 Create Middleware for Protected Routes
+
 Create `middleware.ts` in project root:
 
 ```typescript
-import { withAuth } from "next-auth/middleware"
-import { NextResponse } from "next/server"
+import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    return NextResponse.next()
+    return NextResponse.next();
   },
   {
     callbacks: {
       authorized: ({ token }) => !!token,
     },
-  }
-)
+  },
+);
 
 export const config = {
   matcher: [
@@ -814,10 +893,11 @@ export const config = {
     "/courses/:path*",
     "/planner/:path*",
   ],
-}
+};
 ```
 
 ### 2.7 Create Login Page
+
 Create `app/(auth)/login/page.tsx`:
 
 ```typescript
@@ -927,6 +1007,7 @@ export default function LoginPage() {
 ```
 
 ### 2.8 Create Signup Page
+
 Create `app/(auth)/signup/page.tsx`:
 
 ```typescript
@@ -1131,19 +1212,21 @@ export default function SignupPage() {
 ```
 
 ### 2.9 Create Auth Layout
+
 Create `app/(auth)/layout.tsx`:
 
 ```typescript
 export default function AuthLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  return children
+  return children;
 }
 ```
 
 ### 2.10 Update Root Layout with SessionProvider
+
 Update `app/layout.tsx`:
 
 ```typescript
@@ -1191,6 +1274,7 @@ export default async function RootLayout({
 ```
 
 ### 2.11 Create SessionProvider Component
+
 Create `components/SessionProvider.tsx`:
 
 ```typescript
@@ -1214,6 +1298,7 @@ export default function SessionProvider({
 ```
 
 ### 2.12 Update Navbar with User Menu
+
 Update `components/layout/Navbar.tsx` to add logout functionality:
 
 ```typescript
@@ -1297,11 +1382,13 @@ export function Navbar() {
 ```
 
 ### 2.13 Test Authentication
+
 ```bash
 bun run dev
 ```
 
 Test the following:
+
 1. Navigate to http://localhost:3000/login
 2. Login with test account: `student@smu.edu.sg` / `password123`
 3. Verify redirect to dashboard
@@ -1316,6 +1403,7 @@ Test the following:
 Continue with Step 3: Student Profile & Data Management (see full plan document for remaining steps)
 
 **Success Criteria for Step 2:**
+
 - ✅ Users can sign up with email/password
 - ✅ Users can log in and session persists
 - ✅ Users can log out

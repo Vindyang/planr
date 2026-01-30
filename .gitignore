@@ -52,3 +52,5 @@ next-env.d.ts
 .cursor
 
 .mcp.json
+/lib/generated/prisma
+.env
