@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Particles } from "@/components/ui/particles"
 import { signUp } from "@/lib/auth-client"
-import { prisma } from "@/lib/prisma"
 
 export default function SignupPage() {
   const router = useRouter()
