@@ -52,57 +52,100 @@ export default function LoginPage() {
         refresh
       />
       <Card className="relative z-10 w-full max-w-md p-8">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold">Planr</h1>
-          <p className="mt-2 text-gray-600">Sign in to your account</p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">User Information</h1>
+            <p className="mt-1 text-sm text-gray-500">Please fill in your details below</p>
+          </div>
+          <button className="text-gray-400 hover:text-gray-600">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+            >
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="12" cy="5" r="1" />
+              <circle cx="12" cy="19" r="1" />
+            </svg>
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="student@smu.edu.sg"
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-              {error}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="h-11 bg-transparent"
+                required
+              />
             </div>
-          )}
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
-          </Button>
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-sm font-medium">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                className="h-11 bg-transparent"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {error && (
+              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <Button type="submit" className="flex-1 bg-white text-black hover:bg-gray-100 border border-gray-200 shadow-sm" disabled={isLoading}>
+                {isLoading ? "Submitting..." : "Submit"}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1 bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white border-0"
+                onClick={() => router.push("/")}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-gray-500">
           Don't have an account?{" "}
-          <Link href="/signup" className="text-blue-600 hover:underline">
+          <Link href="/signup" className="text-primary hover:underline font-medium">
             Sign up
           </Link>
         </p>
 
-        <div className="mt-4 rounded-md bg-blue-50 p-3 text-xs text-blue-700">
-          <p className="font-semibold">Test Account:</p>
-          <p>Email: student@smu.edu.sg</p>
-          <p>Password: password123</p>
+        <div className="mt-6 rounded-md bg-gray-50 p-3 text-xs text-gray-500 border border-gray-100">
+          <p className="font-semibold mb-1">Test Account:</p>
+          <div className="flex flex-col space-y-0.5">
+            <p>Email: <span className="font-mono">student@smu.edu.sg</span></p>
+            <p>Password: <span className="font-mono">password123</span></p>
+          </div>
         </div>
       </Card>
     </div>
