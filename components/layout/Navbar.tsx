@@ -56,10 +56,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             <IconBell className="h-5 w-5" />
             <span className="sr-only">Notifications</span>
           </Button>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <IconUserCircle className="h-6 w-6" />
-            <span className="sr-only">User Profile</span>
-          </Button>
+          <Link href="/student/profile">
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <IconUserCircle className="h-6 w-6" />
+              <span className="sr-only">User Profile</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

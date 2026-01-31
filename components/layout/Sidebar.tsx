@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { IconDashboard, IconCalendarEvent, IconBook, IconMessageCircle, IconSettings } from "@tabler/icons-react";
+import { IconDashboard, IconCalendarEvent, IconBook, IconMessageCircle, IconSettings, IconUser } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -15,33 +15,49 @@ export function Sidebar({ className }: SidebarProps) {
             Overview
           </h2>
           <div className="space-y-1">
-            <Button variant="secondary" className="w-full justify-start">
-              <IconDashboard className="mr-2 h-4 w-4" />
-              Dashboard
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-               <IconCalendarEvent className="mr-2 h-4 w-4" />
-              Planner
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <IconBook className="mr-2 h-4 w-4" />
-              Courses
-            </Button>
-             <Button variant="ghost" className="w-full justify-start">
-              <IconMessageCircle className="mr-2 h-4 w-4" />
-              Reviews
-            </Button>
+            <Link href="/dashboard">
+              <Button variant="secondary" className="w-full justify-start">
+                <IconDashboard className="mr-2 h-4 w-4" />
+                Dashboard
+              </Button>
+            </Link>
+            <Link href="/planner">
+              <Button variant="ghost" className="w-full justify-start">
+                <IconCalendarEvent className="mr-2 h-4 w-4" />
+                Planner
+              </Button>
+            </Link>
+            <Link href="/courses">
+              <Button variant="ghost" className="w-full justify-start">
+                <IconBook className="mr-2 h-4 w-4" />
+                Courses
+              </Button>
+            </Link>
+            <Link href="/reviews">
+              <Button variant="ghost" className="w-full justify-start">
+                <IconMessageCircle className="mr-2 h-4 w-4" />
+                Reviews
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="px-3 py-2">
           <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">
-            Settings
+            Account
           </h2>
           <div className="space-y-1">
-            <Button variant="ghost" className="w-full justify-start">
-              <IconSettings className="mr-2 h-4 w-4" />
-              Preferences
-            </Button>
+            <Link href="/student/profile">
+              <Button variant="ghost" className="w-full justify-start">
+                <IconUser className="mr-2 h-4 w-4" />
+                Profile
+              </Button>
+            </Link>
+            <Link href="/settings">
+              <Button variant="ghost" className="w-full justify-start">
+                <IconSettings className="mr-2 h-4 w-4" />
+                Preferences
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
