@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { getSession } from "@/lib/auth"
 import { z } from "zod"
 
-const profileSchema = z.object({
+const createProfileSchema = z.object({
   userId: z.string(),
   university: z.enum(["SMU", "NUS", "NTU", "SUTD", "SUSS"]),
   major: z.string().min(2),
@@ -10,12 +11,56 @@ const profileSchema = z.object({
   enrollmentYear: z.number(),
 })
 
+export async function GET() {
+  try {
+    const session = await getSession()
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const student = await prisma.student.findUnique({
+      where: { userId: session.user.id },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        completedCourses: {
+          include: {
+            course: true,
+          },
+          orderBy: {
+            term: "desc",
+          },
+        },
+      },
+    })
+
+    if (!student) {
+      return NextResponse.json(
+        { error: "Student profile not found" },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ student })
+  } catch (error) {
+    console.error("Profile fetch error:", error)
+    return NextResponse.json(
+      { error: "Failed to fetch student profile" },
+      { status: 500 }
+    )
+  }
+}
+
+// POST kept for signup flow (called from client after Better Auth signup)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const validatedData = profileSchema.parse(body)
+    const validatedData = createProfileSchema.parse(body)
 
-    // Create student profile
     const student = await prisma.student.create({
       data: {
         userId: validatedData.userId,
@@ -42,7 +87,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: error.errors[0].message },
+        { error: error.issues[0].message },
         { status: 400 }
       )
     }
@@ -54,3 +99,5 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// PUT removed - use updateStudentProfile Server Action instead
