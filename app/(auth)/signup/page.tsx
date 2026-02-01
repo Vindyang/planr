@@ -71,63 +71,62 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground font-sans">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F4F1ED] p-4 text-[#0A0A0A] font-sans">
       <div 
-        className="w-full max-w-lg bg-card p-8 border border-border" 
-        style={{
-            boxShadow: "4px 4px 0px rgba(0,0,0,0.05)"
-        }}
+        className="w-full max-w-lg bg-white p-8 border border-[#DAD6CF]" 
       >
-        <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 h-6 w-6 rounded-t-[50%] bg-foreground"></div>
-            <h1 className="text-3xl font-serif font-medium italic tracking-tight">
-            Planr.
-            </h1>
-            <p className="mt-2 text-xs uppercase tracking-widest text-muted-foreground">
+        <div className="mb-10 text-center">
+            <div className="flex flex-col items-center gap-2">
+                <div className="w-6 h-6 bg-black rounded-t-full mb-1" />
+                <h1 className="text-3xl font-serif font-medium italic tracking-tight text-[#0A0A0A]">
+                    Planr.
+                </h1>
+            </div>
+            <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[#666460]">
             Start Your Journey
             </p>
         </div>
 
-        <div className="mb-8 border-b border-border pb-4">
-            <h2 className="text-xs font-semibold uppercase tracking-widest">
+        <div className="mb-8 border-b border-[#DAD6CF] pb-2">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#0A0A0A]">
             Registration
             </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Full Name</Label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">Full Name</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
                 placeholder="Ex. Rachel Lim"
                 required
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">University Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">University Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="student@smu.edu.sg"
-                className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="university" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">University</Label>
+              <div className="space-y-2">
+                <Label htmlFor="university" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">University</Label>
                 <div className="relative">
                   <select
                     id="university"
-                    className="flex h-11 w-full items-center justify-between rounded-none border border-border bg-transparent px-3 py-2 text-sm shadow-none focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                    className="flex h-11 w-full items-center justify-between rounded-none border border-[#DAD6CF] bg-transparent px-3 py-2 text-sm shadow-none focus:outline-none focus:ring-1 focus:ring-black focus:border-black disabled:cursor-not-allowed disabled:opacity-50 appearance-none text-[#0A0A0A]"
                     value={formData.university}
                     onChange={(e) => setFormData({ ...formData, university: e.target.value })}
                   >
@@ -137,7 +136,7 @@ export default function SignupPage() {
                     <option value="SUTD">SUTD</option>
                     <option value="SUSS">SUSS</option>
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#666460]">
                     <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
@@ -145,26 +144,26 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="major" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Major</Label>
+              <div className="space-y-2">
+                <Label htmlFor="major" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">Major</Label>
                 <Input
                   id="major"
                   value={formData.major}
                   onChange={(e) => setFormData({ ...formData, major: e.target.value })}
                   placeholder="Ex. Computer Science"
-                  className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
                   required
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="year" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Current Year</Label>
+              <div className="space-y-2">
+                <Label htmlFor="year" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">Current Year</Label>
                 <div className="relative">
                   <select
                     id="year"
-                    className="flex h-11 w-full items-center justify-between rounded-none border border-border bg-transparent px-3 py-2 text-sm shadow-none focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                    className="flex h-11 w-full items-center justify-between rounded-none border border-[#DAD6CF] bg-transparent px-3 py-2 text-sm shadow-none focus:outline-none focus:ring-1 focus:ring-black focus:border-black disabled:cursor-not-allowed disabled:opacity-50 appearance-none text-[#0A0A0A]"
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
                   >
@@ -173,7 +172,7 @@ export default function SignupPage() {
                     <option value={3}>Year 3</option>
                     <option value={4}>Year 4</option>
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#666460]">
                     <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
@@ -181,8 +180,8 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="enrollmentYear" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Matriculation</Label>
+              <div className="space-y-2">
+                <Label htmlFor="enrollmentYear" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">Matriculation</Label>
                 <Input
                   id="enrollmentYear"
                   type="number"
@@ -190,13 +189,13 @@ export default function SignupPage() {
                   onChange={(e) => setFormData({ ...formData, enrollmentYear: parseInt(e.target.value) })}
                   min={2020}
                   max={2030}
-                  className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -204,39 +203,39 @@ export default function SignupPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 minLength={8}
                 placeholder="Min 8 characters"
-                className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
                 required
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Confirm Password</Label>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">Confirm Password</Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 placeholder="Re-enter password"
-                className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
                 required
               />
             </div>
           </div>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-4 pt-2">
             {error && (
-              <div className="bg-destructive/10 p-3 text-xs text-destructive border border-destructive/20">
+              <div className="bg-red-50 p-3 text-xs text-red-600 border border-red-100">
                 {error}
               </div>
             )}
 
-            <Button type="submit" className="w-full rounded-none bg-primary text-primary-foreground hover:bg-primary/90 h-12 text-xs font-bold uppercase tracking-widest" disabled={isLoading}>
+            <Button type="submit" className="w-full rounded-none bg-black text-white hover:bg-black/80 h-12 text-xs font-bold uppercase tracking-[0.15em] transition-all" disabled={isLoading}>
                 {isLoading ? "Creating Account..." : "Sign Up"}
             </Button>
             
-            <div className="text-center text-xs text-muted-foreground mt-4">
+            <div className="text-center text-xs text-[#666460] mt-6">
                 <span className="italic font-serif">Already have an account?</span>{" "}
-                <Link href="/login" className="underline hover:text-foreground transition-colors">
+                <Link href="/login" className="underline hover:text-[#0A0A0A] transition-colors decoration-[#DAD6CF] underline-offset-4">
                     Sign in
                 </Link>
             </div>

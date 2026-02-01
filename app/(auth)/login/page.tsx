@@ -41,33 +41,32 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground font-sans">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#F4F1ED] p-4 text-[#0A0A0A] font-sans">
       <div 
-        className="w-full max-w-md bg-card p-8 border border-border" 
-        style={{
-            boxShadow: "4px 4px 0px rgba(0,0,0,0.05)"
-        }}
+        className="w-full max-w-md bg-white p-8 border border-[#DAD6CF]" 
       >
-        <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 h-6 w-6 rounded-t-[50%] bg-foreground"></div>
-            <h1 className="text-3xl font-serif font-medium italic tracking-tight">
-            Planr.
-            </h1>
-            <p className="mt-2 text-xs uppercase tracking-widest text-muted-foreground">
-            Academic Journey
+        <div className="mb-10 text-center">
+             <div className="flex flex-col items-center gap-2">
+                <div className="w-6 h-6 bg-black rounded-t-full mb-1" />
+                <h1 className="text-3xl font-serif font-medium italic tracking-tight text-[#0A0A0A]">
+                    Planr.
+                </h1>
+            </div>
+            <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[#666460]">
+                Academic Journey
             </p>
         </div>
 
-        <div className="mb-8 border-b border-border pb-4">
-            <h2 className="text-xs font-semibold uppercase tracking-widest">
+        <div className="mb-8 border-b border-[#DAD6CF] pb-2">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#0A0A0A]">
             Login
             </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">
                 Email
               </Label>
               <Input
@@ -76,13 +75,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@smu.edu.sg"
-                className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
                 required
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[#666460]">
                 Password
               </Label>
               <Input
@@ -91,32 +90,32 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
+                className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
                 required
               />
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {error && (
-              <div className="bg-destructive/10 p-3 text-xs text-destructive border border-destructive/20">
+              <div className="bg-red-50 p-3 text-xs text-red-600 border border-red-100">
                 {error}
               </div>
             )}
 
             <Button
                 type="submit"
-                className="w-full rounded-none bg-primary text-primary-foreground hover:bg-primary/90 h-12 text-xs font-bold uppercase tracking-widest"
+                className="w-full rounded-none bg-black text-white hover:bg-black/80 h-12 text-xs font-bold uppercase tracking-[0.15em] transition-all"
                 disabled={isLoading}
             >
                 {isLoading ? "Authenticating..." : "Sign In"}
             </Button>
             
-            <div className="text-center text-xs text-muted-foreground mt-4">
+            <div className="text-center text-xs text-[#666460] mt-6">
                 <span className="italic font-serif">New to Planr?</span>{" "}
                 <Link
                     href="/signup"
-                    className="underline hover:text-foreground transition-colors"
+                    className="underline hover:text-[#0A0A0A] transition-colors decoration-[#DAD6CF] underline-offset-4"
                 >
                     Create an account
                 </Link>
@@ -124,12 +123,12 @@ export default function LoginPage() {
           </div>
         </form>
         
-        <div className="mt-8 pt-6 border-t border-border text-center">
-             <div className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
+        <div className="mt-10 pt-6 border-t border-[#DAD6CF] text-center">
+             <div className="text-[10px] uppercase tracking-[0.1em] text-[#666460]/60 mb-2">
                 Test Account
              </div>
-             <div className="mt-2 text-xs text-muted-foreground font-mono bg-accent/20 p-2 inline-block">
-                student@smu.edu.sg / password123
+             <div className="inline-block px-3 py-1 bg-[#F4F1ED] border border-[#DAD6CF/50]">
+                <code className="text-[10px] text-[#666460]">student@smu.edu.sg / password123</code>
              </div>
         </div>
       </div>
