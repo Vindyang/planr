@@ -40,7 +40,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex h-12 items-center px-4 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+        <div className="flex h-12 items-center px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
             <span className="font-bold text-xl tracking-tight group-data-[collapsible=icon]:hidden">Planr</span>
             <span className="hidden font-bold text-xl tracking-tight group-data-[collapsible=icon]:block">P</span>
         </div>
