@@ -102,7 +102,7 @@ export default function SignupPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="h-11 rounded-none border-[#DAD6CF] bg-transparent focus-visible:ring-1 focus-visible:ring-black focus-visible:border-black placeholder:text-[#666460]/50"
-                placeholder="Ex. Rachel Lim"
+                placeholder="Ex. Peter Lim"
                 required
               />
             </div>

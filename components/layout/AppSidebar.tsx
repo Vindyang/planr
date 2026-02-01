@@ -101,7 +101,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-6 border-t border-[#DAD6CF]">
         <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                <span className="text-sm font-semibold text-[#0A0A0A]">Rachel Lim</span>
+                <span className="text-sm font-semibold text-[#0A0A0A]">Peter Lim</span>
                 <span className="text-xs text-[#666460]">SMU • Year 2</span>
             </div>
              <SidebarMenuButton 

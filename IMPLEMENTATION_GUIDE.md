@@ -391,7 +391,7 @@ async function main() {
     data: {
       email: "student@smu.edu.sg",
       passwordHash: hashedPassword,
-      name: "Rachel Lim",
+      name: "Peter Lim",
       role: "STUDENT",
       emailVerified: true,
     },

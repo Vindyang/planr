@@ -76,7 +76,7 @@ export const MOCK_COURSES: Course[] = [
 
 export const MOCK_STUDENT: Student = {
   id: "S12345",
-  name: "Rachel Lim",
+  name: "Peter Lim",
   major: "Computer Science",
   year: 2,
   enrollmentYear: 2024,
