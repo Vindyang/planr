@@ -54,3 +54,6 @@ next-env.d.ts
 .mcp.json
 /lib/generated/prisma
 .env
+
+# reference
+/reference

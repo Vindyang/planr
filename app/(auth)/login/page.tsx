@@ -6,8 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Particles } from "@/components/ui/particles";
 import { signIn } from "@/lib/auth-client";
 
 export default function LoginPage() {
@@ -43,28 +41,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <Particles
-        className="absolute inset-0"
-        quantity={100}
-        ease={80}
-        color="#000000"
-        refresh
-      />
-      <Card className="relative z-10 w-full max-w-md p-8">
-        <div className="mb-8 flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-semibold">User Information</h1>
-            <p className="mt-1 text-sm text-gray-500">
-              Please fill in your details below
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4 text-foreground font-sans">
+      <div 
+        className="w-full max-w-md bg-card p-8 border border-border" 
+        style={{
+            boxShadow: "4px 4px 0px rgba(0,0,0,0.05)"
+        }}
+      >
+        <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 h-6 w-6 rounded-t-[50%] bg-foreground"></div>
+            <h1 className="text-3xl font-serif font-medium italic tracking-tight">
+            Planr.
+            </h1>
+            <p className="mt-2 text-xs uppercase tracking-widest text-muted-foreground">
+            Academic Journey
             </p>
-          </div>
+        </div>
+
+        <div className="mb-8 border-b border-border pb-4">
+            <h2 className="text-xs font-semibold uppercase tracking-widest">
+            Login
+            </h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-sm font-medium">
+              <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Email
               </Label>
               <Input
@@ -72,14 +75,14 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="h-11 bg-transparent"
+                placeholder="student@smu.edu.sg"
+                className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-sm font-medium">
+              <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Password
               </Label>
               <Input
@@ -87,8 +90,8 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="h-11 bg-transparent"
+                placeholder="••••••••"
+                className="h-11 rounded-none border-border bg-transparent focus-visible:ring-1 focus-visible:ring-ring"
                 required
               />
             </div>
@@ -96,53 +99,40 @@ export default function LoginPage() {
 
           <div className="space-y-3">
             {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+              <div className="bg-destructive/10 p-3 text-xs text-destructive border border-destructive/20">
                 {error}
               </div>
             )}
 
-            <div className="flex gap-3 pt-2">
-              <Button
+            <Button
                 type="submit"
-                className="flex-1 bg-white text-black hover:bg-gray-100 border border-gray-200 shadow-sm"
+                className="w-full rounded-none bg-primary text-primary-foreground hover:bg-primary/90 h-12 text-xs font-bold uppercase tracking-widest"
                 disabled={isLoading}
-              >
-                {isLoading ? "Submitting..." : "Submit"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1 bg-transparent border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white border-0"
-                onClick={() => router.push("/")}
-              >
-                Cancel
-              </Button>
+            >
+                {isLoading ? "Authenticating..." : "Sign In"}
+            </Button>
+            
+            <div className="text-center text-xs text-muted-foreground mt-4">
+                <span className="italic font-serif">New to Planr?</span>{" "}
+                <Link
+                    href="/signup"
+                    className="underline hover:text-foreground transition-colors"
+                >
+                    Create an account
+                </Link>
             </div>
           </div>
         </form>
-
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/signup"
-            className="text-primary hover:underline font-medium"
-          >
-            Sign up
-          </Link>
-        </p>
-
-        <div className="mt-6 rounded-md bg-gray-50 p-3 text-xs text-gray-500 border border-gray-100">
-          <p className="font-semibold mb-1">Test Account:</p>
-          <div className="flex flex-col space-y-0.5">
-            <p>
-              Email: <span className="font-mono">student@smu.edu.sg</span>
-            </p>
-            <p>
-              Password: <span className="font-mono">password123</span>
-            </p>
-          </div>
+        
+        <div className="mt-8 pt-6 border-t border-border text-center">
+             <div className="text-[10px] uppercase tracking-widest text-muted-foreground/60">
+                Test Account
+             </div>
+             <div className="mt-2 text-xs text-muted-foreground font-mono bg-accent/20 p-2 inline-block">
+                student@smu.edu.sg / password123
+             </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

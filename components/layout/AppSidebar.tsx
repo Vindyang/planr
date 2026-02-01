@@ -3,6 +3,7 @@
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -11,9 +12,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { IconDashboard, IconCalendarEvent, IconBook, IconMessageCircle, IconSettings, IconUser } from "@tabler/icons-react"
+import { IconDashboard, IconCalendarEvent, IconBook, IconMessageCircle, IconSettings, IconUser, IconLogout } from "@tabler/icons-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { signOut } from "@/lib/auth-client"
 
 const items = [
   {
@@ -36,6 +38,7 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
 
   return (
     <Sidebar collapsible="icon">
@@ -66,6 +69,22 @@ export function AppSidebar() {
             </SidebarGroup>
         ))}
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              onClick={async () => {
+                await signOut()
+                router.push("/login")
+              }}
+              tooltip="Logout"
+            >
+              <IconLogout />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
