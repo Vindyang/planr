@@ -133,15 +133,23 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col space-y-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">
-              Welcome back, {student.user.name}
-            </span>
+      <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
+        <header className="flex justify-between items-start border-b border-border pb-8">
+          <div>
+            <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
+              Discover <br />
+              <span className="font-serif font-normal italic">Curriculum</span>
+            </h1>
           </div>
-        </div>
+          <div className="text-right">
+             <span className="block text-sm mt-1 uppercase tracking-wider font-medium text-foreground">
+              Welcome back, {student.user.name}
+             </span>
+             <span className="font-serif text-xl italic text-muted-foreground">
+               Year {student.year} • {student.major}
+             </span>
+          </div>
+        </header>
 
         <StatCards student={studentForStats} />
 

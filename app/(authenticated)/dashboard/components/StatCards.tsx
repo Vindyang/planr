@@ -7,35 +7,35 @@ export function StatCards({ student }: { student: Student }) {
     const totalCredits = student.completedCourses.length;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">GPA</CardTitle>
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <Card className="bg-card border border-border shadow-none rounded-none p-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
+          <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">GPA</CardTitle>
           <IconAward className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{student.gpa.toFixed(2)}</div>
-           <p className="text-xs text-muted-foreground">Cumulative</p>
+        <CardContent className="p-0">
+          <div className="text-2xl font-serif italic text-foreground">{student.gpa.toFixed(2)}</div>
+           <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">Cumulative</p>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Credits Earned</CardTitle>
+      <Card className="bg-card border border-border shadow-none rounded-none p-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
+          <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Credits Earned</CardTitle>
           <IconBook className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalCredits}</div>
-           <p className="text-xs text-muted-foreground">Units completed</p>
+        <CardContent className="p-0">
+          <div className="text-2xl font-serif italic text-foreground">{totalCredits}</div>
+           <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">Units completed</p>
         </CardContent>
       </Card>
-        <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Year</CardTitle>
+        <Card className="bg-card border border-border shadow-none rounded-none p-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
+          <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Year</CardTitle>
           <IconSchool className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">Year {student.year}</div>
-           <p className="text-xs text-muted-foreground">{student.major}</p>
+        <CardContent className="p-0">
+          <div className="text-2xl font-serif italic text-foreground">Year {student.year}</div>
+           <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">{student.major}</p>
         </CardContent>
       </Card>
     </div>
