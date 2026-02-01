@@ -1,46 +1,33 @@
 
-import { IconBell, IconMenu2, IconSearch, IconUserCircle } from "@tabler/icons-react";
+import { IconBell, IconSearch, IconUserCircle } from "@tabler/icons-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { usePathname } from "next/navigation";
 
-export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
+export function Navbar() {
+  const pathname = usePathname();
+  
+  const getPageTitle = (path: string) => {
+    if (path === "/dashboard") return "Dashboard";
+    if (path === "/planner") return "Planner";
+    if (path === "/courses") return "Courses";
+    if (path === "/reviews") return "Reviews";
+    if (path.startsWith("/student/profile")) return "Profile";
+    if (path === "/settings") return "Preferences";
+    return "Planr";
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center px-4 md:px-6">
-        <div className="mr-4 hidden md:flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="hidden font-bold sm:inline-block text-xl tracking-tight">Planr</span>
-          </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <Link
-              href="/dashboard"
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/planner"
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-            >
-              Planner
-            </Link>
-            <Link
-              href="/reviews"
-              className="transition-colors hover:text-foreground/80 text-foreground/60"
-            >
-              Reviews
-            </Link>
-          </nav>
+        <div className="mr-4 flex items-center gap-4">
+          <SidebarTrigger className="-ml-1" />
+
+          <h1 className="text-sm font-medium">{getPageTitle(pathname)}</h1>
         </div>
-        <Button
-          variant="ghost"
-          className="mr-2 px-0 text-base hover:bg-transparent focus:ring-0 md:hidden"
-          onClick={onMenuClick}
-        >
-          <IconMenu2 className="h-6 w-6" />
-          <span className="sr-only">Toggle Menu</span>
-        </Button>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">
              <div className="relative">
