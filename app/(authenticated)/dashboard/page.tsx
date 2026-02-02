@@ -137,8 +137,7 @@ export default function DashboardPage() {
         <header className="flex justify-between items-start border-b border-border pb-8">
           <div>
             <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
-              Discover <br />
-              <span className="font-serif font-normal italic">Curriculum</span>
+              Home <br />
             </h1>
           </div>
           <div className="text-right">
