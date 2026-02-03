@@ -433,7 +433,7 @@ export default function ProfilePage() {
 
                   <div className="pt-4 border-t border-dashed border-border/50">
                     <div className="space-y-1">
-                      <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Total Units Completed</Label>
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Units Earned</Label>
                       <p className="text-base font-normal text-foreground">{totalUnits} CU</p>
                     </div>
                   </div>

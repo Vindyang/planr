@@ -19,12 +19,12 @@ export function StatCards({ student, totalUnits }: { student: Student; totalUnit
       </Card>
       <Card className="bg-card border border-border shadow-none rounded-none p-4">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
-          <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Credits Earned</CardTitle>
+          <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Units Earned</CardTitle>
           <IconBook className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
           <div className="text-2xl font-serif italic text-foreground">{totalUnits}</div>
-           <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">Units completed</p>
+           <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">Units earned</p>
         </CardContent>
       </Card>
         <Card className="bg-card border border-border shadow-none rounded-none p-4">
