@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { getSession } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { calculateGPA } from "@/lib/gpa"
 
 const createProfileSchema = z.object({
   userId: z.string(),
@@ -82,6 +83,27 @@ export async function updateStudentProfile(
   return { success: true, student }
 }
 
+async function recalculateGPA(studentId: string) {
+  const completedCourses = await prisma.completedCourse.findMany({
+    where: { studentId },
+    include: { course: { select: { units: true } } },
+  })
+
+  const gpa = calculateGPA(
+    completedCourses.map((cc) => ({
+      grade: cc.grade,
+      units: cc.course.units,
+    }))
+  )
+
+  await prisma.student.update({
+    where: { id: studentId },
+    data: { gpa },
+  })
+
+  return gpa
+}
+
 export async function addCompletedCourse(
   input: z.infer<typeof addCourseSchema>
 ) {
@@ -134,7 +156,9 @@ export async function addCompletedCourse(
     },
   })
 
-  revalidatePath("/profile")
+  await recalculateGPA(student.id)
+
+  revalidatePath("/student/profile")
   revalidatePath("/dashboard")
 
   return { success: true, completedCourse }
@@ -170,7 +194,9 @@ export async function removeCompletedCourse(completedCourseId: string) {
     where: { id: completedCourseId },
   })
 
-  revalidatePath("/profile")
+  await recalculateGPA(student.id)
+
+  revalidatePath("/student/profile")
   revalidatePath("/dashboard")
 
   return { success: true }

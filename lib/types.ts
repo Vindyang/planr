@@ -36,3 +36,53 @@ export interface EligibilityResult {
   missingPrerequisites: string[]; // IDs of missing courses
   warnings?: string[];
 }
+
+// API response types
+
+export interface StudentProfileResponse {
+  student: {
+    id: string;
+    university: string;
+    major: string;
+    secondMajor: string | null;
+    minor: string | null;
+    year: number;
+    enrollmentYear: number;
+    expectedGraduationYear: number;
+    gpa: number;
+    user: {
+      name: string;
+      email: string;
+    };
+    completedCourses: CompletedCourseWithDetails[];
+  };
+}
+
+export interface CompletedCourseWithDetails {
+  id: string;
+  courseId: string;
+  grade: string;
+  term: string;
+  course: {
+    id: string;
+    code: string;
+    title: string;
+    units: number;
+  };
+}
+
+export interface CourseListResponse {
+  courses: Array<{
+    id: string;
+    code: string;
+    title: string;
+    description: string;
+    units: number;
+    termsOffered: string[];
+    tags: string[];
+    prerequisites: Array<{
+      prerequisiteCourseId: string;
+      type: string;
+    }>;
+  }>;
+}

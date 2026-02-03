@@ -24,7 +24,15 @@
 
 ### 🚧 In Progress
 
-- [ ] **Step 3: Student Profile & Data Management** - Not started
+- [x] **Step 3: Student Profile & Data Management**
+  - [x] Created API endpoints for student data (CRUD via Server Actions)
+  - [x] Dashboard fetches real student data from API
+  - [x] Profile page with edit personal/academic info
+  - [x] Add completed courses (searchable course selector, grade, term)
+  - [x] Remove completed courses
+  - [x] GPA auto-calculates from completed course grades
+  - [x] Credits earned sums actual course units
+  - [x] Added API response types to lib/types.ts
 - [ ] **Step 4: Enhanced Eligibility System** - Not started
 - [ ] **Step 5: Course Catalog & Detail Pages** - Not started
 - [ ] **Step 6: Multi-Semester Planner** - Not started

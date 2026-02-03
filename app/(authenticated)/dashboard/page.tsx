@@ -150,7 +150,10 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <StatCards student={studentForStats} />
+        <StatCards
+          student={studentForStats}
+          totalUnits={student.completedCourses.reduce((sum, cc) => sum + cc.course.units, 0)}
+        />
 
         <div className="space-y-4">
           <h3 className="text-xl font-semibold tracking-tight">

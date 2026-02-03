@@ -2,13 +2,28 @@
 
 import { useEffect, useState } from "react"
 import { AppLayout } from "@/components/layout/AppLayout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { IconEdit, IconCheck, IconX, IconTrash } from "@tabler/icons-react"
-import { updateStudentProfile, removeCompletedCourse } from "./componentsAction/student"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { IconEdit, IconCheck, IconX, IconTrash, IconPlus, IconSearch } from "@tabler/icons-react"
+import { updateStudentProfile, addCompletedCourse, removeCompletedCourse } from "./componentsAction/student"
+import { VALID_GRADES } from "@/lib/gpa"
 
 interface CompletedCourse {
   id: string
@@ -39,6 +54,13 @@ interface StudentProfile {
   completedCourses: CompletedCourse[]
 }
 
+interface AvailableCourse {
+  id: string
+  code: string
+  title: string
+  units: number
+}
+
 export default function ProfilePage() {
   const [student, setStudent] = useState<StudentProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -50,6 +72,16 @@ export default function ProfilePage() {
     minor: "",
     year: 1,
   })
+
+  // Add course state
+  const [isAddCourseOpen, setIsAddCourseOpen] = useState(false)
+  const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>([])
+  const [courseSearch, setCourseSearch] = useState("")
+  const [selectedCourseId, setSelectedCourseId] = useState("")
+  const [selectedGrade, setSelectedGrade] = useState("")
+  const [selectedTerm, setSelectedTerm] = useState("")
+  const [isAddingCourse, setIsAddingCourse] = useState(false)
+  const [addCourseError, setAddCourseError] = useState("")
 
   useEffect(() => {
     fetchProfile()
@@ -73,6 +105,24 @@ export default function ProfilePage() {
       setError("Failed to load profile")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  async function fetchAvailableCourses() {
+    try {
+      const res = await fetch("/api/courses")
+      if (!res.ok) return
+      const data = await res.json()
+      setAvailableCourses(
+        (data.courses || []).map((c: AvailableCourse) => ({
+          id: c.id,
+          code: c.code,
+          title: c.title,
+          units: c.units,
+        }))
+      )
+    } catch {
+      // silently fail, courses just won't be available
     }
   }
 
@@ -109,6 +159,65 @@ export default function ProfilePage() {
     }
   }
 
+  function handleOpenAddCourse() {
+    setIsAddCourseOpen(true)
+    setSelectedCourseId("")
+    setSelectedGrade("")
+    setSelectedTerm("")
+    setCourseSearch("")
+    setAddCourseError("")
+    fetchAvailableCourses()
+  }
+
+  async function handleAddCourse() {
+    if (!selectedCourseId || !selectedGrade || !selectedTerm) {
+      setAddCourseError("Please fill in all fields")
+      return
+    }
+
+    setIsAddingCourse(true)
+    setAddCourseError("")
+
+    try {
+      const result = await addCompletedCourse({
+        courseId: selectedCourseId,
+        grade: selectedGrade,
+        term: selectedTerm,
+      })
+
+      if (result.success) {
+        setIsAddCourseOpen(false)
+        await fetchProfile()
+      } else {
+        setAddCourseError(result.error || "Failed to add course")
+      }
+    } catch (err) {
+      setAddCourseError("Failed to add course")
+    } finally {
+      setIsAddingCourse(false)
+    }
+  }
+
+  // Filter out already completed courses and apply search
+  const completedCourseIds = new Set(student?.completedCourses.map((cc) => cc.course.id) || [])
+  const filteredCourses = availableCourses
+    .filter((c) => !completedCourseIds.has(c.id))
+    .filter(
+      (c) =>
+        !courseSearch ||
+        c.code.toLowerCase().includes(courseSearch.toLowerCase()) ||
+        c.title.toLowerCase().includes(courseSearch.toLowerCase())
+    )
+
+  const selectedCourse = availableCourses.find((c) => c.id === selectedCourseId)
+
+  // Generate term options
+  const currentYear = new Date().getFullYear()
+  const termOptions: string[] = []
+  for (let year = currentYear; year >= currentYear - 5; year--) {
+    termOptions.push(`${year}-Fall`, `${year}-Spring`)
+  }
+
   if (isLoading) {
     return (
       <AppLayout>
@@ -138,6 +247,9 @@ export default function ProfilePage() {
       </AppLayout>
     )
   }
+
+  // Calculate total units from completed courses
+  const totalUnits = student.completedCourses.reduce((sum, cc) => sum + cc.course.units, 0)
 
   return (
     <AppLayout>
@@ -224,7 +336,7 @@ export default function ProfilePage() {
                 </div>
               )}
             </div>
-            
+
             <div className="bg-card border border-transparent shadow-sm hover:border-sidebar-border hover:shadow-md transition-all duration-200 p-6 space-y-6">
               {isEditing ? (
                 <div className="space-y-5">
@@ -290,7 +402,7 @@ export default function ProfilePage() {
                       <p className="text-base font-normal text-foreground">Year {student.year}</p>
                     </div>
                   </div>
-                  
+
                   {(student.secondMajor || student.minor) && (
                     <div className="grid grid-cols-2 gap-6 pt-4 border-t border-dashed border-border/50">
                       {student.secondMajor && (
@@ -318,6 +430,13 @@ export default function ProfilePage() {
                       <p className="text-base font-normal text-foreground font-serif italic">{student.gpa.toFixed(2)}</p>
                     </div>
                   </div>
+
+                  <div className="pt-4 border-t border-dashed border-border/50">
+                    <div className="space-y-1">
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Total Units Completed</Label>
+                      <p className="text-base font-normal text-foreground">{totalUnits} CU</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -328,15 +447,35 @@ export default function ProfilePage() {
         <div className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium font-serif italic">Completed Courses</h3>
-            <Badge variant="outline" className="font-normal text-muted-foreground">
-              {student.completedCourses.length} Courses
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="font-normal text-muted-foreground">
+                {student.completedCourses.length} Courses
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenAddCourse}
+                className="h-8 text-xs uppercase tracking-wider hover:bg-muted"
+              >
+                <IconPlus className="h-3.5 w-3.5 mr-1.5" />
+                Add Course
+              </Button>
+            </div>
           </div>
-          
+
           <div className="bg-card border border-transparent shadow-sm p-6">
             {student.completedCourses.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <p>No completed courses yet.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenAddCourse}
+                  className="mt-4 text-xs uppercase tracking-wider"
+                >
+                  <IconPlus className="h-3.5 w-3.5 mr-1.5" />
+                  Add your first course
+                </Button>
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -361,9 +500,9 @@ export default function ProfilePage() {
                       </div>
                       <h4 className="font-medium text-foreground leading-tight">{cc.course.title}</h4>
                     </div>
-                    
+
                     <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{cc.term} · {cc.course.units} units</span>
+                      <span className="text-muted-foreground">{cc.term} · {cc.course.units} CU</span>
                       <span className="font-serif italic font-medium">{cc.grade}</span>
                     </div>
                   </div>
@@ -373,6 +512,122 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Add Course Sheet */}
+      <Sheet open={isAddCourseOpen} onOpenChange={setIsAddCourseOpen}>
+        <SheetContent side="right" className="sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="text-lg font-medium">Add Completed Course</SheetTitle>
+            <SheetDescription>
+              Select a course, grade, and the term you completed it.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 space-y-6">
+            {addCourseError && (
+              <div className="rounded-none border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
+                {addCourseError}
+              </div>
+            )}
+
+            {/* Course selector */}
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Course</Label>
+              <div className="relative">
+                <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search courses..."
+                  value={courseSearch}
+                  onChange={(e) => setCourseSearch(e.target.value)}
+                  className="pl-9 bg-transparent"
+                />
+              </div>
+              <div className="border border-input rounded-md max-h-48 overflow-y-auto">
+                {filteredCourses.length === 0 ? (
+                  <div className="p-3 text-sm text-muted-foreground text-center">
+                    {courseSearch ? "No matching courses found" : "No courses available"}
+                  </div>
+                ) : (
+                  filteredCourses.map((course) => (
+                    <button
+                      key={course.id}
+                      type="button"
+                      className={`w-full text-left px-3 py-2.5 text-sm border-b border-border/50 last:border-b-0 transition-colors ${
+                        selectedCourseId === course.id
+                          ? "bg-primary/10 text-primary"
+                          : "hover:bg-muted/50"
+                      }`}
+                      onClick={() => setSelectedCourseId(course.id)}
+                    >
+                      <span className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">
+                        {course.code}
+                      </span>
+                      <span className="block font-medium text-foreground">{course.title}</span>
+                      <span className="text-xs text-muted-foreground">{course.units} CU</span>
+                    </button>
+                  ))
+                )}
+              </div>
+              {selectedCourse && (
+                <p className="text-xs text-muted-foreground">
+                  Selected: <span className="font-medium text-foreground">{selectedCourse.code} - {selectedCourse.title}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Grade selector */}
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Grade</Label>
+              <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select grade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {VALID_GRADES.map((grade) => (
+                    <SelectItem key={grade} value={grade}>
+                      {grade}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Term selector */}
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Term</Label>
+              <Select value={selectedTerm} onValueChange={setSelectedTerm}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select term" />
+                </SelectTrigger>
+                <SelectContent>
+                  {termOptions.map((term) => (
+                    <SelectItem key={term} value={term}>
+                      {term}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <SheetFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddCourseOpen(false)}
+              className="text-xs uppercase tracking-wider"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddCourse}
+              disabled={isAddingCourse || !selectedCourseId || !selectedGrade || !selectedTerm}
+              className="text-xs uppercase tracking-wider"
+            >
+              {isAddingCourse ? "Adding..." : "Add Course"}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   )
 }
