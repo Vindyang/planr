@@ -3,12 +3,12 @@ import { IconBell, IconSearch, IconUserCircle } from "@tabler/icons-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   
   const getPageTitle = (path: string) => {
     if (path === "/dashboard") return "Dashboard";
@@ -34,8 +34,18 @@ export function Navbar() {
               <IconSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search resources..."
+                placeholder="Search courses..."
                 className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const value = (e.target as HTMLInputElement).value.trim()
+                    if (value) {
+                      router.push(`/courses?q=${encodeURIComponent(value)}`)
+                    } else {
+                      router.push("/courses")
+                    }
+                  }
+                }}
               />
             </div>
           </div>

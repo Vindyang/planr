@@ -33,8 +33,15 @@ export interface Student {
 
 export interface EligibilityResult {
   isEligible: boolean;
-  missingPrerequisites: string[]; // IDs of missing courses
+  missingPrerequisites: string[]; // IDs of missing hard prereq courses
+  softWarnings: string[];         // IDs of soft prereqs not met (course still eligible)
+  corequisiteNeeded: string[];    // IDs of corequisites needed concurrently
   warnings?: string[];
+}
+
+export interface EligibleCourse {
+  course: Course;
+  eligibility: EligibilityResult;
 }
 
 // API response types

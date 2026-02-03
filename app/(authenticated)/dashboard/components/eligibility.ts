@@ -1,4 +1,4 @@
-import { Course, EligibilityResult, Student } from "@/lib/types";
+import { Course, EligibilityResult, EligibleCourse, Student } from "@/lib/types";
 
 export function checkEligibility(
   course: Course,
@@ -8,29 +8,33 @@ export function checkEligibility(
     student.completedCourses.map((c) => c.courseId),
   );
   const missingPrereqs: string[] = [];
+  const softWarnings: string[] = [];
+  const corequisiteNeeded: string[] = [];
 
-  // Check each prerequisite
   for (const prereq of course.prerequisites) {
-    if (prereq.type === "hard") {
-      // Hard prerequisite must be completed
-      if (!completedCourseIds.has(prereq.courseId)) {
-        missingPrereqs.push(prereq.courseId);
-      }
+    const completed = completedCourseIds.has(prereq.courseId);
+
+    if (prereq.type === "hard" && !completed) {
+      missingPrereqs.push(prereq.courseId);
+    } else if (prereq.type === "soft" && !completed) {
+      softWarnings.push(prereq.courseId);
+    } else if (prereq.type === "corequisite" && !completed) {
+      corequisiteNeeded.push(prereq.courseId);
     }
-    // We can handle soft/coreqs here later if needed
   }
 
   return {
     isEligible: missingPrereqs.length === 0,
     missingPrerequisites: missingPrereqs,
+    softWarnings,
+    corequisiteNeeded,
   };
 }
 
 export function getEligibleCourses(
   allCourses: Course[],
   student: Student,
-): Course[] {
-  // Filter out courses already taken
+): EligibleCourse[] {
   const completedCourseIds = new Set(
     student.completedCourses.map((c) => c.courseId),
   );
@@ -38,8 +42,10 @@ export function getEligibleCourses(
     (c) => !completedCourseIds.has(c.id),
   );
 
-  return notTakenCourses.filter((course) => {
-    const { isEligible } = checkEligibility(course, student);
-    return isEligible;
-  });
+  return notTakenCourses
+    .map((course) => ({
+      course,
+      eligibility: checkEligibility(course, student),
+    }))
+    .filter((ec) => ec.eligibility.isEligible);
 }

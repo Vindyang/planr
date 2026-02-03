@@ -159,7 +159,7 @@ export default function DashboardPage() {
           <h3 className="text-xl font-semibold tracking-tight">
             Eligible Courses for Next Semester
           </h3>
-          <EligibleCoursesList courses={eligibleCourses} />
+          <EligibleCoursesList courses={eligibleCourses} allCourses={transformedCourses} />
         </div>
       </div>
     </AppLayout>
