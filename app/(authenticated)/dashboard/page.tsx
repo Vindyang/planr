@@ -1,6 +1,5 @@
-"use client"
-
-import { useEffect, useState } from "react"
+import { getSession } from "@/lib/auth"
+import { redirect } from "next/navigation"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { StatCards } from "./components/StatCards"
 import { EligibleCoursesList } from "./components/EligibleCoursesList"
@@ -10,98 +9,28 @@ import {
   CompletedCourseInfo,
 } from "@/lib/eligibility"
 import { Student } from "@/lib/types"
+import { getStudentProfile } from "@/lib/data/students"
+import { getAllCoursesForUniversity } from "@/lib/data/courses"
 
-interface StudentData {
-  id: string
-  university: string
-  major: string
-  year: number
-  enrollmentYear: number
-  gpa: number
-  user: {
-    name: string
-    email: string
+export default async function DashboardPage() {
+  const session = await getSession()
+  if (!session?.user) {
+    redirect("/login")
   }
-  completedCourses: Array<{
-    id: string
-    courseId: string
-    grade: string
-    term: string
-    course: {
-      id: string
-      code: string
-      title: string
-      units: number
-    }
-  }>
-}
 
-interface CourseData {
-  id: string
-  code: string
-  title: string
-  description: string
-  units: number
-  termsOffered: string[]
-  tags: string[]
-  prerequisites: Array<{
-    prerequisiteCourseId: string
-    type: string
-  }>
-}
+  const student = await getStudentProfile(session.user.id)
 
-export default function DashboardPage() {
-  const [student, setStudent] = useState<StudentData | null>(null)
-  const [courses, setCourses] = useState<CourseData[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState("")
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [profileRes, coursesRes] = await Promise.all([
-          fetch("/api/student/profile"),
-          fetch("/api/courses"),
-        ])
-
-        if (profileRes.ok) {
-          const profileData = await profileRes.json()
-          setStudent(profileData.student)
-        }
-
-        if (coursesRes.ok) {
-          const coursesData = await coursesRes.json()
-          setCourses(coursesData.courses || [])
-        }
-      } catch (err) {
-        setError("Failed to load dashboard data")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchData()
-  }, [])
-
-  if (isLoading) {
+  if (!student) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <p className="text-red-500">Student profile not found</p>
         </div>
       </AppLayout>
     )
   }
 
-  if (error || !student) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-red-500">{error || "Failed to load profile"}</p>
-        </div>
-      </AppLayout>
-    )
-  }
+  const courses = await getAllCoursesForUniversity(student.university)
 
   // Transform data to match expected types
   const studentForStats: Student = {
@@ -118,7 +47,8 @@ export default function DashboardPage() {
     })),
   }
 
-  // Transform courses to match CourseWithPrereqs type for new eligibility system
+  // Transform courses to match CourseWithPrereqs type
+  // getAllCoursesForUniversity returns full prerequisite objects, we need to map to the structure expected by eligibility checker
   const transformedCourses: CourseWithPrereqs[] = courses.map((course) => ({
     id: course.id,
     code: course.code,
@@ -127,6 +57,7 @@ export default function DashboardPage() {
     prerequisites: course.prerequisites.map((p) => ({
       prerequisiteCourseId: p.prerequisiteCourseId,
       type: p.type,
+      prerequisiteCourse: p.prerequisiteCourse, // Include full object if available/needed types
     })),
   }))
 
@@ -144,7 +75,7 @@ export default function DashboardPage() {
     { university: student.university }
   )
 
-  // Add descriptions and tags back for display (they're not in CourseWithPrereqs)
+  // Add descriptions and tags back for display
   const eligibleCoursesWithDisplay = eligibleCourses.map((ec) => {
     const originalCourse = courses.find((c) => c.id === ec.course.id)
     return {
