@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
+import { EligibilityCheckResponse, EligibilityStatus } from "@/lib/eligibility"
 
 interface PrerequisiteDetail {
   id: string
@@ -47,6 +48,7 @@ interface StudentData {
   id: string
   completedCourses: Array<{
     courseId: string
+    grade: string
   }>
 }
 
@@ -54,6 +56,7 @@ export default function CourseDetailPage() {
   const params = useParams()
   const [course, setCourse] = useState<CourseDetail | null>(null)
   const [student, setStudent] = useState<StudentData | null>(null)
+  const [eligibility, setEligibility] = useState<EligibilityCheckResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -75,6 +78,13 @@ export default function CourseDetailPage() {
         if (profileRes.ok) {
           const data = await profileRes.json()
           setStudent(data.student)
+        }
+
+        // Fetch eligibility data
+        const eligibilityRes = await fetch(`/api/courses/${params.id}/eligibility`)
+        if (eligibilityRes.ok) {
+          const eligibilityData = await eligibilityRes.json()
+          setEligibility(eligibilityData)
         }
       } catch {
         setError("Failed to load course")
@@ -106,12 +116,20 @@ export default function CourseDetailPage() {
   }
 
   const completedIds = new Set(student?.completedCourses.map((c) => c.courseId) || [])
+  const completedGrades = new Map(student?.completedCourses.map((c) => [c.courseId, c.grade]) || [])
   const isCompleted = completedIds.has(course.id)
 
   const typeLabel: Record<string, string> = {
     HARD: "Required",
     SOFT: "Recommended",
     COREQUISITE: "Corequisite",
+  }
+
+  // Check if a prerequisite has a grade deficiency
+  const getGradeDeficiency = (prereqCourseId: string) => {
+    return eligibility?.eligibility.gradeDeficiencies.find(
+      (g) => g.courseId === prereqCourseId
+    )
   }
 
   return (
@@ -137,6 +155,27 @@ export default function CourseDetailPage() {
                 Completed
               </span>
             )}
+            {!isCompleted && eligibility && (
+              <span
+                className={`text-xs uppercase tracking-wider px-2 py-0.5 ${
+                  eligibility.eligibility.status === EligibilityStatus.ELIGIBLE
+                    ? "bg-green-100 text-green-800"
+                    : eligibility.eligibility.status === EligibilityStatus.WARNING
+                      ? "bg-amber-100 text-amber-800"
+                      : eligibility.eligibility.status === EligibilityStatus.COREQUISITE_NEEDED
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-red-100 text-red-800"
+                }`}
+              >
+                {eligibility.eligibility.status === EligibilityStatus.ELIGIBLE
+                  ? "Eligible"
+                  : eligibility.eligibility.status === EligibilityStatus.WARNING
+                    ? "Eligible (with warnings)"
+                    : eligibility.eligibility.status === EligibilityStatus.COREQUISITE_NEEDED
+                      ? "Needs Corequisite"
+                      : "Not Eligible"}
+              </span>
+            )}
           </div>
           <h1 className="text-4xl font-serif italic text-foreground">
             {course.title}
@@ -154,6 +193,67 @@ export default function CourseDetailPage() {
               <p className="text-foreground leading-relaxed">{course.description}</p>
             </div>
 
+            {/* Eligibility Issues */}
+            {eligibility && !eligibility.eligibility.isEligible && (
+              <div className="space-y-3">
+                <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                  Why Not Eligible
+                </h2>
+                <div className="bg-red-50 border border-red-200 p-4 space-y-2">
+                  {eligibility.eligibility.reasons.map((reason, i) => (
+                    <p key={i} className="text-sm text-red-700">
+                      • {reason}
+                    </p>
+                  ))}
+                </div>
+                {eligibility.eligibility.suggestions.length > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 p-4 space-y-2">
+                    <p className="text-xs uppercase tracking-wider font-medium text-blue-700">
+                      Suggestions
+                    </p>
+                    {eligibility.eligibility.suggestions.map((suggestion, i) => (
+                      <p key={i} className="text-sm text-blue-700">
+                        • {suggestion}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Suggested Sequence */}
+            {eligibility && eligibility.suggestedSequence.length > 0 && (
+              <div className="space-y-3">
+                <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                  Suggested Course Sequence
+                </h2>
+                <div className="space-y-2">
+                  {eligibility.suggestedSequence.map((suggested) => (
+                    <Link
+                      key={suggested.courseId}
+                      href={`/courses/${suggested.courseId}`}
+                      className="flex items-center gap-3 p-3 border border-border bg-card hover:border-foreground transition-colors"
+                    >
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-medium">
+                        {suggested.order}
+                      </span>
+                      <div>
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                          {suggested.courseCode}
+                        </span>
+                        <p className="font-medium text-foreground text-sm">
+                          {suggested.courseTitle}
+                        </p>
+                      </div>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {suggested.reason}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Prerequisites */}
             {course.prerequisites.length > 0 && (
               <div className="space-y-3">
@@ -163,6 +263,9 @@ export default function CourseDetailPage() {
                 <div className="space-y-2">
                   {course.prerequisites.map((prereq) => {
                     const completed = completedIds.has(prereq.prerequisiteCourse.id)
+                    const grade = completedGrades.get(prereq.prerequisiteCourse.id)
+                    const gradeDeficiency = getGradeDeficiency(prereq.prerequisiteCourse.id)
+
                     return (
                       <Link
                         key={prereq.id}
@@ -170,8 +273,10 @@ export default function CourseDetailPage() {
                         className="flex items-center justify-between p-4 border border-border bg-card hover:border-foreground transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          {completed ? (
+                          {completed && !gradeDeficiency ? (
                             <IconCheck className="h-4 w-4 text-green-600" />
+                          ) : gradeDeficiency ? (
+                            <IconAlertTriangle className="h-4 w-4 text-red-500" />
                           ) : prereq.type === "SOFT" ? (
                             <IconAlertTriangle className="h-4 w-4 text-amber-500" />
                           ) : (
@@ -184,6 +289,16 @@ export default function CourseDetailPage() {
                             <p className="font-medium text-foreground text-sm">
                               {prereq.prerequisiteCourse.title}
                             </p>
+                            {gradeDeficiency && (
+                              <p className="text-xs text-red-600">
+                                Grade {gradeDeficiency.actualGrade} does not meet minimum {gradeDeficiency.requiredGrade}
+                              </p>
+                            )}
+                            {completed && grade && !gradeDeficiency && (
+                              <p className="text-xs text-green-600">
+                                Completed with grade {grade}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <span
@@ -269,12 +384,18 @@ export default function CourseDetailPage() {
                 </div>
               </div>
 
-              {!isCompleted && (
+              {!isCompleted && eligibility?.eligibility.isEligible && (
                 <Link href="/planner">
                   <Button className="w-full text-xs uppercase tracking-wider">
                     Add to Plan
                   </Button>
                 </Link>
+              )}
+
+              {!isCompleted && !eligibility?.eligibility.isEligible && (
+                <Button className="w-full text-xs uppercase tracking-wider" disabled>
+                  Prerequisites Required
+                </Button>
               )}
             </div>
           </div>

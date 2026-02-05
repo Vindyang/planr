@@ -4,8 +4,12 @@ import { useEffect, useState } from "react"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { StatCards } from "./components/StatCards"
 import { EligibleCoursesList } from "./components/EligibleCoursesList"
-import { getEligibleCourses } from "./components/eligibility"
-import { Course, Student } from "@/lib/types"
+import {
+  getEligibleCoursesWithDetails,
+  CourseWithPrereqs,
+  CompletedCourseInfo,
+} from "@/lib/eligibility"
+import { Student } from "@/lib/types"
 
 interface StudentData {
   id: string
@@ -114,22 +118,45 @@ export default function DashboardPage() {
     })),
   }
 
-  // Transform courses to match Course type
-  const transformedCourses: Course[] = courses.map((course) => ({
+  // Transform courses to match CourseWithPrereqs type for new eligibility system
+  const transformedCourses: CourseWithPrereqs[] = courses.map((course) => ({
     id: course.id,
     code: course.code,
     title: course.title,
-    description: course.description,
     units: course.units,
     prerequisites: course.prerequisites.map((p) => ({
-      courseId: p.prerequisiteCourseId,
-      type: p.type.toLowerCase() as "hard" | "soft" | "corequisite",
+      prerequisiteCourseId: p.prerequisiteCourseId,
+      type: p.type,
     })),
-    termsOffered: course.termsOffered,
-    tags: course.tags,
   }))
 
-  const eligibleCourses = getEligibleCourses(transformedCourses, studentForStats)
+  // Transform completed courses for eligibility checking
+  const completedCoursesInfo: CompletedCourseInfo[] = student.completedCourses.map((cc) => ({
+    courseId: cc.courseId,
+    grade: cc.grade,
+    course: cc.course,
+  }))
+
+  // Get eligible courses using enhanced eligibility system
+  const eligibleCourses = getEligibleCoursesWithDetails(
+    transformedCourses,
+    completedCoursesInfo,
+    { university: student.university }
+  )
+
+  // Add descriptions and tags back for display (they're not in CourseWithPrereqs)
+  const eligibleCoursesWithDisplay = eligibleCourses.map((ec) => {
+    const originalCourse = courses.find((c) => c.id === ec.course.id)
+    return {
+      ...ec,
+      course: {
+        ...ec.course,
+        description: originalCourse?.description ?? "",
+        tags: originalCourse?.tags ?? [],
+        termsOffered: originalCourse?.termsOffered ?? [],
+      },
+    }
+  })
 
   return (
     <AppLayout>
@@ -159,7 +186,7 @@ export default function DashboardPage() {
           <h3 className="text-xl font-semibold tracking-tight">
             Eligible Courses for Next Semester
           </h3>
-          <EligibleCoursesList courses={eligibleCourses} allCourses={transformedCourses} />
+          <EligibleCoursesList courses={eligibleCoursesWithDisplay} />
         </div>
       </div>
     </AppLayout>

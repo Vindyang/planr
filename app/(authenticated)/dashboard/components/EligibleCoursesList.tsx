@@ -1,29 +1,31 @@
-import { EligibleCourse, Course } from "@/lib/types";
+import { DetailedEligibilityResult } from "@/lib/eligibility"
+
+interface CourseDisplay {
+  id: string
+  code: string
+  title: string
+  description?: string
+  units: number
+  tags?: string[]
+  termsOffered?: string[]
+}
+
+interface EligibleCourseDisplay {
+  course: CourseDisplay
+  eligibility: DetailedEligibilityResult
+}
 
 export function EligibleCoursesList({
   courses,
-  allCourses,
 }: {
-  courses: EligibleCourse[];
-  allCourses?: Course[];
+  courses: EligibleCourseDisplay[]
 }) {
-  // Build a code lookup from all available courses
-  const codeMap = new Map<string, string>();
-  if (allCourses) {
-    for (const c of allCourses) {
-      codeMap.set(c.id, c.code);
-    }
-  }
-  for (const ec of courses) {
-    codeMap.set(ec.course.id, ec.course.code);
-  }
-
   if (courses.length === 0) {
     return (
       <div className="text-center p-8 text-muted-foreground">
         No new eligible courses found.
       </div>
-    );
+    )
   }
 
   return (
@@ -57,22 +59,32 @@ export function EligibleCoursesList({
             {course.description}
           </p>
 
-          {/* Soft prerequisite warnings */}
-          {eligibility.softWarnings.length > 0 && (
-            <div className="mb-3 px-2 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs">
-              <span className="font-medium uppercase tracking-wider">Recommended: </span>
-              {eligibility.softWarnings
-                .map((id) => codeMap.get(id) || id)
+          {/* Grade deficiency warnings */}
+          {eligibility.gradeDeficiencies.length > 0 && (
+            <div className="mb-3 px-2 py-1.5 bg-red-50 border border-red-200 text-red-700 text-xs">
+              <span className="font-medium uppercase tracking-wider">Grade Issue: </span>
+              {eligibility.gradeDeficiencies
+                .map((g) => `${g.courseCode} (${g.actualGrade} < ${g.requiredGrade})`)
                 .join(", ")}
             </div>
           )}
 
-          {/* Corequisite info */}
-          {eligibility.corequisiteNeeded.length > 0 && (
+          {/* Soft prerequisite warnings - now uses course codes directly */}
+          {eligibility.softWarnings.length > 0 && (
+            <div className="mb-3 px-2 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs">
+              <span className="font-medium uppercase tracking-wider">Recommended: </span>
+              {eligibility.softWarnings
+                .map((prereq) => prereq.courseCode)
+                .join(", ")}
+            </div>
+          )}
+
+          {/* Corequisite info - now uses course codes directly */}
+          {eligibility.corequisitesNeeded.length > 0 && (
             <div className="mb-3 px-2 py-1.5 bg-blue-50 border border-blue-200 text-blue-700 text-xs">
               <span className="font-medium uppercase tracking-wider">Corequisite: </span>
-              {eligibility.corequisiteNeeded
-                .map((id) => codeMap.get(id) || id)
+              {eligibility.corequisitesNeeded
+                .map((prereq) => prereq.courseCode)
                 .join(", ")}
             </div>
           )}
@@ -88,5 +100,5 @@ export function EligibleCoursesList({
         </div>
       ))}
     </div>
-  );
+  )
 }

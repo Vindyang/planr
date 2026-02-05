@@ -6,8 +6,11 @@ import Link from "next/link"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { Input } from "@/components/ui/input"
 import { IconSearch } from "@tabler/icons-react"
-import { checkEligibility } from "../dashboard/components/eligibility"
-import { Course, Student } from "@/lib/types"
+import {
+  checkCourseEligibility,
+  CourseWithPrereqs,
+  CompletedCourseInfo,
+} from "@/lib/eligibility"
 
 interface CourseData {
   id: string
@@ -88,22 +91,14 @@ function CoursesContent() {
     return Array.from(termSet).sort()
   }, [courses])
 
-  // Build student type for eligibility checks
-  const studentForEligibility: Student | null = student
-    ? {
-        id: student.id,
-        name: student.user.name,
-        major: student.major,
-        year: student.year,
-        enrollmentYear: student.enrollmentYear,
-        gpa: student.gpa,
-        completedCourses: student.completedCourses.map((cc) => ({
-          courseId: cc.courseId,
-          grade: cc.grade,
-          term: cc.term,
-        })),
-      }
-    : null
+  // Build completed courses for eligibility checks
+  const completedCoursesInfo: CompletedCourseInfo[] = student
+    ? student.completedCourses.map((cc) => ({
+        courseId: cc.courseId,
+        grade: cc.grade,
+        course: cc.course,
+      }))
+    : []
 
   const completedCourseIds = new Set(
     student?.completedCourses.map((cc) => cc.courseId) || []
@@ -125,25 +120,27 @@ function CoursesContent() {
 
   function getEligibilityStatus(courseData: CourseData) {
     if (completedCourseIds.has(courseData.id)) return "completed"
-    if (!studentForEligibility) return "unknown"
+    if (!student) return "unknown"
 
-    const transformed: Course = {
+    const transformed: CourseWithPrereqs = {
       id: courseData.id,
       code: courseData.code,
       title: courseData.title,
-      description: courseData.description,
       units: courseData.units,
       prerequisites: courseData.prerequisites.map((p) => ({
-        courseId: p.prerequisiteCourseId,
-        type: p.type.toLowerCase() as "hard" | "soft" | "corequisite",
+        prerequisiteCourseId: p.prerequisiteCourseId,
+        type: p.type,
       })),
-      termsOffered: courseData.termsOffered,
-      tags: courseData.tags,
     }
 
-    const result = checkEligibility(transformed, studentForEligibility)
+    const result = checkCourseEligibility(
+      transformed,
+      completedCoursesInfo,
+      { university: student.university }
+    )
+
     if (result.isEligible) {
-      if (result.softWarnings.length > 0 || result.corequisiteNeeded.length > 0)
+      if (result.softWarnings.length > 0 || result.corequisitesNeeded.length > 0)
         return "eligible-warnings"
       return "eligible"
     }

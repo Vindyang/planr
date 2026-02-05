@@ -22,8 +22,6 @@
   - [x] Created middleware for protected routes
   - [x] Integrated auth with Prisma schema
 
-### 🚧 In Progress
-
 - [x] **Step 3: Student Profile & Data Management**
   - [x] Created API endpoints for student data (CRUD via Server Actions)
   - [x] Dashboard fetches real student data from API
@@ -33,8 +31,24 @@
   - [x] GPA auto-calculates from completed course grades
   - [x] Credits earned sums actual course units
   - [x] Added API response types to lib/types.ts
-- [ ] **Step 4: Enhanced Eligibility System** - Not started
-- [ ] **Step 5: Course Catalog & Detail Pages** - Not started
+- [x] **Step 4: Enhanced Eligibility System**
+  - [x] Created `lib/eligibility/` module with 7 files
+  - [x] Implemented grade requirement checking (C or better for hard prereqs)
+  - [x] Implemented prerequisite graph traversal (DFS for chains)
+  - [x] Implemented topological sort for suggested course sequences
+  - [x] Created `/api/courses/[id]/eligibility` endpoint
+  - [x] Updated dashboard to use enhanced eligibility
+  - [x] Updated courses pages with eligibility status
+  - [x] Added grade deficiency warnings in UI
+- [x] **Step 5: Course Catalog & Detail Pages**
+  - [x] Course catalog page with search and filters
+  - [x] Course detail page with prerequisites display
+  - [x] Eligibility status badges on courses
+  - [x] "Why not eligible" explanations
+  - [x] Suggested course sequence display
+
+### 🚧 In Progress
+
 - [ ] **Step 6: Multi-Semester Planner** - Not started
 - [ ] **Step 7: Enhanced Dashboard** - Not started
 - [ ] **Step 8: User Experience Enhancements** - Not started
