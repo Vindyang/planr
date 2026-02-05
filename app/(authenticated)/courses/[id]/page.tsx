@@ -1,131 +1,52 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { getSession } from "@/lib/auth"
 import Link from "next/link"
+import { notFound, redirect } from "next/navigation"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
-import { EligibilityCheckResponse, EligibilityStatus } from "@/lib/eligibility"
+import { EligibilityStatus } from "@/lib/eligibility"
+import { getCourseWithPrerequisites } from "@/lib/data/courses"
+import { getStudentProfile } from "@/lib/data/students"
+import { getEligibilityForCourse } from "@/lib/eligibility/service"
 
-interface PrerequisiteDetail {
-  id: string
-  type: string
-  prerequisiteCourse: {
-    id: string
-    code: string
-    title: string
-    units: number
-  }
-}
-
-interface DependentCourse {
-  id: string
-  type: string
-  course: {
-    id: string
-    code: string
-    title: string
-    units: number
-  }
-}
-
-interface CourseDetail {
-  id: string
-  code: string
-  title: string
-  description: string
-  units: number
-  termsOffered: string[]
-  tags: string[]
-  isActive: boolean
-  prerequisites: PrerequisiteDetail[]
-  prerequisiteFor: DependentCourse[]
-}
-
-interface StudentData {
-  id: string
-  completedCourses: Array<{
-    courseId: string
-    grade: string
-  }>
-}
-
-export default function CourseDetailPage() {
-  const params = useParams()
-  const [course, setCourse] = useState<CourseDetail | null>(null)
-  const [student, setStudent] = useState<StudentData | null>(null)
-  const [eligibility, setEligibility] = useState<EligibilityCheckResponse | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState("")
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [courseRes, profileRes] = await Promise.all([
-          fetch(`/api/courses/${params.id}`),
-          fetch("/api/student/profile"),
-        ])
-
-        if (courseRes.ok) {
-          const data = await courseRes.json()
-          setCourse(data.course)
-        } else {
-          setError("Course not found")
-        }
-
-        if (profileRes.ok) {
-          const data = await profileRes.json()
-          setStudent(data.student)
-        }
-
-        // Fetch eligibility data
-        const eligibilityRes = await fetch(`/api/courses/${params.id}/eligibility`)
-        if (eligibilityRes.ok) {
-          const eligibilityData = await eligibilityRes.json()
-          setEligibility(eligibilityData)
-        }
-      } catch {
-        setError("Failed to load course")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [params.id])
-
-  if (isLoading) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading course...</p>
-        </div>
-      </AppLayout>
-    )
+export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await getSession()
+  if (!session?.user) {
+    redirect("/login")
   }
 
-  if (error || !course) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-red-500">{error || "Course not found"}</p>
-        </div>
-      </AppLayout>
-    )
+  const { id } = await params
+
+  // 1. Parallel Data Fetching
+  const [course, student] = await Promise.all([
+    getCourseWithPrerequisites(id),
+    getStudentProfile(session.user.id),
+  ])
+
+  if (!course) {
+    notFound()
   }
 
+  // 2. Derive State
   const completedIds = new Set(student?.completedCourses.map((c) => c.courseId) || [])
   const completedGrades = new Map(student?.completedCourses.map((c) => [c.courseId, c.grade]) || [])
   const isCompleted = completedIds.has(course.id)
 
+  // 3. Check Eligibility (if needed)
+  let eligibility = null
+  if (!isCompleted && student) {
+    // Pass pre-fetched objects to avoid re-fetching
+    eligibility = await getEligibilityForCourse(session.user.id, id, student, course)
+  }
+
+  // Helper for UI logic
   const typeLabel: Record<string, string> = {
     HARD: "Required",
     SOFT: "Recommended",
     COREQUISITE: "Corequisite",
   }
 
-  // Check if a prerequisite has a grade deficiency
   const getGradeDeficiency = (prereqCourseId: string) => {
     return eligibility?.eligibility.gradeDeficiencies.find(
       (g) => g.courseId === prereqCourseId
@@ -306,8 +227,8 @@ export default function CourseDetailPage() {
                             prereq.type === "HARD"
                               ? "bg-red-50 text-red-700 border border-red-200"
                               : prereq.type === "SOFT"
-                                ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                : "bg-blue-50 text-blue-700 border border-blue-200"
+                              ? "bg-amber-50 text-amber-700 border border-amber-200"
+                              : "bg-blue-50 text-blue-700 border border-blue-200"
                           }`}
                         >
                           {typeLabel[prereq.type] || prereq.type}
