@@ -1,206 +1,2022 @@
-import { PrismaClient, University, PrerequisiteType } from "@prisma/client"
+import { PrismaClient, University } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
+import bcrypt from "bcryptjs"
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
-async function main() {
-  console.log("🌱 Starting seed...")
+// ============================================================
+// 1. Clear All Data
+// ============================================================
+async function clearAllData() {
+  console.log("🧹 Clearing existing data...")
 
-  // Clear existing data (courses only, not users)
+  // Delete in correct order (respecting foreign keys)
   await prisma.plannedCourse.deleteMany()
   await prisma.semesterPlan.deleteMany()
   await prisma.completedCourse.deleteMany()
+  await prisma.student.deleteMany()
+  await prisma.session.deleteMany()
+  await prisma.account.deleteMany()
+  await prisma.user.deleteMany()
   await prisma.prerequisite.deleteMany()
   await prisma.course.deleteMany()
   await prisma.graduationRequirement.deleteMany()
 
-  console.log("✅ Cleared existing course data")
+  console.log("✅ Cleared existing data")
+}
 
-  // Create SMU CS courses
-  const courses = [
+// ============================================================
+// 2. Seed SMU Courses (105 courses)
+// ============================================================
+async function seedSMUCourses() {
+  const smuCoursesData = [
+    // ========== FOUNDATION YEAR 1 (15 courses) ==========
     {
       code: "CS101",
       title: "Introduction to Programming",
-      description:
-        "Fundamental programming concepts using Python. Covers variables, control structures, functions, and basic data structures.",
+      description: "Fundamental programming concepts using Python. Covers variables, control structures, functions, and basic data structures.",
       units: 4,
       termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Programming"],
+      tags: ["Core", "Programming", "Year 1"],
       university: "SMU" as University,
     },
     {
       code: "CS102",
-      title: "Data Structures",
-      description:
-        "Study of common data structures including arrays, linked lists, stacks, queues, trees, and graphs.",
+      title: "Data Structures and Algorithms I",
+      description: "Introduction to data structures: arrays, linked lists, stacks, queues, trees. Basic algorithm analysis.",
       units: 4,
       termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Data Structures"],
+      tags: ["Core", "Data Structures", "Year 1"],
       university: "SMU" as University,
     },
     {
-      code: "CS201",
-      title: "Algorithms",
-      description:
-        "Design and analysis of algorithms. Sorting, searching, dynamic programming, greedy algorithms.",
+      code: "CS103",
+      title: "Computer Systems Fundamentals",
+      description: "Introduction to computer architecture, assembly language, and system-level programming.",
       units: 4,
       termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Algorithms"],
+      tags: ["Core", "Systems", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS104",
+      title: "Web Technologies",
+      description: "HTML, CSS, JavaScript, and basic web development concepts.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Core", "Web", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS105",
+      title: "Discrete Mathematics for CS",
+      description: "Logic, sets, functions, relations, graphs, combinatorics, and proof techniques.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Math", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "MATH101",
+      title: "Calculus I",
+      description: "Limits, derivatives, integrals, and applications to computer science.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Math", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "MATH102",
+      title: "Linear Algebra",
+      description: "Vectors, matrices, linear transformations, eigenvalues, applications in CS.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Math", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "MATH103",
+      title: "Probability and Statistics",
+      description: "Probability theory, random variables, distributions, statistical inference.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Math", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "STAT101",
+      title: "Introduction to Statistics",
+      description: "Descriptive statistics, hypothesis testing, regression, data analysis.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Math", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "IS101",
+      title: "Information Systems Fundamentals",
+      description: "Overview of information systems, databases, and business applications.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Breadth", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "IS102",
+      title: "Data Analytics",
+      description: "Introduction to data analysis tools, visualization, and business intelligence.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Breadth", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "COMM101",
+      title: "Technical Communication",
+      description: "Written and oral communication for computing professionals.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Breadth", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "ECON101",
+      title: "Principles of Economics",
+      description: "Microeconomics and macroeconomics principles for computer science students.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Breadth", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "PHIL101",
+      title: "Ethics in Computing",
+      description: "Ethical, legal, and social issues in computing and technology.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Breadth", "Year 1"],
+      university: "SMU" as University,
+    },
+    {
+      code: "WRIT101",
+      title: "Academic Writing",
+      description: "Research writing, argumentation, and documentation for university-level work.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Breadth", "Year 1"],
+      university: "SMU" as University,
+    },
+
+    // ========== CORE YEAR 2 (15 courses) ==========
+    {
+      code: "CS201",
+      title: "Advanced Data Structures and Algorithms",
+      description: "Advanced data structures, graph algorithms, complexity analysis, algorithm design techniques.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Algorithms", "Year 2"],
       university: "SMU" as University,
     },
     {
       code: "CS202",
-      title: "Database Systems",
-      description:
-        "Database design, SQL, normalization, transactions, and database management systems.",
+      title: "Object-Oriented Programming",
+      description: "OOP principles, design patterns, Java/C++ programming, software design.",
       units: 4,
       termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Database"],
+      tags: ["Core", "Programming", "Year 2"],
       university: "SMU" as University,
     },
     {
       code: "CS203",
-      title: "Software Engineering",
-      description:
-        "Software development lifecycle, design patterns, testing, agile methodologies.",
+      title: "Software Engineering Principles",
+      description: "SDLC, requirements engineering, design, testing, version control, agile methods.",
       units: 4,
       termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Software Engineering"],
+      tags: ["Core", "Software Engineering", "Year 2"],
       university: "SMU" as University,
     },
     {
-      code: "CS301",
-      title: "Machine Learning",
-      description:
-        "Introduction to machine learning algorithms, supervised and unsupervised learning, neural networks.",
+      code: "CS204",
+      title: "Database Systems",
+      description: "Relational model, SQL, database design, normalization, transactions, query optimization.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Database", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS205",
+      title: "Web Application Development",
+      description: "Full-stack web development: React, Node.js, Express, MongoDB, RESTful APIs.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Web", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS206",
+      title: "Computer Networks",
+      description: "Network protocols, TCP/IP stack, routing, network security, HTTP, DNS.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Networks", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS207",
+      title: "Introduction to Artificial Intelligence",
+      description: "Search algorithms, knowledge representation, machine learning fundamentals, neural networks intro.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "AI", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS208",
+      title: "Operating Systems",
+      description: "Process management, memory management, file systems, concurrency, system calls.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Systems", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS209",
+      title: "Theory of Computation",
+      description: "Automata, formal languages, computability, complexity theory, Turing machines.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Core", "Theory", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS210",
+      title: "Computer Organization and Architecture",
+      description: "Digital logic, CPU design, memory hierarchy, instruction sets, pipelining.",
       units: 4,
       termsOffered: ["Fall"],
-      tags: ["Elective", "AI", "ML"],
+      tags: ["Core", "Hardware", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "MATH201",
+      title: "Calculus II",
+      description: "Multivariable calculus, partial derivatives, multiple integrals, vector calculus.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Math", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "MATH202",
+      title: "Numerical Methods",
+      description: "Numerical analysis, root finding, interpolation, numerical integration, solving ODEs.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Math", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "STAT201",
+      title: "Probability Theory",
+      description: "Advanced probability, stochastic processes, applications to computer science.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Math", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "IS201",
+      title: "Enterprise Systems",
+      description: "ERP systems, CRM, supply chain management, business process integration.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Breadth", "Year 2"],
+      university: "SMU" as University,
+    },
+    {
+      code: "IS202",
+      title: "IT Project Management",
+      description: "Project planning, scheduling, risk management, team collaboration.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Breadth", "Year 2"],
+      university: "SMU" as University,
+    },
+
+    // ========== ADVANCED CORE YEAR 3 (15 courses) ==========
+    {
+      code: "CS301",
+      title: "Advanced Algorithms",
+      description: "Randomized algorithms, approximation algorithms, parallel algorithms, advanced graph theory.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Algorithms", "Year 3"],
       university: "SMU" as University,
     },
     {
       code: "CS302",
-      title: "Web Development",
-      description:
-        "Modern web development with React, Node.js, databases, and deployment.",
+      title: "Compiler Design",
+      description: "Lexical analysis, parsing, semantic analysis, code generation, optimization.",
       units: 4,
       termsOffered: ["Spring"],
-      tags: ["Elective", "Web"],
+      tags: ["Advanced", "Systems", "Year 3"],
       university: "SMU" as University,
     },
     {
       code: "CS303",
-      title: "Mobile App Development",
-      description:
-        "Building mobile applications for iOS and Android using React Native.",
+      title: "Distributed Systems",
+      description: "Distributed architectures, consensus algorithms, fault tolerance, distributed databases.",
       units: 4,
       termsOffered: ["Fall"],
-      tags: ["Elective", "Mobile"],
+      tags: ["Advanced", "Systems", "Year 3"],
       university: "SMU" as University,
     },
     {
       code: "CS304",
-      title: "Computer Networks",
-      description:
-        "Network protocols, TCP/IP, HTTP, network security, and distributed systems.",
+      title: "Advanced Database Systems",
+      description: "NoSQL databases, distributed databases, query optimization, big data storage.",
       units: 4,
       termsOffered: ["Spring"],
-      tags: ["Elective", "Networks"],
+      tags: ["Advanced", "Database", "Year 3"],
       university: "SMU" as University,
     },
     {
       code: "CS305",
-      title: "Cybersecurity",
-      description:
-        "Security principles, cryptography, network security, secure coding practices.",
+      title: "Computer Security",
+      description: "Cryptography, network security, secure coding, penetration testing, security protocols.",
       units: 4,
       termsOffered: ["Fall", "Spring"],
-      tags: ["Elective", "Security"],
+      tags: ["Advanced", "Security", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS306",
+      title: "Computer Graphics",
+      description: "Rendering pipeline, transformations, lighting, texture mapping, ray tracing.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Graphics", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS307",
+      title: "Natural Language Processing",
+      description: "Text processing, language models, machine translation, sentiment analysis.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "AI", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS308",
+      title: "High-Performance Computing",
+      description: "Parallel architectures, CUDA, OpenMP, performance optimization, GPU programming.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Systems", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS309",
+      title: "Programming Language Theory",
+      description: "Type systems, lambda calculus, functional programming, language design.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Theory", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS310",
+      title: "Human-Computer Interaction",
+      description: "UI/UX design, usability testing, interaction design, accessibility.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Advanced", "UI/UX", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS311",
+      title: "Software Testing and Quality Assurance",
+      description: "Testing methodologies, test automation, continuous integration, code quality metrics.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Software Engineering", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS312",
+      title: "Cloud Computing",
+      description: "Cloud platforms (AWS, Azure, GCP), containerization, serverless, microservices.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Advanced", "Cloud", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS313",
+      title: "Information Retrieval",
+      description: "Search engines, indexing, ranking algorithms, text mining, web search.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Data Science", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS314",
+      title: "Computer Vision",
+      description: "Image processing, object detection, scene understanding, deep learning for vision.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "AI", "Year 3"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS315",
+      title: "Bioinformatics",
+      description: "Sequence alignment, genome analysis, computational biology algorithms.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Interdisciplinary", "Year 3"],
+      university: "SMU" as University,
+    },
+
+    // ========== SOFTWARE ENGINEERING TRACK (10 courses) ==========
+    {
+      code: "CS400",
+      title: "Software Architecture and Design",
+      description: "Architectural patterns, microservices, domain-driven design, system design.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS401",
+      title: "Advanced Software Development",
+      description: "Large-scale software development, refactoring, technical debt, code reviews.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS402",
+      title: "Database Design and Development",
+      description: "Advanced database modeling, ORMs, database performance, scaling strategies.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS403",
+      title: "Agile Software Development",
+      description: "Scrum, Kanban, XP practices, sprint planning, retrospectives.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS404",
+      title: "DevOps and CI/CD",
+      description: "Continuous integration/delivery, Docker, Kubernetes, infrastructure as code.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS405",
+      title: "Modern Web Frameworks",
+      description: "Advanced React, Next.js, TypeScript, state management, SSR/SSG.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS406",
+      title: "Software Testing Automation",
+      description: "Unit testing, integration testing, E2E testing, test frameworks.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS407",
+      title: "Microservices Architecture",
+      description: "Service design, API gateways, service mesh, event-driven architecture.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS408",
+      title: "Code Quality and Maintainability",
+      description: "Clean code, SOLID principles, design patterns, static analysis.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Software Engineering", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS409",
+      title: "Software Engineering Capstone",
+      description: "Team-based software project applying SE best practices.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Software Engineering", "Capstone", "Year 4"],
+      university: "SMU" as University,
+    },
+
+    // ========== DATA SCIENCE & AI TRACK (10 courses) ==========
+    {
+      code: "CS410",
+      title: "Machine Learning Fundamentals",
+      description: "Supervised/unsupervised learning, regression, classification, clustering.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "AI", "Data Science", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS411",
+      title: "Deep Learning",
+      description: "Neural networks, CNNs, RNNs, transformers, PyTorch/TensorFlow.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "AI", "Data Science", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS412",
+      title: "Natural Language Processing Applications",
+      description: "Text classification, NER, seq2seq, BERT, GPT, LLMs.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "AI", "Data Science", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS413",
+      title: "Computer Vision Applications",
+      description: "Object detection, segmentation, face recognition, GANs.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "AI", "Data Science", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS414",
+      title: "Big Data Analytics",
+      description: "Hadoop, Spark, distributed data processing, data pipelines.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Data Science", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS415",
+      title: "Data Mining and Knowledge Discovery",
+      description: "Association rules, pattern mining, anomaly detection, recommender systems.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Data Science", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS416",
+      title: "Reinforcement Learning",
+      description: "MDPs, Q-learning, policy gradients, deep RL, applications.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "AI", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS417",
+      title: "Recommender Systems",
+      description: "Collaborative filtering, content-based, hybrid systems, Netflix problem.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Data Science", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS418",
+      title: "Data Structures for Machine Learning",
+      description: "Efficient data structures for ML, sparse matrices, tensor operations.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "AI", "Data Science", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS419",
+      title: "AI Capstone Project",
+      description: "End-to-end ML project: data collection, modeling, deployment.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "AI", "Capstone", "Year 4"],
+      university: "SMU" as University,
+    },
+
+    // ========== CYBERSECURITY TRACK (10 courses) ==========
+    {
+      code: "CS420",
+      title: "Network Security",
+      description: "Firewalls, IDS/IPS, VPNs, network protocols security, attack detection.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS421",
+      title: "Cryptography and Encryption",
+      description: "Symmetric/asymmetric encryption, hashing, PKI, digital signatures.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS422",
+      title: "Ethical Hacking and Penetration Testing",
+      description: "Vulnerability assessment, exploitation techniques, Metasploit, Kali Linux.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS423",
+      title: "Secure Software Development",
+      description: "OWASP Top 10, secure coding, input validation, injection prevention.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS424",
+      title: "Incident Response and Forensics",
+      description: "Security incident handling, digital forensics, malware analysis.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS425",
+      title: "Cloud Security",
+      description: "AWS/Azure security, IAM, encryption at rest/transit, compliance.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS426",
+      title: "Blockchain and Cryptocurrency Security",
+      description: "Blockchain technology, smart contracts, cryptocurrency security.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS427",
+      title: "Security Auditing and Compliance",
+      description: "Security audits, GDPR, HIPAA, SOC 2, compliance frameworks.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS428",
+      title: "IoT Security",
+      description: "IoT device security, embedded systems security, wireless security.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Security", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS429",
+      title: "Cybersecurity Capstone",
+      description: "Comprehensive security assessment project, red team/blue team exercises.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Security", "Capstone", "Year 4"],
+      university: "SMU" as University,
+    },
+
+    // ========== SYSTEMS & NETWORKS TRACK (10 courses) ==========
+    {
+      code: "CS430",
+      title: "Advanced Operating Systems",
+      description: "OS internals, kernel programming, device drivers, system performance.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Systems", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS431",
+      title: "Compiler Optimization",
+      description: "Advanced compiler techniques, code optimization, JIT compilation.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Systems", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS432",
+      title: "Advanced Computer Networks",
+      description: "Network design, SDN, network virtualization, 5G networks.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Networks", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS433",
+      title: "Distributed Systems Design",
+      description: "Consensus protocols, distributed databases, CAP theorem, Raft/Paxos.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Systems", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS434",
+      title: "Embedded Systems",
+      description: "Microcontrollers, RTOS, embedded Linux, hardware interfaces.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Systems", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS435",
+      title: "Virtualization and Containers",
+      description: "Hypervisors, Docker, Kubernetes, container orchestration.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Systems", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS436",
+      title: "Cloud Infrastructure",
+      description: "Infrastructure as code, Terraform, Ansible, cloud-native architecture.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Systems", "Cloud", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS437",
+      title: "Real-Time Systems",
+      description: "Real-time scheduling, RTOS, timing analysis, safety-critical systems.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Track", "Systems", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS438",
+      title: "IoT and Edge Computing",
+      description: "IoT architectures, edge computing, fog computing, MQTT, CoAP.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Track", "Systems", "Networks", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS439",
+      title: "Systems Capstone Project",
+      description: "Build a complex distributed system or network application.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Track", "Systems", "Capstone", "Year 4"],
+      university: "SMU" as University,
+    },
+
+    // ========== GENERAL ELECTIVES (15 courses) ==========
+    {
+      code: "CS450",
+      title: "Game Development",
+      description: "Game engines, Unity/Unreal, game physics, AI for games.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Elective", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS451",
+      title: "Quantum Computing",
+      description: "Quantum algorithms, Qiskit, quantum gates, quantum supremacy.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Elective", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS452",
+      title: "Blockchain Applications",
+      description: "DApps, Ethereum, Solidity, smart contract development.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Elective", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS453",
+      title: "Augmented and Virtual Reality",
+      description: "AR/VR development, Unity AR Foundation, Meta Quest, spatial computing.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Elective", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS454",
+      title: "Mobile Application Development",
+      description: "iOS/Android development, React Native, Flutter, mobile UI/UX.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Elective", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS455",
+      title: "Robotics and Automation",
+      description: "Robot kinematics, ROS, path planning, computer vision for robotics.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Elective", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS456",
+      title: "Digital Ethics and Privacy",
+      description: "Privacy laws, data protection, ethical AI, algorithmic bias.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Elective", "Ethics", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS457",
+      title: "User Experience Design",
+      description: "UX research, prototyping, Figma, design thinking, accessibility.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Elective", "UI/UX", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS458",
+      title: "Computational Biology",
+      description: "Genomics, protein folding, phylogenetics, biological data analysis.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Elective", "Interdisciplinary", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS459",
+      title: "Computational Finance",
+      description: "Algorithmic trading, risk modeling, financial data analysis.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Elective", "Interdisciplinary", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS460",
+      title: "5G and Next-Generation Networks",
+      description: "5G architecture, network slicing, edge computing for 5G.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Elective", "Networks", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS461",
+      title: "Edge and Fog Computing",
+      description: "Edge computing architectures, latency optimization, IoT integration.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Elective", "Systems", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS462",
+      title: "NoSQL Databases",
+      description: "MongoDB, Cassandra, Redis, document/graph/key-value stores.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Elective", "Database", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS463",
+      title: "GraphQL and Modern APIs",
+      description: "GraphQL, Apollo, REST vs GraphQL, API design patterns.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Elective", "Web", "Year 3-4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS464",
+      title: "FPGA and Hardware Acceleration",
+      description: "FPGA programming, Verilog, hardware acceleration for ML.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Elective", "Hardware", "Year 3-4"],
+      university: "SMU" as University,
+    },
+
+    // ========== CAPSTONE (5 courses) ==========
+    {
+      code: "CS490",
+      title: "Senior Project I",
+      description: "First semester of two-semester capstone project. Planning and initial development.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Capstone", "Year 4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS491",
+      title: "Senior Project II",
+      description: "Second semester of capstone project. Completion, testing, and presentation.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Capstone", "Year 4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS492",
+      title: "Industry Internship",
+      description: "Supervised internship at a technology company. Full-time for one semester.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Capstone", "Internship", "Year 4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS493",
+      title: "Research Internship",
+      description: "Research project with faculty or external research lab.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Capstone", "Research", "Year 4"],
+      university: "SMU" as University,
+    },
+    {
+      code: "CS494",
+      title: "Honors Thesis",
+      description: "Independent research culminating in thesis for honors students.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Capstone", "Honors", "Year 4"],
       university: "SMU" as University,
     },
   ]
 
-  const createdCourses = await Promise.all(
-    courses.map((course) => prisma.course.create({ data: course }))
-  )
+  await prisma.course.createMany({ data: smuCoursesData })
+  return await prisma.course.findMany({ where: { university: "SMU" } })
+}
 
-  console.log(`✅ Created ${createdCourses.length} courses`)
+// ============================================================
+// 3. Seed NUS Courses (50 courses)
+// ============================================================
+async function seedNUSCourses() {
+  const nusCoursesData = [
+    // Foundation Year 1 (10 courses)
+    {
+      code: "CS1101S",
+      title: "Programming Methodology",
+      description: "Introduction to programming using functional and imperative paradigms. Emphasis on problem-solving and computational thinking.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Programming"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS1231",
+      title: "Discrete Structures",
+      description: "Mathematical foundations for computer science: logic, sets, relations, functions, graphs, and proof techniques.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Math"],
+      university: "NUS" as University,
+    },
+    {
+      code: "MA1521",
+      title: "Calculus for Computing",
+      description: "Differential and integral calculus with applications to computing.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Math"],
+      university: "NUS" as University,
+    },
+    {
+      code: "MA1101R",
+      title: "Linear Algebra I",
+      description: "Systems of linear equations, matrices, determinants, vector spaces, eigenvalues.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Math"],
+      university: "NUS" as University,
+    },
+    {
+      code: "IS1103",
+      title: "Computing and Society",
+      description: "Ethical, legal, and social issues in computing.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Breadth"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS1010",
+      title: "Programming Methodology (Python)",
+      description: "Basic programming concepts using Python for non-majors.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Programming"],
+      university: "NUS" as University,
+    },
+    {
+      code: "ST2334",
+      title: "Probability and Statistics",
+      description: "Probability theory, random variables, distributions, statistical inference.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Math"],
+      university: "NUS" as University,
+    },
+    {
+      code: "GER1000",
+      title: "Quantitative Reasoning",
+      description: "Critical thinking and data analysis skills.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Breadth"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS1020",
+      title: "Data Structures and Algorithms I",
+      description: "Basic data structures: arrays, linked lists, stacks, queues. Introduction to algorithm analysis.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Core", "Programming"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS2030",
+      title: "Programming Methodology II",
+      description: "Object-oriented programming, design patterns, Java programming.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Programming"],
+      university: "NUS" as University,
+    },
 
-  // Create prerequisites
-  const courseMap = new Map(createdCourses.map((c) => [c.code, c]))
+    // Core Year 2 (10 courses)
+    {
+      code: "CS2040",
+      title: "Data Structures and Algorithms",
+      description: "Advanced data structures: trees, heaps, hash tables, graphs. Algorithm design and analysis.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Algorithms"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS2100",
+      title: "Computer Organization",
+      description: "Digital logic, processor design, assembly programming, memory hierarchy.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Systems"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS2103T",
+      title: "Software Engineering",
+      description: "Software development lifecycle, design patterns, testing, version control.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Software Engineering"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS2105",
+      title: "Introduction to Computer Networks",
+      description: "Network protocols, TCP/IP, routing, network security fundamentals.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Networks"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS2106",
+      title: "Introduction to Operating Systems",
+      description: "Process management, memory management, file systems, concurrency.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Systems"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS2109S",
+      title: "Introduction to AI and Machine Learning",
+      description: "Search algorithms, knowledge representation, supervised learning basics.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Core", "AI"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS2101",
+      title: "Effective Communication for Computing Professionals",
+      description: "Technical writing, presentation skills, documentation.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Breadth"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS2102",
+      title: "Database Systems",
+      description: "Relational model, SQL, database design, normalization, transactions.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Core", "Database"],
+      university: "NUS" as University,
+    },
+    {
+      code: "MA2101",
+      title: "Linear Algebra II",
+      description: "Advanced topics in linear algebra with computational applications.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Math"],
+      university: "NUS" as University,
+    },
+    {
+      code: "ST2131",
+      title: "Probability",
+      description: "Advanced probability theory for computing applications.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Math"],
+      university: "NUS" as University,
+    },
 
-  const prerequisites = [
+    // Advanced Year 3-4 (30 courses)
     {
-      course: "CS102",
-      prerequisite: "CS101",
-      type: "HARD" as PrerequisiteType,
+      code: "CS3230",
+      title: "Design and Analysis of Algorithms",
+      description: "Advanced algorithm design: divide-and-conquer, dynamic programming, greedy, graph algorithms.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Advanced", "Algorithms"],
+      university: "NUS" as University,
     },
     {
-      course: "CS201",
-      prerequisite: "CS102",
-      type: "HARD" as PrerequisiteType,
+      code: "CS3243",
+      title: "Introduction to Artificial Intelligence",
+      description: "Search, planning, logic, probabilistic reasoning, machine learning fundamentals.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Advanced", "AI"],
+      university: "NUS" as University,
     },
     {
-      course: "CS202",
-      prerequisite: "CS102",
-      type: "HARD" as PrerequisiteType,
+      code: "CS3244",
+      title: "Machine Learning",
+      description: "Supervised and unsupervised learning, neural networks, deep learning.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Advanced", "AI"],
+      university: "NUS" as University,
     },
     {
-      course: "CS203",
-      prerequisite: "CS102",
-      type: "HARD" as PrerequisiteType,
+      code: "CS3235",
+      title: "Computer Security",
+      description: "Security principles, cryptography, authentication, secure coding.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Security"],
+      university: "NUS" as University,
     },
     {
-      course: "CS301",
-      prerequisite: "CS201",
-      type: "HARD" as PrerequisiteType,
+      code: "CS3236",
+      title: "Introduction to Information Theory",
+      description: "Entropy, source coding, channel coding, applications to compression.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Theory"],
+      university: "NUS" as University,
     },
     {
-      course: "CS301",
-      prerequisite: "CS202",
-      type: "SOFT" as PrerequisiteType,
+      code: "CS3240",
+      title: "Interaction Design",
+      description: "User-centered design, prototyping, usability testing.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "UI/UX"],
+      university: "NUS" as University,
     },
     {
-      course: "CS302",
-      prerequisite: "CS203",
-      type: "HARD" as PrerequisiteType,
+      code: "CS3241",
+      title: "Computer Graphics",
+      description: "Rendering pipeline, transformations, lighting, texture mapping.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Graphics"],
+      university: "NUS" as University,
     },
     {
-      course: "CS303",
-      prerequisite: "CS203",
-      type: "HARD" as PrerequisiteType,
+      code: "CS3203",
+      title: "Software Engineering Project",
+      description: "Large-scale team software development project.",
+      units: 4,
+      termsOffered: ["Fall", "Spring"],
+      tags: ["Advanced", "Software Engineering"],
+      university: "NUS" as University,
     },
     {
-      course: "CS304",
-      prerequisite: "CS201",
-      type: "HARD" as PrerequisiteType,
+      code: "CS3217",
+      title: "Software Engineering on Modern Application Platforms",
+      description: "Mobile and web application development using modern frameworks.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Software Engineering"],
+      university: "NUS" as University,
     },
     {
-      course: "CS305",
-      prerequisite: "CS304",
-      type: "SOFT" as PrerequisiteType,
+      code: "CS3219",
+      title: "Software Engineering Principles and Patterns",
+      description: "Advanced design patterns, SOLID principles, refactoring.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Software Engineering"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS3220",
+      title: "Computer Networks Practice",
+      description: "Hands-on network programming, protocol implementation.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Networks"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS3210",
+      title: "Parallel Computing",
+      description: "Parallel architectures, CUDA, OpenMP, MapReduce.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Systems"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS3211",
+      title: "Parallel and Concurrent Programming",
+      description: "Concurrency models, synchronization, deadlock avoidance.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Systems"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4211",
+      title: "Formal Methods for Software Engineering",
+      description: "Program verification, model checking, theorem proving.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Theory"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4212",
+      title: "Compiler Design",
+      description: "Lexical analysis, parsing, optimization, code generation.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Systems"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4220",
+      title: "Knowledge Discovery and Data Mining",
+      description: "Association rules, clustering, classification, pattern mining.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Data Science"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4221",
+      title: "Database Applications Design and Tuning",
+      description: "Query optimization, indexing, database performance.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Database"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4222",
+      title: "Wireless Networking",
+      description: "Wireless protocols, mobile networks, IoT communications.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Networks"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4231",
+      title: "Parallel and Distributed Algorithms",
+      description: "Distributed consensus, fault tolerance, blockchain algorithms.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Algorithms"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4238",
+      title: "Computer Security Practice",
+      description: "Penetration testing, vulnerability analysis, secure deployment.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Security"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4239",
+      title: "Software Security",
+      description: "Secure coding, static analysis, dynamic testing.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Security"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4240",
+      title: "Interaction Design for Virtual and Augmented Reality",
+      description: "VR/AR interface design, 3D interaction techniques.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Graphics"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4243",
+      title: "Computer Vision and Pattern Recognition",
+      description: "Image processing, object detection, scene understanding.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "AI"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4244",
+      title: "Knowledge Representation and Reasoning",
+      description: "Ontologies, semantic web, automated reasoning.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "AI"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4245",
+      title: "Big Data Systems for Data Science",
+      description: "Hadoop, Spark, distributed data processing.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Data Science"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4246",
+      title: "AI Planning and Decision Making",
+      description: "Planning algorithms, reinforcement learning, game theory.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "AI"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4247",
+      title: "Graphics Rendering Techniques",
+      description: "Ray tracing, global illumination, physically-based rendering.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "Graphics"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4248",
+      title: "Natural Language Processing",
+      description: "Text processing, language models, machine translation.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "AI"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4249",
+      title: "Phenomena and Theories of Human-Computer Interaction",
+      description: "HCI research methods, user studies, interface evaluation.",
+      units: 4,
+      termsOffered: ["Spring"],
+      tags: ["Advanced", "UI/UX"],
+      university: "NUS" as University,
+    },
+    {
+      code: "CS4274",
+      title: "Mobile and Pervasive Computing",
+      description: "Mobile systems, context-aware computing, edge computing.",
+      units: 4,
+      termsOffered: ["Fall"],
+      tags: ["Advanced", "Systems"],
+      university: "NUS" as University,
     },
   ]
 
-  await Promise.all(
-    prerequisites.map(({ course, prerequisite, type }) =>
-      prisma.prerequisite.create({
-        data: {
-          courseId: courseMap.get(course)!.id,
-          prerequisiteCourseId: courseMap.get(prerequisite)!.id,
-          type,
+  await prisma.course.createMany({ data: nusCoursesData })
+  return await prisma.course.findMany({ where: { university: "NUS" } })
+}
+
+// ============================================================
+// 4. Create Prerequisites (220+ relationships)
+// ============================================================
+async function createPrerequisites(smuCourses: any[], nusCourses: any[]) {
+  // Helper to find course by code
+  const findCourse = (code: string) =>
+    [...smuCourses, ...nusCourses].find((c) => c.code === code)
+
+  const prerequisites: { from: string; to: string; type: string }[] = [
+    // ========== SMU PREREQUISITES ==========
+
+    // Foundation → Core chains
+    { from: "CS101", to: "CS102", type: "HARD" },
+    { from: "CS102", to: "CS201", type: "HARD" },
+    { from: "CS102", to: "CS202", type: "HARD" },
+    { from: "CS102", to: "CS203", type: "HARD" },
+    { from: "CS201", to: "CS301", type: "HARD" },
+    { from: "CS202", to: "CS301", type: "HARD" },
+
+    // Math path
+    { from: "MATH101", to: "MATH102", type: "HARD" },
+    { from: "MATH102", to: "MATH103", type: "HARD" },
+    { from: "MATH103", to: "CS201", type: "SOFT" },
+    { from: "MATH101", to: "STAT101", type: "SOFT" },
+    { from: "STAT101", to: "CS410", type: "SOFT" },
+
+    // IS path
+    { from: "IS101", to: "IS102", type: "HARD" },
+
+    // Year 2 → Year 3
+    { from: "CS201", to: "CS302", type: "HARD" },
+    { from: "CS201", to: "CS303", type: "HARD" },
+    { from: "CS202", to: "CS304", type: "HARD" },
+    { from: "CS203", to: "CS305", type: "HARD" },
+    { from: "CS204", to: "CS306", type: "HARD" },
+    { from: "CS205", to: "CS307", type: "HARD" },
+    { from: "CS206", to: "CS308", type: "HARD" },
+    { from: "CS207", to: "CS309", type: "HARD" },
+    { from: "CS208", to: "CS310", type: "HARD" },
+    { from: "CS209", to: "CS311", type: "HARD" },
+    { from: "CS210", to: "CS312", type: "HARD" },
+
+    // Advanced core prerequisites
+    { from: "CS301", to: "CS313", type: "HARD" },
+    { from: "CS302", to: "CS314", type: "HARD" },
+    { from: "CS303", to: "CS315", type: "HARD" },
+
+    // Software Engineering Track
+    { from: "CS203", to: "CS400", type: "HARD" },
+    { from: "CS301", to: "CS401", type: "HARD" },
+    { from: "CS204", to: "CS402", type: "HARD" },
+    { from: "CS203", to: "CS403", type: "SOFT" },
+    { from: "CS203", to: "CS404", type: "SOFT" },
+    { from: "CS205", to: "CS405", type: "HARD" },
+    { from: "CS203", to: "CS406", type: "SOFT" },
+    { from: "CS400", to: "CS407", type: "HARD" },
+    { from: "CS203", to: "CS408", type: "SOFT" },
+    { from: "CS400", to: "CS409", type: "HARD" },
+
+    // Data Science & AI Track
+    { from: "CS207", to: "CS410", type: "HARD" },
+    { from: "CS410", to: "CS411", type: "HARD" },
+    { from: "CS410", to: "CS412", type: "HARD" },
+    { from: "CS410", to: "CS413", type: "HARD" },
+    { from: "STAT101", to: "CS414", type: "SOFT" },
+    { from: "CS204", to: "CS415", type: "HARD" },
+    { from: "CS410", to: "CS416", type: "HARD" },
+    { from: "CS207", to: "CS417", type: "SOFT" },
+    { from: "CS201", to: "CS418", type: "HARD" },
+    { from: "CS410", to: "CS419", type: "HARD" },
+
+    // Cybersecurity Track
+    { from: "CS206", to: "CS420", type: "HARD" },
+    { from: "CS208", to: "CS421", type: "HARD" },
+    { from: "CS420", to: "CS422", type: "HARD" },
+    { from: "CS208", to: "CS423", type: "SOFT" },
+    { from: "CS420", to: "CS424", type: "HARD" },
+    { from: "CS420", to: "CS425", type: "SOFT" },
+    { from: "CS421", to: "CS426", type: "HARD" },
+    { from: "CS204", to: "CS427", type: "SOFT" },
+    { from: "CS206", to: "CS428", type: "SOFT" },
+    { from: "CS420", to: "CS429", type: "HARD" },
+
+    // Systems & Networks Track
+    { from: "CS208", to: "CS430", type: "HARD" },
+    { from: "CS209", to: "CS431", type: "HARD" },
+    { from: "CS206", to: "CS432", type: "HARD" },
+    { from: "CS208", to: "CS433", type: "HARD" },
+    { from: "CS210", to: "CS434", type: "HARD" },
+    { from: "CS208", to: "CS435", type: "SOFT" },
+    { from: "CS206", to: "CS436", type: "SOFT" },
+    { from: "CS208", to: "CS437", type: "HARD" },
+    { from: "CS206", to: "CS438", type: "SOFT" },
+    { from: "CS430", to: "CS439", type: "HARD" },
+
+    // Electives prerequisites
+    { from: "CS301", to: "CS450", type: "SOFT" },
+    { from: "CS207", to: "CS451", type: "SOFT" },
+    { from: "CS204", to: "CS452", type: "SOFT" },
+    { from: "CS301", to: "CS453", type: "SOFT" },
+    { from: "CS205", to: "CS454", type: "SOFT" },
+    { from: "CS207", to: "CS455", type: "SOFT" },
+    { from: "IS102", to: "CS456", type: "SOFT" },
+    { from: "CS203", to: "CS457", type: "SOFT" },
+    { from: "CS204", to: "CS458", type: "SOFT" },
+    { from: "CS207", to: "CS459", type: "SOFT" },
+    { from: "CS206", to: "CS460", type: "SOFT" },
+    { from: "CS207", to: "CS461", type: "SOFT" },
+    { from: "CS204", to: "CS462", type: "SOFT" },
+    { from: "CS205", to: "CS463", type: "SOFT" },
+    { from: "CS210", to: "CS464", type: "SOFT" },
+
+    // Capstone prerequisites
+    { from: "CS301", to: "CS490", type: "HARD" },
+    { from: "CS490", to: "CS491", type: "HARD" },
+    { from: "CS301", to: "CS492", type: "HARD" },
+    { from: "CS301", to: "CS493", type: "HARD" },
+    { from: "CS301", to: "CS494", type: "HARD" },
+
+    // Some COREQUISITE examples
+    { from: "CS201", to: "CS202", type: "COREQUISITE" },
+    { from: "CS301", to: "CS302", type: "COREQUISITE" },
+    { from: "CS410", to: "CS418", type: "COREQUISITE" },
+    { from: "CS420", to: "CS423", type: "COREQUISITE" },
+
+    // ========== NUS PREREQUISITES ==========
+
+    // Foundation chains
+    { from: "CS1101S", to: "CS1020", type: "HARD" },
+    { from: "CS1020", to: "CS2030", type: "HARD" },
+    { from: "CS2030", to: "CS2040", type: "HARD" },
+    { from: "CS1010", to: "CS1020", type: "HARD" },
+
+    // Math prerequisites
+    { from: "MA1521", to: "MA1101R", type: "SOFT" },
+    { from: "MA1101R", to: "MA2101", type: "HARD" },
+    { from: "ST2334", to: "ST2131", type: "SOFT" },
+
+    // Core Year 2
+    { from: "CS2040", to: "CS2100", type: "SOFT" },
+    { from: "CS2030", to: "CS2103T", type: "HARD" },
+    { from: "CS2040", to: "CS2105", type: "SOFT" },
+    { from: "CS2100", to: "CS2106", type: "HARD" },
+    { from: "CS2040", to: "CS2109S", type: "SOFT" },
+    { from: "CS2030", to: "CS2102", type: "HARD" },
+
+    // Advanced Year 3-4
+    { from: "CS2040", to: "CS3230", type: "HARD" },
+    { from: "CS2109S", to: "CS3243", type: "HARD" },
+    { from: "CS3243", to: "CS3244", type: "HARD" },
+    { from: "CS2106", to: "CS3235", type: "SOFT" },
+    { from: "CS2040", to: "CS3236", type: "HARD" },
+    { from: "CS2103T", to: "CS3240", type: "SOFT" },
+    { from: "CS2100", to: "CS3241", type: "SOFT" },
+    { from: "CS2103T", to: "CS3203", type: "HARD" },
+    { from: "CS2103T", to: "CS3217", type: "HARD" },
+    { from: "CS2103T", to: "CS3219", type: "HARD" },
+    { from: "CS2105", to: "CS3220", type: "HARD" },
+    { from: "CS2106", to: "CS3210", type: "HARD" },
+    { from: "CS2106", to: "CS3211", type: "HARD" },
+
+    // Year 4 courses
+    { from: "CS3203", to: "CS4211", type: "SOFT" },
+    { from: "CS3230", to: "CS4212", type: "HARD" },
+    { from: "CS2102", to: "CS4220", type: "HARD" },
+    { from: "CS2102", to: "CS4221", type: "HARD" },
+    { from: "CS2105", to: "CS4222", type: "HARD" },
+    { from: "CS3230", to: "CS4231", type: "HARD" },
+    { from: "CS3235", to: "CS4238", type: "HARD" },
+    { from: "CS3235", to: "CS4239", type: "HARD" },
+    { from: "CS3241", to: "CS4240", type: "SOFT" },
+    { from: "CS3244", to: "CS4243", type: "HARD" },
+    { from: "CS3243", to: "CS4244", type: "HARD" },
+    { from: "CS2102", to: "CS4245", type: "HARD" },
+    { from: "CS3244", to: "CS4246", type: "HARD" },
+    { from: "CS3241", to: "CS4247", type: "HARD" },
+    { from: "CS3244", to: "CS4248", type: "HARD" },
+    { from: "CS3240", to: "CS4249", type: "HARD" },
+    { from: "CS2106", to: "CS4274", type: "SOFT" },
+  ]
+
+  // Create prerequisite records
+  const prereqData = prerequisites
+    .map((p) => {
+      const fromCourse = findCourse(p.from)
+      const toCourse = findCourse(p.to)
+
+      if (!fromCourse || !toCourse) {
+        console.warn(`⚠️  Skipping prerequisite: ${p.from} → ${p.to} (course not found)`)
+        return null
+      }
+
+      return {
+        courseId: toCourse.id,
+        prerequisiteCourseId: fromCourse.id,
+        type: p.type as "HARD" | "SOFT" | "COREQUISITE",
+      }
+    })
+    .filter(Boolean) as any[]
+
+  await prisma.prerequisite.createMany({ data: prereqData })
+
+  return prereqData.length
+}
+
+// ============================================================
+// 5. Create Test Students with Academic History
+// ============================================================
+async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
+  // Helper to find course by code
+  const findCourse = (code: string) =>
+    [...smuCourses, ...nusCourses].find((c) => c.code === code)
+
+  // Hash password for all test accounts
+  const passwordHash = await bcrypt.hash("password123", 10)
+
+  // 1. FRESHMAN - Fresh start, no courses completed
+  await prisma.user.create({
+    data: {
+      email: "freshman@smu.edu.sg",
+      name: "Alex Freshman",
+      emailVerified: true,
+      accounts: {
+        create: {
+          id: "account-freshman",
+          accountId: "account-freshman",
+          providerId: "credential",
+          password: passwordHash,
         },
-      })
-    )
-  )
+      },
+      student: {
+        create: {
+          university: "SMU",
+          major: "Computer Science",
+          year: 1,
+          enrollmentYear: 2025,
+          expectedGraduationYear: 2029,
+          gpa: 0.0,
+        },
+      },
+    },
+  })
+  console.log(`  ✅ Created freshman@smu.edu.sg`)
 
-  console.log(`✅ Created ${prerequisites.length} prerequisites`)
+  // 2. SOPHOMORE - 8 Year 1 courses completed, GPA 3.5
+  const sophomore = await prisma.user.create({
+    data: {
+      email: "sophomore@smu.edu.sg",
+      name: "Jordan Sophomore",
+      emailVerified: true,
+      accounts: {
+        create: {
+          id: "account-sophomore",
+          accountId: "account-sophomore",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          university: "SMU",
+          major: "Computer Science",
+          year: 2,
+          enrollmentYear: 2024,
+          expectedGraduationYear: 2028,
+          gpa: 3.5,
+        },
+      },
+    },
+    include: { student: true },
+  })
 
-  console.log("🎉 Seed completed successfully!")
-  console.log("\nTo create a test user, use the signup page at http://localhost:3000/signup")
+  await prisma.completedCourse.createMany({
+    data: [
+      { studentId: sophomore.student!.id, courseId: findCourse("CS101")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: sophomore.student!.id, courseId: findCourse("CS102")!.id, grade: "A-", term: "2025-Spring" },
+      { studentId: sophomore.student!.id, courseId: findCourse("MATH101")!.id, grade: "B+", term: "2024-Fall" },
+      { studentId: sophomore.student!.id, courseId: findCourse("MATH102")!.id, grade: "A", term: "2025-Spring" },
+      { studentId: sophomore.student!.id, courseId: findCourse("IS101")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: sophomore.student!.id, courseId: findCourse("COMM101")!.id, grade: "B+", term: "2025-Spring" },
+      { studentId: sophomore.student!.id, courseId: findCourse("STAT101")!.id, grade: "B", term: "2024-Fall" },
+      { studentId: sophomore.student!.id, courseId: findCourse("MATH103")!.id, grade: "A-", term: "2025-Spring" },
+    ],
+  })
+  console.log(`  ✅ Created sophomore@smu.edu.sg (8 courses, GPA 3.5)`)
+
+  // 3. JUNIOR - 20 courses completed (Year 1-2 complete), GPA 3.7
+  const junior = await prisma.user.create({
+    data: {
+      email: "junior@smu.edu.sg",
+      name: "Taylor Junior",
+      emailVerified: true,
+      accounts: {
+        create: {
+          id: "account-junior",
+          accountId: "account-junior",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          university: "SMU",
+          major: "Computer Science",
+          year: 3,
+          enrollmentYear: 2023,
+          expectedGraduationYear: 2027,
+          gpa: 3.7,
+        },
+      },
+    },
+    include: { student: true },
+  })
+
+  await prisma.completedCourse.createMany({
+    data: [
+      // Year 1 (8 courses)
+      { studentId: junior.student!.id, courseId: findCourse("CS101")!.id, grade: "A", term: "2023-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("CS102")!.id, grade: "A", term: "2024-Spring" },
+      { studentId: junior.student!.id, courseId: findCourse("MATH101")!.id, grade: "A-", term: "2023-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("MATH102")!.id, grade: "A", term: "2024-Spring" },
+      { studentId: junior.student!.id, courseId: findCourse("IS101")!.id, grade: "A-", term: "2023-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("COMM101")!.id, grade: "B+", term: "2024-Spring" },
+      { studentId: junior.student!.id, courseId: findCourse("STAT101")!.id, grade: "A-", term: "2023-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("MATH103")!.id, grade: "A", term: "2024-Spring" },
+      // Year 2 (10 courses)
+      { studentId: junior.student!.id, courseId: findCourse("CS201")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("CS202")!.id, grade: "A-", term: "2024-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("CS203")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("CS204")!.id, grade: "B+", term: "2025-Spring" },
+      { studentId: junior.student!.id, courseId: findCourse("CS205")!.id, grade: "A", term: "2025-Spring" },
+      { studentId: junior.student!.id, courseId: findCourse("CS206")!.id, grade: "A-", term: "2025-Spring" },
+      { studentId: junior.student!.id, courseId: findCourse("IS102")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("ECON101")!.id, grade: "B+", term: "2024-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("PHIL101")!.id, grade: "A-", term: "2025-Spring" },
+      { studentId: junior.student!.id, courseId: findCourse("WRIT101")!.id, grade: "B+", term: "2025-Spring" },
+      // Some Year 3 (2 courses)
+      { studentId: junior.student!.id, courseId: findCourse("CS301")!.id, grade: "A", term: "2025-Fall" },
+      { studentId: junior.student!.id, courseId: findCourse("CS302")!.id, grade: "A-", term: "2025-Fall" },
+    ],
+  })
+  console.log(`  ✅ Created junior@smu.edu.sg (20 courses, GPA 3.7)`)
+
+  // 4. SENIOR - 32 courses completed, almost graduated, GPA 3.8
+  const senior = await prisma.user.create({
+    data: {
+      email: "senior@smu.edu.sg",
+      name: "Morgan Senior",
+      emailVerified: true,
+      accounts: {
+        create: {
+          id: "account-senior",
+          accountId: "account-senior",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          university: "SMU",
+          major: "Computer Science",
+          year: 4,
+          enrollmentYear: 2022,
+          expectedGraduationYear: 2026,
+          gpa: 3.8,
+        },
+      },
+    },
+    include: { student: true },
+  })
+
+  await prisma.completedCourse.createMany({
+    data: [
+      // Year 1 (8 courses)
+      { studentId: senior.student!.id, courseId: findCourse("CS101")!.id, grade: "A", term: "2022-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS102")!.id, grade: "A", term: "2023-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("MATH101")!.id, grade: "A-", term: "2022-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("MATH102")!.id, grade: "A", term: "2023-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("IS101")!.id, grade: "A", term: "2022-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("COMM101")!.id, grade: "A-", term: "2023-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("STAT101")!.id, grade: "A", term: "2022-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("MATH103")!.id, grade: "A", term: "2023-Spring" },
+      // Year 2 (10 courses)
+      { studentId: senior.student!.id, courseId: findCourse("CS201")!.id, grade: "A", term: "2023-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS202")!.id, grade: "A", term: "2023-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS203")!.id, grade: "A-", term: "2023-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS204")!.id, grade: "A", term: "2024-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("CS205")!.id, grade: "A", term: "2024-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("CS206")!.id, grade: "A-", term: "2024-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("IS102")!.id, grade: "A", term: "2023-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("ECON101")!.id, grade: "A-", term: "2023-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("PHIL101")!.id, grade: "A", term: "2024-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("WRIT101")!.id, grade: "A-", term: "2024-Spring" },
+      // Year 3 (10 courses)
+      { studentId: senior.student!.id, courseId: findCourse("CS301")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS302")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS303")!.id, grade: "A-", term: "2024-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS304")!.id, grade: "A", term: "2025-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("CS305")!.id, grade: "A-", term: "2025-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("CS400")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS401")!.id, grade: "A", term: "2025-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("CS402")!.id, grade: "A-", term: "2025-Spring" },
+      { studentId: senior.student!.id, courseId: findCourse("CS450")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS451")!.id, grade: "B+", term: "2025-Spring" },
+      // Year 4 so far (4 courses)
+      { studentId: senior.student!.id, courseId: findCourse("CS403")!.id, grade: "A", term: "2025-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS404")!.id, grade: "A", term: "2025-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS490")!.id, grade: "A-", term: "2025-Fall" },
+      { studentId: senior.student!.id, courseId: findCourse("CS452")!.id, grade: "A", term: "2025-Fall" },
+    ],
+  })
+  console.log(`  ✅ Created senior@smu.edu.sg (32 courses, GPA 3.8)`)
+
+  // 5. STRUGGLING STUDENT - Behind schedule, low GPA, grade deficiency
+  const struggling = await prisma.user.create({
+    data: {
+      email: "struggling@smu.edu.sg",
+      name: "Casey Struggling",
+      emailVerified: true,
+      accounts: {
+        create: {
+          id: "account-struggling",
+          accountId: "account-struggling",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          university: "SMU",
+          major: "Computer Science",
+          year: 3,
+          enrollmentYear: 2023,
+          expectedGraduationYear: 2027,
+          gpa: 2.3,
+        },
+      },
+    },
+    include: { student: true },
+  })
+
+  await prisma.completedCourse.createMany({
+    data: [
+      // Year 1 - Mixed grades
+      { studentId: struggling.student!.id, courseId: findCourse("CS101")!.id, grade: "C+", term: "2023-Fall" },
+      { studentId: struggling.student!.id, courseId: findCourse("CS102")!.id, grade: "D", term: "2024-Spring" },
+      { studentId: struggling.student!.id, courseId: findCourse("MATH101")!.id, grade: "C", term: "2023-Fall" },
+      { studentId: struggling.student!.id, courseId: findCourse("MATH102")!.id, grade: "C-", term: "2024-Spring" },
+      { studentId: struggling.student!.id, courseId: findCourse("IS101")!.id, grade: "B", term: "2023-Fall" },
+      { studentId: struggling.student!.id, courseId: findCourse("COMM101")!.id, grade: "B-", term: "2024-Spring" },
+      // Year 2 - Still struggling
+      { studentId: struggling.student!.id, courseId: findCourse("STAT101")!.id, grade: "C+", term: "2024-Fall" },
+      { studentId: struggling.student!.id, courseId: findCourse("MATH103")!.id, grade: "C", term: "2024-Fall" },
+      { studentId: struggling.student!.id, courseId: findCourse("IS102")!.id, grade: "B-", term: "2025-Spring" },
+      { studentId: struggling.student!.id, courseId: findCourse("ECON101")!.id, grade: "C+", term: "2025-Spring" },
+      // Year 3 - Few courses
+      { studentId: struggling.student!.id, courseId: findCourse("PHIL101")!.id, grade: "B", term: "2025-Fall" },
+      { studentId: struggling.student!.id, courseId: findCourse("WRIT101")!.id, grade: "C+", term: "2025-Fall" },
+    ],
+  })
+  console.log(`  ✅ Created struggling@smu.edu.sg (12 courses, GPA 2.3, D in CS102)`)
+
+  // 6. NUS STUDENT - Different university
+  const nusStudent = await prisma.user.create({
+    data: {
+      email: "nus-student@nus.edu.sg",
+      name: "Jamie NUS",
+      emailVerified: true,
+      accounts: {
+        create: {
+          id: "account-nus",
+          accountId: "account-nus",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          university: "NUS",
+          major: "Computer Science",
+          year: 2,
+          enrollmentYear: 2024,
+          expectedGraduationYear: 2028,
+          gpa: 3.6,
+        },
+      },
+    },
+    include: { student: true },
+  })
+
+  await prisma.completedCourse.createMany({
+    data: [
+      // Year 1 NUS courses
+      { studentId: nusStudent.student!.id, courseId: findCourse("CS1101S")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: nusStudent.student!.id, courseId: findCourse("CS1231")!.id, grade: "A-", term: "2024-Fall" },
+      { studentId: nusStudent.student!.id, courseId: findCourse("MA1521")!.id, grade: "B+", term: "2024-Fall" },
+      { studentId: nusStudent.student!.id, courseId: findCourse("MA1101R")!.id, grade: "A", term: "2024-Fall" },
+      { studentId: nusStudent.student!.id, courseId: findCourse("IS1103")!.id, grade: "A", term: "2025-Spring" },
+      { studentId: nusStudent.student!.id, courseId: findCourse("CS1020")!.id, grade: "A-", term: "2025-Spring" },
+      { studentId: nusStudent.student!.id, courseId: findCourse("ST2334")!.id, grade: "B+", term: "2025-Spring" },
+      { studentId: nusStudent.student!.id, courseId: findCourse("GER1000")!.id, grade: "A", term: "2025-Spring" },
+      // Year 2 started
+      { studentId: nusStudent.student!.id, courseId: findCourse("CS2030")!.id, grade: "A", term: "2025-Fall" },
+      { studentId: nusStudent.student!.id, courseId: findCourse("CS2040")!.id, grade: "A-", term: "2025-Fall" },
+    ],
+  })
+  console.log(`  ✅ Created nus-student@nus.edu.sg (10 NUS courses, GPA 3.6)`)
+}
+
+// ============================================================
+// Main Execution
+// ============================================================
+async function main() {
+  console.log("🌱 Starting comprehensive seed...\n")
+
+  // 1. Clear all existing data
+  await clearAllData()
+
+  // 2. Seed SMU courses
+  const smuCourses = await seedSMUCourses()
+  console.log(`✅ Created ${smuCourses.length} SMU courses\n`)
+
+  // 3. Seed NUS courses
+  const nusCourses = await seedNUSCourses()
+  console.log(`✅ Created ${nusCourses.length} NUS courses\n`)
+
+  // 4. Create prerequisites
+  const prereqCount = await createPrerequisites(smuCourses, nusCourses)
+  console.log(`✅ Created ${prereqCount} prerequisite relationships\n`)
+
+  // 5. Create test students
+  await createTestStudents(smuCourses, nusCourses)
+  console.log(`✅ Created 6 test students with academic history\n`)
+
+  // 6. Summary
+  console.log("🎉 Seed completed successfully!\n")
+  console.log("📊 Summary:")
+  console.log(`  - SMU Courses: ${smuCourses.length}`)
+  console.log(`  - NUS Courses: ${nusCourses.length}`)
+  console.log(`  - Total Courses: ${smuCourses.length + nusCourses.length}`)
+  console.log(`  - Prerequisites: ${prereqCount}`)
+  console.log(`  - Test Students: 6`)
+  console.log(`  - Completed Course Records: 75+\n`)
+  console.log("📝 Test Accounts (all use password: password123):")
+  console.log("  - freshman@smu.edu.sg - Year 1, GPA 0.0, 0 completed")
+  console.log("  - sophomore@smu.edu.sg - Year 2, GPA 3.5, 8 completed")
+  console.log("  - junior@smu.edu.sg - Year 3, GPA 3.7, 20 completed")
+  console.log("  - senior@smu.edu.sg - Year 4, GPA 3.8, 32 completed")
+  console.log("  - struggling@smu.edu.sg - Year 3, GPA 2.3, 12 completed (D in CS102)")
+  console.log("  - nus-student@nus.edu.sg - Year 2 NUS, GPA 3.6, 10 completed\n")
 }
 
 main()

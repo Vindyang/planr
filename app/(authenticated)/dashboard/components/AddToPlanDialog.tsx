@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { addCourseToPlan } from "@/lib/planner/actions"
 import { useRouter } from "next/navigation"
 import { Prisma } from "@prisma/client"
@@ -65,19 +66,18 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
         <div className="space-y-4">
           <div>
             <Label htmlFor="semester-select">Select Semester</Label>
-            <select
-              id="semester-select"
-              className="w-full rounded-md border border-border px-3 py-2 mt-2 bg-background text-foreground"
-              value={selectedPlanId}
-              onChange={(e) => setSelectedPlanId(e.target.value)}
-            >
-              <option value="">Choose semester...</option>
-              {semesters.map((sem) => (
-                <option key={sem.id} value={sem.id}>
-                  {sem.term} {sem.year} ({sem.plannedCourses.length} courses)
-                </option>
-              ))}
-            </select>
+            <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+              <SelectTrigger className="w-full mt-2">
+                <SelectValue placeholder="Choose semester..." />
+              </SelectTrigger>
+              <SelectContent>
+                {semesters.map((sem) => (
+                  <SelectItem key={sem.id} value={sem.id}>
+                    {sem.term} {sem.year} ({sem.plannedCourses.length} courses)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {error && (
