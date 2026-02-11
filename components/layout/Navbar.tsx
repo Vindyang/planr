@@ -4,21 +4,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { Breadcrumbs } from "./Breadcrumbs";
 
 export function Navbar() {
-  const pathname = usePathname();
   const router = useRouter();
-  
-  const getPageTitle = (path: string) => {
-    if (path === "/dashboard") return "Dashboard";
-    if (path === "/planner") return "Planner";
-    if (path === "/courses") return "Courses";
-    if (path === "/reviews") return "Reviews";
-    if (path.startsWith("/student/profile")) return "Profile";
-    if (path === "/settings") return "Preferences";
-    return "Planr";
-  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -26,7 +16,7 @@ export function Navbar() {
         <div className="mr-4 flex items-center gap-4">
           <SidebarTrigger className="-ml-1" />
 
-          <h1 className="text-sm font-medium">{getPageTitle(pathname)}</h1>
+          <Breadcrumbs />
         </div>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">

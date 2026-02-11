@@ -1,17 +1,18 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { 
-  DndContext, 
-  useSensor, 
-  useSensors, 
-  PointerSensor, 
-  DragStartEvent, 
+import {
+  DndContext,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  DragStartEvent,
   DragEndEvent,
 } from "@dnd-kit/core"
 import { PlannerBoard } from "./components/PlannerBoard"
 import { addCourseToPlan, moveCourse, removeCourseFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
 import { useRouter } from "next/navigation"
+import { toast } from "@/components/ui/toast"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,7 +74,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
             }
         } catch (error) {
             console.error("Move failed", error)
-            alert("Failed to move course: " + (error as Error).message)
+            toast.error("Failed to move course", {
+                description: (error as Error).message
+            })
         }
     })
   }

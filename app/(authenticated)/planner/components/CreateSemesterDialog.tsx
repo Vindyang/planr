@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { toast } from "@/components/ui/toast"
 import {
   Dialog,
   DialogContent,
@@ -41,10 +42,13 @@ export function CreateSemesterDialog({
     try {
       setLoading(true)
       await onCreate(term, parseInt(year))
+      toast.success("Semester plan created successfully")
       setOpen(false)
     } catch (error) {
       console.error(error)
-      // Ideally show error via toast
+      toast.error("Failed to create semester", {
+        description: (error as Error).message
+      })
     } finally {
       setLoading(false)
     }

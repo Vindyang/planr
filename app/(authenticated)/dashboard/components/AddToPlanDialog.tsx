@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { addCourseToPlan } from "@/lib/planner/actions"
 import { useRouter } from "next/navigation"
 import { Prisma } from "@prisma/client"
+import { toast } from "@/components/ui/toast"
 
 type SemesterPlan = Prisma.semesterPlanGetPayload<{
   include: { plannedCourses: { include: { course: true } } }
@@ -41,10 +42,14 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
 
     try {
       await addCourseToPlan(selectedPlanId, course.id)
+      toast.success(`${course.code} added to plan`)
       router.refresh()
       onClose()
     } catch (err: any) {
       setError(err.message || "Failed to add course")
+      toast.error("Failed to add course", {
+        description: err.message
+      })
     } finally {
       setIsLoading(false)
     }
