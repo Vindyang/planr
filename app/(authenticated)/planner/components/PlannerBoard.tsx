@@ -2,13 +2,12 @@
 
 import { SemesterColumn } from "./SemesterColumn"
 import { CourseDrawer } from "./CourseDrawer"
-import { ValidationPanel } from "./components/ValidationPanel"
-import { GraduationTracker } from "./components/GraduationTracker"
+import { ValidationPanel } from "./ValidationPanel"
+import { GraduationTracker } from "./GraduationTracker"
 import { Prisma } from "@prisma/client"
 import { DragOverlay } from "@dnd-kit/core"
 import { CourseCard } from "./CourseCard"
-import { CreateSemesterDialog } from "./components/CreateSemesterDialog"
-import { Button } from "@/components/ui/button"
+import { CreateSemesterDialog } from "./CreateSemesterDialog"
 import { Separator } from "@/components/ui/separator"
 import { IconPlus } from "@tabler/icons-react"
 
@@ -64,7 +63,7 @@ export function PlannerBoard({
   )
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
+    <div className="flex h-full overflow-hidden bg-background">
       {/* Sidebar / Drawer */}
       <CourseDrawer availableCourses={data.availableCourses} />
 
@@ -73,8 +72,8 @@ export function PlannerBoard({
         {/* Toolbar / Header */}
         <div className="px-8 py-6 border-b bg-card flex justify-between items-center shrink-0">
           <div>
-            <h1 className="text-2xl font-serif font-medium text-foreground">Degree Planner</h1>
-            <p className="text-sm text-muted-foreground mt-1">Drag and drop courses to plan your semesters</p>
+            <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">Degree Planner</h1>
+            <p className="font-serif text-xl italic text-muted-foreground mt-1">Drag and drop courses to plan your semesters</p>
           </div>
             
           <div className="flex gap-2">

@@ -1,4 +1,11 @@
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { DetailedEligibilityResult } from "@/lib/eligibility"
+import { Prisma } from "@prisma/client"
+import { AddToPlanDialog } from "./AddToPlanDialog"
 
 interface CourseDisplay {
   id: string
@@ -15,11 +22,18 @@ interface EligibleCourseDisplay {
   eligibility: DetailedEligibilityResult
 }
 
+type SemesterPlan = Prisma.semesterPlanGetPayload<{
+  include: { plannedCourses: { include: { course: true } } }
+}>
+
 export function EligibleCoursesList({
   courses,
+  semesterPlans,
 }: {
   courses: EligibleCourseDisplay[]
+  semesterPlans: SemesterPlan[]
 }) {
+  const [selectedCourse, setSelectedCourse] = useState<CourseDisplay | null>(null)
   if (courses.length === 0) {
     return (
       <div className="text-center p-8 text-muted-foreground">
@@ -89,16 +103,44 @@ export function EligibleCoursesList({
             </div>
           )}
 
-          <div className="mt-auto flex justify-between items-center border-t border-muted pt-4">
-            <span className="bg-green-100 text-green-800 text-xs uppercase tracking-wider px-2 py-1">
-              Available
-            </span>
-            <span className="uppercase text-[0.65rem] tracking-wider font-medium">
-              {course.units} CU
-            </span>
+          <div className="mt-auto space-y-3">
+            <div className="flex justify-between items-center border-t border-muted pt-4">
+              <span className="bg-green-100 text-green-800 text-xs uppercase tracking-wider px-2 py-1">
+                Available
+              </span>
+              <span className="uppercase text-[0.65rem] tracking-wider font-medium">
+                {course.units} CU
+              </span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <Link href={`/courses/${course.id}`} className="flex-1">
+                <Button size="sm" className="w-full">
+                  View Details
+                </Button>
+              </Link>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setSelectedCourse(course)}
+              >
+                Add to Plan
+              </Button>
+            </div>
           </div>
         </div>
       ))}
+
+      {/* Add to Plan Dialog */}
+      {selectedCourse && (
+        <AddToPlanDialog
+          course={selectedCourse}
+          semesters={semesterPlans}
+          onClose={() => setSelectedCourse(null)}
+        />
+      )}
     </div>
   )
 }

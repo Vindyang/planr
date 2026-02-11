@@ -9,7 +9,7 @@ import {
   DragStartEvent, 
   DragEndEvent,
 } from "@dnd-kit/core"
-import { PlannerBoard } from "./PlannerBoard"
+import { PlannerBoard } from "./components/PlannerBoard"
 import { addCourseToPlan, moveCourse, removeCourseFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
 import { useRouter } from "next/navigation"
 import {

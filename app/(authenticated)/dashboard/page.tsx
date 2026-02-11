@@ -8,9 +8,12 @@ import {
   CourseWithPrereqs,
   CompletedCourseInfo,
 } from "@/lib/eligibility"
-import { Student } from "@/lib/types"
 import { getStudentProfile } from "@/lib/data/students"
 import { getAllCoursesForUniversity } from "@/lib/data/courses"
+import { getPlannerData } from "@/lib/planner/actions"
+import { getNextSemesterSummary } from "@/lib/data/dashboard"
+import { PlanSummary } from "./components/PlanSummary"
+import { UpcomingDeadlines } from "./components/UpcomingDeadlines"
 
 export default async function DashboardPage() {
   const session = await getSession()
@@ -32,23 +35,13 @@ export default async function DashboardPage() {
 
   const courses = await getAllCoursesForUniversity(student.university)
 
-  // Transform data to match expected types
-  const studentForStats: Student = {
-    id: student.id,
-    name: student.user.name,
-    major: student.major,
-    year: student.year,
-    enrollmentYear: student.enrollmentYear,
-    gpa: student.gpa,
-    completedCourses: student.completedCourses.map((cc) => ({
-      courseId: cc.courseId,
-      grade: cc.grade,
-      term: cc.term,
-    })),
-  }
+  // Fetch planner data and next semester summary
+  const [plannerData, nextSemester] = await Promise.all([
+    getPlannerData(),
+    getNextSemesterSummary(student.id)
+  ])
 
   // Transform courses to match CourseWithPrereqs type
-  // getAllCoursesForUniversity returns full prerequisite objects, we need to map to the structure expected by eligibility checker
   const transformedCourses: CourseWithPrereqs[] = courses.map((course) => ({
     id: course.id,
     code: course.code,
@@ -57,7 +50,7 @@ export default async function DashboardPage() {
     prerequisites: course.prerequisites.map((p) => ({
       prerequisiteCourseId: p.prerequisiteCourseId,
       type: p.type,
-      prerequisiteCourse: p.prerequisiteCourse, // Include full object if available/needed types
+      prerequisiteCourse: p.prerequisiteCourse,
     })),
   }))
 
@@ -89,6 +82,19 @@ export default async function DashboardPage() {
     }
   })
 
+  // Calculate statistics
+  const completedUnits = student.completedCourses.reduce(
+    (sum, cc) => sum + cc.course.units,
+    0
+  )
+
+  const plannedUnits = plannerData.semesterPlans.reduce(
+    (sum, plan) => sum + plan.plannedCourses.reduce((s, pc) => s + pc.course.units, 0),
+    0
+  )
+
+  const remainingUnits = Math.max(0, 120 - completedUnits - plannedUnits)
+
   return (
     <AppLayout>
       <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
@@ -99,25 +105,42 @@ export default async function DashboardPage() {
             </h1>
           </div>
           <div className="text-right">
-             <span className="block text-sm mt-1 uppercase tracking-wider font-medium text-foreground">
+            <span className="block text-sm mt-1 uppercase tracking-wider font-medium text-foreground">
               Welcome back, {student.user.name}
-             </span>
-             <span className="font-serif text-xl italic text-muted-foreground">
-               Year {student.year} • {student.major}
-             </span>
+            </span>
+            <span className="font-serif text-xl italic text-muted-foreground">
+              Year {student.year} • {student.major}
+            </span>
           </div>
         </header>
 
+        {/* Enhanced Stat Cards - 3x2 Grid */}
         <StatCards
-          student={studentForStats}
-          totalUnits={student.completedCourses.reduce((sum, cc) => sum + cc.course.units, 0)}
+          gpa={student.gpa}
+          unitsEarned={completedUnits}
+          year={student.year}
+          major={student.major}
+          nextSemesterCourses={nextSemester.coursesCount}
+          totalCoursesTaken={student.completedCourses.length}
+          remainingUnits={remainingUnits}
         />
 
-        <div className="space-y-4">
-          <h3 className="text-xl font-semibold tracking-tight">
-            Eligible Courses for Next Semester
-          </h3>
-          <EligibleCoursesList courses={eligibleCoursesWithDisplay} />
+        {/* Main Content: Eligible Courses + Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <h3 className="text-xl font-semibold tracking-tight mb-4">
+              Eligible Courses for Next Semester
+            </h3>
+            <EligibleCoursesList
+              courses={eligibleCoursesWithDisplay}
+              semesterPlans={plannerData.semesterPlans}
+            />
+          </div>
+
+          <div className="space-y-6">
+            <PlanSummary semesterPlans={plannerData.semesterPlans} />
+            <UpcomingDeadlines />
+          </div>
         </div>
       </div>
     </AppLayout>

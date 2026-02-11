@@ -3,6 +3,7 @@ import { getAllCoursesForUniversity } from "@/lib/data/courses"
 import { requireSession } from "@/lib/auth"
 import { getStudentProfile } from "@/lib/data/students"
 import PlannerClient from "./PlannerClient"
+import { AppLayout } from "@/components/layout/AppLayout"
 
 export default async function PlannerPage() {
   const session = await requireSession()
@@ -27,12 +28,14 @@ export default async function PlannerPage() {
   ) || 0
 
   return (
-    <div className="h-full">
-      <PlannerClient
-        initialData={plannerData}
-        allCourses={allCourses}
-        completedUnits={completedUnits}
-      />
-    </div>
+    <AppLayout>
+      <div className="h-[calc(100vh-4rem)] -m-6 md:-m-8">
+        <PlannerClient
+          initialData={plannerData}
+          allCourses={allCourses}
+          completedUnits={completedUnits}
+        />
+      </div>
+    </AppLayout>
   )
 }
