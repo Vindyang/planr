@@ -29,7 +29,7 @@ export default async function PlannerPage() {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-4rem)] -m-6 md:-m-8">
+      <div className="h-[calc(100vh-4rem)] -m-6 md:-m-8 bg-background">
         <PlannerClient
           initialData={plannerData}
           allCourses={allCourses}

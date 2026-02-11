@@ -3,7 +3,7 @@
 import { useDraggable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
 import { cn } from "@/lib/utils"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+// import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card" // Removing shadcn card for custom flat style
 import { Badge } from "@/components/ui/badge"
 
 type CourseCardProps = {
@@ -27,22 +27,26 @@ export function CourseCard({ id, code, title, units, isOverlay, error }: CourseC
     },
   })
 
+  // Use translate3d for performance, but careful with blurriness
   const style = {
     transform: CSS.Translate.toString(transform),
   }
 
-  // Common card content
+  // Common card content - mimics the "Weekly Schedule" white blocks
+  // e.g. <div className="bg-white p-2 text-xs border-l-2 border-[#0A0A0A]">
   const CardBody = () => (
-    <div className="flex flex-col gap-1 p-3">
-      <div className="flex justify-between items-start gap-2">
-        <div className="font-bold text-sm text-foreground">{code}</div>
-        <Badge variant="secondary" className="text-[10px] px-1 h-5 whitespace-nowrap">
-          {units} U
-        </Badge>
+    <div className={cn(
+        "bg-white p-3 text-xs border-l-2 border-[#0A0A0A] shadow-sm",
+        error ? "border-l-[#ef4444] bg-[#fff5f5]" : ""
+    )}>
+      <div className="flex justify-between items-start gap-2 mb-1">
+          <span className="font-semibold text-[#0A0A0A]">{code}</span>
+          <span className="text-[0.65rem] text-[#666460] font-medium bg-[#F4F1ED] px-1.5 py-0.5 rounded-sm">{units} CU</span>
       </div>
-      <div className="text-xs text-muted-foreground line-clamp-2 leading-tight">{title}</div>
+      <div className="text-[#666460] leading-tight text-[0.75rem]">{title}</div>
+      
       {error && (
-        <div className="mt-2 text-[10px] text-destructive font-medium bg-destructive/10 p-1 rounded">
+        <div className="mt-2 text-[0.65rem] text-[#ef4444] font-medium">
           {error}
         </div>
       )}
@@ -51,9 +55,9 @@ export function CourseCard({ id, code, title, units, isOverlay, error }: CourseC
 
   if (isOverlay) {
     return (
-      <Card className="w-full shadow-xl ring-2 ring-primary/20 rotate-2 cursor-grabbing bg-card">
+      <div className="w-full shadow-xl rotate-2 cursor-grabbing">
         <CardBody />
-      </Card>
+      </div>
     )
   }
 
@@ -64,18 +68,13 @@ export function CourseCard({ id, code, title, units, isOverlay, error }: CourseC
       {...listeners}
       {...attributes}
       className={cn(
-        "group relative w-full touch-none outline-none",
+        "group relative w-full touch-none outline-none mb-2",
         isDragging ? "opacity-30" : "opacity-100"
       )}
     >
-      <Card 
-        className={cn(
-          "hover:shadow-md transition-all cursor-grab active:cursor-grabbing border-border/60",
-          error && "border-destructive/50 bg-destructive/5"
-        )}
-      >
+      <div className="hover:translate-x-1 transition-transform cursor-grab active:cursor-grabbing">
         <CardBody />
-      </Card>
+      </div>
     </div>
   )
 }

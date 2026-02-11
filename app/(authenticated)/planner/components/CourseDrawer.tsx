@@ -35,8 +35,9 @@ function DraggableDrawerItem({ course }: { course: DrawerCourse }) {
 
   if (isDragging) {
     return (
-      <div ref={setNodeRef} style={style} className="opacity-50 border p-3 rounded-md bg-muted">
+      <div ref={setNodeRef} style={style} className="opacity-80 border p-4 rounded-sm bg-background shadow-lg w-full">
          <div className="font-bold text-sm">{course.code}</div>
+         <div className="text-xs text-muted-foreground">{course.title}</div>
       </div>
     )
   }
@@ -46,13 +47,13 @@ function DraggableDrawerItem({ course }: { course: DrawerCourse }) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className="p-3 bg-card border border-border/60 rounded-md shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing group transition-all"
+      className="p-4 bg-background border border-border rounded-sm hover:border-foreground/50 cursor-grab active:cursor-grabbing group transition-all"
     >
-      <div className="flex justify-between items-start mb-1">
-          <div className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">{course.code}</div>
-          <Badge variant="outline" className="text-[10px] px-1 h-5 text-muted-foreground bg-secondary/30 border-0">{course.units} U</Badge>
+      <div className="flex justify-between items-center mb-1">
+          <div className="font-bold text-sm text-foreground">{course.code}</div>
+          <Badge variant="secondary" className="text-[10px] px-1.5 h-5 font-normal bg-muted text-muted-foreground border-0 rounded-sm hover:bg-muted">{course.units} U</Badge>
       </div>
-      <div className="text-xs text-muted-foreground truncate">{course.title}</div>
+      <div className="text-xs text-muted-foreground line-clamp-1 group-hover:text-foreground transition-colors">{course.title}</div>
     </div>
   )
 }
@@ -70,22 +71,22 @@ export function CourseDrawer({ availableCourses }: CourseDrawerProps) {
   )
 
   return (
-    <div className="w-80 border-r border-border bg-card flex flex-col h-full shrink-0">
-      <div className="p-4 border-b border-border space-y-3">
-        <h2 className="font-semibold text-sm text-foreground">Course Catalog</h2>
+    <div className="flex flex-col h-full w-full bg-background border-r border-border">
+      <div className="p-6 pb-4 space-y-4">
+        <h2 className="font-serif font-medium text-lg text-foreground">Course Catalog</h2>
         <div className="relative">
-          <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             type="text" 
             placeholder="Search courses..." 
-            className="pl-9 pr-8 h-9 text-sm"
+            className="pl-9 pr-8 h-10 text-sm bg-background border-border focus-visible:ring-1 focus-visible:ring-foreground rounded-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {searchTerm && (
             <button 
               onClick={() => setSearchTerm("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <IconX size={14} />
             </button>
@@ -93,15 +94,14 @@ export function CourseDrawer({ availableCourses }: CourseDrawerProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-muted/10">
+      <div className="flex-1 overflow-y-auto px-6 py-2 space-y-3">
         {filteredCourses.length > 0 ? (
           filteredCourses.map(course => (
             <DraggableDrawerItem key={course.id} course={course} />
           ))
         ) : (
-          <div className="text-center py-12 text-muted-foreground text-sm">
+          <div className="text-center py-12 text-muted-foreground text-sm font-serif italic">
             <p>No courses found</p>
-            <p className="text-xs opacity-70 mt-1">Try a different search term</p>
           </div>
         )}
       </div>

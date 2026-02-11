@@ -31,8 +31,9 @@ type CreateSemesterDialogProps = {
 export function CreateSemesterDialog({ 
   onCreate, 
   defaultYear = new Date().getFullYear(),
-  defaultTerm = "Fall"
-}: CreateSemesterDialogProps) {
+  defaultTerm = "Fall",
+  children
+}: CreateSemesterDialogProps & { children?: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const [term, setTerm] = useState(defaultTerm)
   const [year, setYear] = useState(defaultYear.toString())
@@ -57,9 +58,7 @@ export function CreateSemesterDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          + Add Semester
-        </Button>
+        {children || <Button>+ Add Semester</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

@@ -1,6 +1,7 @@
 "use client"
 
-import { IconCheck } from "@tabler/icons-react"
+import { IconCheck, IconCircle, IconAlertTriangle } from "@tabler/icons-react"
+import { cn } from "@/lib/utils"
 
 interface GraduationTrackerProps {
   totalUnits: number
@@ -20,104 +21,77 @@ export function GraduationTracker({
   const plannedUnits = totalUnits
   const totalWithCompleted = completedUnits + plannedUnits
   const remainingUnits = Math.max(0, requiredUnits - totalWithCompleted)
-  const progressPercentage = Math.min(100, (totalWithCompleted / requiredUnits) * 100)
-
-  const isOnTrack = totalWithCompleted >= requiredUnits
+  
+  // Requirement Definitions (Mocked for now, flexible for future)
+  const requirements = [
+    { label: "University Core", completed: true, icon: IconCheck },
+    { label: "Major Requirements", completed: majorCourses >= requiredMajorCourses, icon: majorCourses >= requiredMajorCourses ? IconCheck : IconCircle },
+    { label: "General Electives", completed: false, icon: IconCircle },
+  ]
 
   return (
-    <div className="bg-card border border-border p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xs uppercase tracking-wider font-medium text-foreground">
-          Graduation Progress
-        </h3>
-        {isOnTrack && (
-          <div className="flex items-center gap-1.5 text-green-600">
-            <IconCheck className="h-4 w-4" />
-            <span className="text-xs uppercase tracking-wider font-medium">On Track</span>
-          </div>
-        )}
-      </div>
-
-      {/* Total Units Progress */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-baseline">
-          <span className="text-xs uppercase tracking-wider text-muted-foreground">
-            Total Units
-          </span>
-          <span className="font-serif italic text-lg">
-            {totalWithCompleted} / {requiredUnits}
-          </span>
+    <div className="space-y-8">
+      
+      {/* Editorial Stats Row */}
+      <div className="grid grid-cols-2 gap-4 border-b border-[#DAD6CF] pb-8">
+        <div>
+           <span className="block text-[10px] uppercase tracking-widest text-[#666460] mb-2">Units Earned</span>
+           <div className="flex items-baseline gap-1">
+             <span className="font-serif italic text-4xl text-[#0A0A0A]">{totalWithCompleted}</span>
+             <span className="text-xs text-[#666460] font-medium">/ {requiredUnits}</span>
+           </div>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full bg-foreground transition-all duration-300"
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Completed: {completedUnits}</span>
-          <span>Planned: {plannedUnits}</span>
-          <span>Remaining: {remainingUnits}</span>
+        <div>
+           <span className="block text-[10px] uppercase tracking-widest text-[#666460] mb-2">Current GPA</span>
+           <div className="flex items-baseline gap-1">
+             <span className="font-serif italic text-4xl text-[#0A0A0A]">3.8</span>
+           </div>
         </div>
       </div>
 
-      {/* Major Requirements */}
-      {requiredMajorCourses > 0 && (
-        <div className="space-y-2 pt-4 border-t border-border">
-          <div className="flex justify-between items-baseline">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">
-              Major Courses
+      {/* Degree Requirements List */}
+      <div>
+         <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-[#0A0A0A]">Degree Requirements</h3>
+            <span className="text-[10px] uppercase tracking-widest text-[#666460]">
+                {requirements.filter(r => r.completed).length} / {requirements.length} Completed
             </span>
-            <span className="font-serif italic text-lg">
-              {majorCourses} / {requiredMajorCourses}
-            </span>
-          </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-foreground transition-all duration-300"
-              style={{
-                width: `${Math.min(100, (majorCourses / requiredMajorCourses) * 100)}%`,
-              }}
-            />
-          </div>
-        </div>
-      )}
+         </div>
+         
+         <div className="space-y-px bg-[#DAD6CF] border border-[#DAD6CF]">
+            {requirements.map((req, i) => (
+                <div key={i} className="flex items-center justify-between bg-white p-4 h-14">
+                    <span className="text-xs font-medium text-[#0A0A0A]">{req.label}</span>
+                    <req.icon 
+                        size={16} 
+                        className={cn(
+                            req.completed ? "text-[#0A0A0A]" : "text-[#DAD6CF]"
+                        )} 
+                        stroke={1.5}
+                    />
+                </div>
+            ))}
+             {/* Dynamic Major Count Row */}
+             <div className="flex items-center justify-between bg-white p-4 h-14">
+                <span className="text-xs font-medium text-[#0A0A0A]">Major Courses</span>
+                <span className="font-serif italic text-sm text-[#666460]">
+                    {majorCourses} / {requiredMajorCourses}
+                </span>
+             </div>
+         </div>
+      </div>
 
-      {/* Semester Breakdown */}
-      <div className="pt-4 border-t border-border space-y-2">
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">
-          Plan Summary
-        </span>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <p className="text-muted-foreground">Average per semester</p>
-            <p className="font-medium">{plannedUnits > 0 ? "~15 units" : "—"}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Semesters to complete</p>
-            <p className="font-medium">
-              {remainingUnits > 0 ? Math.ceil(remainingUnits / 15) : 0}
+      {/* Alert / Insight Box */}
+      {remainingUnits > 0 && (
+         <div className="bg-[#F4F1ED] p-4 border border-[#DAD6CF] flex gap-3 items-start">
+            <IconAlertTriangle size={16} className="text-[#666460] mt-0.5 shrink-0" />
+            <p className="text-xs text-[#666460] leading-relaxed">
+               You need <span className="font-semibold text-[#0A0A0A]">{remainingUnits} more units</span> to meet the minimum graduation requirement of {requiredUnits} units.
             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Status Message */}
-      {!isOnTrack && remainingUnits > 0 && (
-        <div className="pt-4 border-t border-border">
-          <p className="text-sm text-muted-foreground">
-            You need {remainingUnits} more units to meet graduation requirements.
-          </p>
-        </div>
+         </div>
       )}
 
-      {isOnTrack && (
-        <div className="pt-4 border-t border-border">
-          <p className="text-sm text-green-600">
-            ✓ Your plan meets the minimum graduation requirements!
-          </p>
-        </div>
-      )}
     </div>
   )
 }
+

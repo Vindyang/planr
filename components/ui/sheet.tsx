@@ -51,10 +51,11 @@ function SheetContent({
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
+  hideOverlay?: boolean
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      {!props.hideOverlay && <SheetOverlay />}
       <SheetPrimitive.Content
         data-slot="sheet-content"
         data-side={side}
