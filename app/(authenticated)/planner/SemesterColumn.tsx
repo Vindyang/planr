@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils"
 import { CourseCard } from "./CourseCard"
 import { Prisma } from "@prisma/client"
 import { IconTrash, IconX } from "@tabler/icons-react"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 type PlannedCourseWithCourse = Prisma.plannedCourseGetPayload<{
   include: { course: true }
@@ -40,36 +42,38 @@ export function SemesterColumn({
   })
 
   return (
-    <div 
+    <Card 
       ref={setNodeRef}
       className={cn(
-        "flex flex-col w-72 shrink-0 rounded-lg bg-gray-50/50 border h-fit max-h-full transition-colors",
-        isOver && "bg-blue-50 border-blue-200 ring-2 ring-blue-100"
+        "flex flex-col w-72 shrink-0 border-border h-fit max-h-[calc(100vh-12rem)] transition-all",
+        isOver ? "bg-muted/50 ring-2 ring-primary/20 border-primary/50" : "bg-card"
       )}
     >
       {/* Header */}
-      <div className="p-3 border-b flex justify-between items-center bg-white rounded-t-lg sticky top-0 z-10">
+      <div className="p-3 border-b border-border flex justify-between items-center bg-muted/20 rounded-t-lg sticky top-0 z-10 backdrop-blur-sm">
         <div>
-          <h3 className="font-semibold text-gray-900 text-sm">{term} {year}</h3>
-          <p className="text-xs text-gray-500">{totalUnits} Units</p>
+          <h3 className="font-semibold text-foreground text-sm">{term} {year}</h3>
+          <p className="text-xs text-muted-foreground">{totalUnits} Units</p>
         </div>
-        <button 
+        <Button 
+          variant="ghost" 
+          size="icon-xs"
           onClick={() => onDeletePlan(planId)}
-          className="text-gray-400 hover:text-red-500 transition-colors p-1"
+          className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
           title="Delete Semester"
         >
           <IconTrash size={14} />
-        </button>
+        </Button>
       </div>
 
       {/* Course List */}
-      <div className="p-2 space-y-2 overflow-y-auto min-h-[150px]">
+      <div className="p-2 space-y-2 overflow-y-auto min-h-[150px] scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         {courses.map((plannedCourse) => (
           <div key={plannedCourse.id} className="relative group/card">
              {/* Delete Button (Overlay) */}
              <button
               onClick={() => onRemoveCourse(plannedCourse.id)}
-              className="absolute -top-1 -right-1 z-20 bg-white shadow-sm border rounded-full p-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity hover:bg-red-50 text-gray-400 hover:text-red-600 scale-90"
+              className="absolute -top-1.5 -right-1.5 z-20 bg-card shadow-sm border border-border rounded-full p-1 opacity-0 group-hover/card:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground hover:border-destructive scale-75"
             >
               <IconX size={12} />
             </button>
@@ -84,11 +88,11 @@ export function SemesterColumn({
           </div>
         ))}
         {courses.length === 0 && (
-          <div className="h-24 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-md">
-            <span className="text-xs text-gray-400">Drop courses here</span>
+          <div className="h-32 flex flex-col items-center justify-center border-2 border-dashed border-muted rounded-md bg-muted/5 gap-2">
+            <span className="text-xs text-muted-foreground font-medium">Drop courses here</span>
           </div>
         )}
       </div>
-    </div>
+    </Card>
   )
 }

@@ -3,6 +3,8 @@
 import { useDraggable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
 import { cn } from "@/lib/utils"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 type CourseCardProps = {
   id: string
@@ -29,19 +31,29 @@ export function CourseCard({ id, code, title, units, isOverlay, error }: CourseC
     transform: CSS.Translate.toString(transform),
   }
 
+  // Common card content
+  const CardBody = () => (
+    <div className="flex flex-col gap-1 p-3">
+      <div className="flex justify-between items-start gap-2">
+        <div className="font-bold text-sm text-foreground">{code}</div>
+        <Badge variant="secondary" className="text-[10px] px-1 h-5 whitespace-nowrap">
+          {units} U
+        </Badge>
+      </div>
+      <div className="text-xs text-muted-foreground line-clamp-2 leading-tight">{title}</div>
+      {error && (
+        <div className="mt-2 text-[10px] text-destructive font-medium bg-destructive/10 p-1 rounded">
+          {error}
+        </div>
+      )}
+    </div>
+  )
+
   if (isOverlay) {
     return (
-      <div className="w-full rounded-md border bg-white p-3 shadow-lg ring-2 ring-blue-500 opacity-90 cursor-grabbing">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="font-bold text-sm text-gray-900">{code}</div>
-            <div className="text-xs text-gray-500 line-clamp-1">{title}</div>
-          </div>
-          <div className="text-xs font-semibold bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
-            {units} U
-          </div>
-        </div>
-      </div>
+      <Card className="w-full shadow-xl ring-2 ring-primary/20 rotate-2 cursor-grabbing bg-card">
+        <CardBody />
+      </Card>
     )
   }
 
@@ -52,26 +64,18 @@ export function CourseCard({ id, code, title, units, isOverlay, error }: CourseC
       {...listeners}
       {...attributes}
       className={cn(
-        "group relative w-full rounded-md border bg-white p-3 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing",
-        isDragging && "opacity-30",
-        error && "border-red-300 bg-red-50"
+        "group relative w-full touch-none outline-none",
+        isDragging ? "opacity-30" : "opacity-100"
       )}
     >
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="font-bold text-sm text-gray-900">{code}</div>
-          <div className="text-xs text-gray-500 line-clamp-1">{title}</div>
-        </div>
-        <div className="text-xs font-semibold bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">
-          {units} U
-        </div>
-      </div>
-      
-      {error && (
-        <div className="mt-2 text-[10px] text-red-600 font-medium">
-          {error}
-        </div>
-      )}
+      <Card 
+        className={cn(
+          "hover:shadow-md transition-all cursor-grab active:cursor-grabbing border-border/60",
+          error && "border-destructive/50 bg-destructive/5"
+        )}
+      >
+        <CardBody />
+      </Card>
     </div>
   )
 }

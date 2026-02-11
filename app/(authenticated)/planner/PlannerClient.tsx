@@ -12,6 +12,16 @@ import {
 import { PlannerBoard } from "./PlannerBoard"
 import { addCourseToPlan, moveCourse, removeCourseFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
 import { useRouter } from "next/navigation"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 type PlannerClientProps = {
   initialData: any
@@ -24,6 +34,10 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   const [isPending, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
   
+  // Dialog States
+  const [courseToRemove, setCourseToRemove] = useState<string | null>(null)
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null)
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -64,45 +78,25 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
     })
   }
 
-  const handleRemoveCourse = (id: string) => {
-    if (confirm("Remove this course from plan?")) {
-        startTransition(async () => {
-            await removeCourseFromPlan(id)
-        })
+  const confirmRemoveCourse = () => {
+    if (courseToRemove) {
+      startTransition(async () => {
+        await removeCourseFromPlan(courseToRemove)
+        setCourseToRemove(null)
+      })
     }
   }
 
-  const handleDeletePlan = (id: string) => {
-    if (confirm("Delete this semester plan? All courses in it will be removed.")) {
-        startTransition(async () => {
-            await deleteSemesterPlan(id)
-        })
+  const confirmDeletePlan = () => {
+    if (planToDelete) {
+      startTransition(async () => {
+        await deleteSemesterPlan(planToDelete)
+        setPlanToDelete(null)
+      })
     }
   }
 
-  const handleCreatePlan = () => {
-     const lastPlan = initialData.semesterPlans[initialData.semesterPlans.length - 1]
-     
-     let defaultTerm = "Fall"
-     let defaultYear = new Date().getFullYear()
-
-     if (lastPlan) {
-        if (lastPlan.term === "Fall") {
-            defaultTerm = "Spring"
-            defaultYear = lastPlan.year + 1
-        } else {
-            defaultTerm = "Fall"
-            defaultYear = lastPlan.year
-        }
-     }
-
-     const term = prompt("Enter Term (Spring, Fall):", defaultTerm)
-     if (!term) return
-     
-     const yearStr = prompt("Enter Year:", defaultYear.toString())
-     if (!yearStr) return
-     const year = parseInt(yearStr)
-
+  const handleCreatePlan = async (term: string, year: number) => {
      startTransition(async () => {
          try {
              await createSemesterPlan(term, year)
@@ -113,22 +107,60 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <PlannerBoard
-        data={{
-            semesterPlans: initialData.semesterPlans,
-            availableCourses: allCourses
-        }}
-        activeId={activeId}
-        onRemoveCourse={handleRemoveCourse}
-        onDeletePlan={handleDeletePlan}
-        onCreatePlan={handleCreatePlan}
-        completedUnits={completedUnits}
-      />
-    </DndContext>
+    <>
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <PlannerBoard
+          data={{
+              semesterPlans: initialData.semesterPlans,
+              availableCourses: allCourses
+          }}
+          activeId={activeId}
+          onRemoveCourse={setCourseToRemove}
+          onDeletePlan={setPlanToDelete}
+          onCreatePlan={handleCreatePlan}
+          completedUnits={completedUnits}
+        />
+      </DndContext>
+
+      {/* Delete Course Dialog */}
+      <AlertDialog open={!!courseToRemove} onOpenChange={(open) => !open && setCourseToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Course</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove this course from your plan?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRemoveCourse} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Plan Dialog */}
+      <AlertDialog open={!!planToDelete} onOpenChange={(open) => !open && setPlanToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Semester Plan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this semester plan? All courses in it will be removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeletePlan} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

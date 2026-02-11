@@ -59,9 +59,9 @@ export function ValidationPanel({ onValidate }: ValidationPanelProps) {
   return (
     <div className="bg-card border border-border">
       {/* Header */}
-      <button
+      <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer"
       >
         <div className="flex items-center gap-3">
           {validation.isValid ? (
@@ -102,7 +102,7 @@ export function ValidationPanel({ onValidate }: ValidationPanelProps) {
             <IconChevronDown className="h-4 w-4 text-muted-foreground" />
           )}
         </div>
-      </button>
+      </div>
 
       {/* Violations List */}
       {isExpanded && hasIssues && (
