@@ -14,20 +14,11 @@ export type {
   Violation,
   PlanStatistics,
   ValidationResult,
-  PlannedCourseData,
-  SemesterWithCourses,
-  PlanData,
   ValidationContext,
-  DragItem,
-  DropTarget,
-  AvailableCourse,
-  CreateSemesterRequest,
-  AddCourseRequest,
-  MoveCourseRequest,
-  PlansListResponse,
-  SemesterResponse,
-  PlannedCourseResponse,
-  ValidationResponse,
+  SemesterWithCourses,
+  PlannedCourseInfo,
+  CompletedCourseInfo,
+  CourseWithPrereqs,
 } from "./types"
 
 // Semester ordering utilities
@@ -37,10 +28,8 @@ export {
   getSemesterLabel,
   isBefore,
   isAfter,
-  isSameSemester,
   getNextSemester,
   getPreviousSemester,
-  generateSemesterRange,
 } from "./utils/semester-ordering"
 
 // Validation

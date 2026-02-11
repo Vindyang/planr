@@ -10,7 +10,7 @@ export function validateTermAvailability(context: ValidationContext): Violation[
   const { semesters } = context
 
   for (const semester of semesters) {
-    const semesterLabel = getSemesterLabel(semester.term, semester.year)
+    const semesterLabel = getSemesterLabel(semester)
 
     for (const plannedCourse of semester.courses) {
       const termsOffered = plannedCourse.course.termsOffered || []

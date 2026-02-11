@@ -3,16 +3,25 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { PlanStatus, Prisma } from "@prisma/client"
-import { requireStudent } from "@/lib/auth"
+import { requireSession } from "@/lib/auth"
 import { z } from "zod"
+
+async function getStudentId() {
+  const session = await requireSession()
+  const student = await prisma.student.findUnique({
+    where: { userId: session.user.id },
+  })
+  if (!student) throw new Error("Student profile not found")
+  return student.id
+}
 
 // --- Types ---
 
 export type PlannerData = {
-  semesterPlans: (Prisma.SemesterPlanGetPayload<{
+  semesterPlans: (Prisma.semesterPlanGetPayload<{
     include: { plannedCourses: { include: { course: true } } }
   }>)[]
-  completedCourses: Prisma.CompletedCourseGetPayload<{
+  completedCourses: Prisma.completedCourseGetPayload<{
     include: { course: true }
   }>[]
   gradRequirement?: any // Placeholder for future use
@@ -38,11 +47,11 @@ const moveCourseSchema = z.object({
 // --- Actions ---
 
 export async function getPlannerData(): Promise<PlannerData> {
-  const user = await requireStudent()
+  const studentId = await getStudentId()
 
   const [semesterPlans, completedCourses] = await Promise.all([
     prisma.semesterPlan.findMany({
-      where: { studentId: user.studentId },
+      where: { studentId },
       include: {
         plannedCourses: {
           include: {
@@ -54,7 +63,7 @@ export async function getPlannerData(): Promise<PlannerData> {
       orderBy: [{ year: "asc" }, { term: "desc" }], // Fall/Spring ordering logic might need custom sort later
     }),
     prisma.completedCourse.findMany({
-      where: { studentId: user.studentId },
+      where: { studentId },
       include: {
         course: true,
       },
@@ -66,14 +75,14 @@ export async function getPlannerData(): Promise<PlannerData> {
 }
 
 export async function createSemesterPlan(term: string, year: number) {
-  const user = await requireStudent()
-  
+  const studentId = await getStudentId()
+
   const validated = createPlanSchema.parse({ term, year })
 
   // Check if plan already exists for this term/year
   const existing = await prisma.semesterPlan.findFirst({
     where: {
-      studentId: user.studentId,
+      studentId,
       term: validated.term,
       year: validated.year,
     },
@@ -85,7 +94,7 @@ export async function createSemesterPlan(term: string, year: number) {
 
   await prisma.semesterPlan.create({
     data: {
-      studentId: user.studentId!,
+      studentId,
       term: validated.term,
       year: validated.year,
       isActive: true,
@@ -96,13 +105,13 @@ export async function createSemesterPlan(term: string, year: number) {
 }
 
 export async function deleteSemesterPlan(planId: string) {
-  const user = await requireStudent()
+  const studentId = await getStudentId()
 
   const plan = await prisma.semesterPlan.findUnique({
     where: { id: planId },
   })
 
-  if (!plan || plan.studentId !== user.studentId) {
+  if (!plan || plan.studentId !== studentId) {
     throw new Error("Plan not found or unauthorized")
   }
 
@@ -117,8 +126,8 @@ export async function deleteSemesterPlan(planId: string) {
 }
 
 export async function addCourseToPlan(planId: string, courseId: string) {
-  const user = await requireStudent()
-  
+  const studentId = await getStudentId()
+
   const validated = addCourseSchema.parse({ planId, courseId })
 
   // Verify ownership of plan
@@ -126,7 +135,7 @@ export async function addCourseToPlan(planId: string, courseId: string) {
     where: { id: validated.planId },
   })
 
-  if (!plan || plan.studentId !== user.studentId) {
+  if (!plan || plan.studentId !== studentId) {
     throw new Error("Plan not found or unauthorized")
   }
 
@@ -157,14 +166,14 @@ export async function addCourseToPlan(planId: string, courseId: string) {
 }
 
 export async function removeCourseFromPlan(plannedCourseId: string) {
-  const user = await requireStudent()
+  const studentId = await getStudentId()
 
   const plannedCourse = await prisma.plannedCourse.findUnique({
     where: { id: plannedCourseId },
     include: { semesterPlan: true },
   })
 
-  if (!plannedCourse || plannedCourse.semesterPlan.studentId !== user.studentId) {
+  if (!plannedCourse || plannedCourse.semesterPlan.studentId !== studentId) {
     throw new Error("Course not found or unauthorized")
   }
 
@@ -176,8 +185,8 @@ export async function removeCourseFromPlan(plannedCourseId: string) {
 }
 
 export async function moveCourse(plannedCourseId: string, targetPlanId: string) {
-  const user = await requireStudent()
-  
+  const studentId = await getStudentId()
+
   const validated = moveCourseSchema.parse({ plannedCourseId, targetPlanId })
 
   // Verify target plan ownership
@@ -185,7 +194,7 @@ export async function moveCourse(plannedCourseId: string, targetPlanId: string) 
     where: { id: validated.targetPlanId },
   })
 
-  if (!targetPlan || targetPlan.studentId !== user.studentId) {
+  if (!targetPlan || targetPlan.studentId !== studentId) {
     throw new Error("Target plan not found or unauthorized")
   }
 
@@ -195,7 +204,7 @@ export async function moveCourse(plannedCourseId: string, targetPlanId: string) 
     include: { semesterPlan: true },
   })
 
-  if (!sourceCourse || sourceCourse.semesterPlan.studentId !== user.studentId) {
+  if (!sourceCourse || sourceCourse.semesterPlan.studentId !== studentId) {
     throw new Error("Source course not found or unauthorized")
   }
 

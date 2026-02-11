@@ -86,7 +86,7 @@ export const getEligibilityForCourse = cache(async (
     completedMap
   )
 
-  const completedIds = new Set(student.completedCourses.map((cc: any) => cc.courseId))
+  const completedIds = new Set<string>(student.completedCourses.map((cc: any): string => cc.courseId))
   const suggestedSequence = !eligibility.isEligible
     ? suggestPrerequisiteSequence(courseId, coursesMap, completedIds)
     : []

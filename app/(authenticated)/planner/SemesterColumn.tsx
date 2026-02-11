@@ -6,7 +6,7 @@ import { CourseCard } from "./CourseCard"
 import { Prisma } from "@prisma/client"
 import { IconTrash, IconX } from "@tabler/icons-react"
 
-type PlannedCourseWithCourse = Prisma.PlannedCourseGetPayload<{
+type PlannedCourseWithCourse = Prisma.plannedCourseGetPayload<{
   include: { course: true }
 }>
 

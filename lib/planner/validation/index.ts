@@ -80,12 +80,24 @@ function calculatePlanStatistics(context: ValidationContext): PlanStatistics {
     }
   }
 
+  const totalSemesters = semesters.length
+  const averageUnitsPerSemester = totalSemesters > 0 ? totalUnits / totalSemesters : 0
+  const semestersWithOverload = Object.values(unitsPerSemester).filter((u: number) => u > 18).length
+  const completedUnitsTotal = completedCourses.reduce((sum: number, cc) => sum + (cc.course?.units || 0), 0)
+  const completedCoursesCount = completedCourses.length
+  const remainingCoursesCount = 0 // Would need total required courses to calculate
+  const remainingUnitsCount = Math.max(0, 120 - completedUnitsTotal - totalUnits) // Assuming 120 units required
+
   return {
-    totalUnits,
+    totalSemesters,
     totalCourses,
-    unitsPerSemester,
-    prerequisitesCompleted,
-    prerequisitesRemaining,
+    totalUnits,
+    averageUnitsPerSemester,
+    semestersWithOverload,
+    completedCourses: completedCoursesCount,
+    completedUnits: completedUnitsTotal,
+    remainingCourses: remainingCoursesCount,
+    remainingUnits: remainingUnitsCount,
   }
 }
 

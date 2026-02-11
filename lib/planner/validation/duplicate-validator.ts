@@ -31,7 +31,7 @@ export function validateDuplicates(context: ValidationContext): Violation[] {
   for (const [courseId, appearances] of courseAppearances) {
     // If course appears more than once
     if (appearances.length > 1) {
-      const semesterLabels = appearances.map((a) => getSemesterLabel(a.term, a.year)).join(", ")
+      const semesterLabels = appearances.map((a) => getSemesterLabel({ term: a.term, year: a.year })).join(", ")
 
       for (const appearance of appearances) {
         const plannedCourse = semesters
@@ -45,7 +45,7 @@ export function validateDuplicates(context: ValidationContext): Violation[] {
             courseId: plannedCourse.courseId,
             courseCode: plannedCourse.course.code,
             semesterId: appearance.semesterId,
-            semesterLabel: getSemesterLabel(appearance.term, appearance.year),
+            semesterLabel: getSemesterLabel({ term: appearance.term, year: appearance.year }),
             message: `${plannedCourse.course.code} appears multiple times in your plan (${semesterLabels})`,
             suggestion: `Remove duplicate instances of ${plannedCourse.course.code}`,
           })
@@ -67,7 +67,7 @@ export function validateDuplicates(context: ValidationContext): Violation[] {
             courseId: plannedCourse.courseId,
             courseCode: plannedCourse.course.code,
             semesterId: appearance.semesterId,
-            semesterLabel: getSemesterLabel(appearance.term, appearance.year),
+            semesterLabel: getSemesterLabel({ term: appearance.term, year: appearance.year }),
             message: `${plannedCourse.course.code} is already completed`,
             suggestion: `Remove ${plannedCourse.course.code} from your plan`,
           })

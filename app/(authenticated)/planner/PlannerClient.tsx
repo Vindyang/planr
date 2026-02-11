@@ -14,11 +14,12 @@ import { addCourseToPlan, moveCourse, removeCourseFromPlan, deleteSemesterPlan, 
 import { useRouter } from "next/navigation"
 
 type PlannerClientProps = {
-  initialData: any 
+  initialData: any
   allCourses: any[]
+  completedUnits?: number
 }
 
-export default function PlannerClient({ initialData, allCourses }: PlannerClientProps) {
+export default function PlannerClient({ initialData, allCourses, completedUnits = 0 }: PlannerClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -112,12 +113,12 @@ export default function PlannerClient({ initialData, allCourses }: PlannerClient
   }
 
   return (
-    <DndContext 
+    <DndContext
       sensors={sensors}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <PlannerBoard 
+      <PlannerBoard
         data={{
             semesterPlans: initialData.semesterPlans,
             availableCourses: allCourses
@@ -126,6 +127,7 @@ export default function PlannerClient({ initialData, allCourses }: PlannerClient
         onRemoveCourse={handleRemoveCourse}
         onDeletePlan={handleDeletePlan}
         onCreatePlan={handleCreatePlan}
+        completedUnits={completedUnits}
       />
     </DndContext>
   )

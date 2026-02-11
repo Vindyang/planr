@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { IconAlertTriangle, IconX, IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react"
-import { Violation, ValidationResponse } from "@/lib/planner/types"
+import { Violation, ValidationResult } from "@/lib/planner/types"
 
 interface ValidationPanelProps {
   onValidate?: () => void
 }
 
 export function ValidationPanel({ onValidate }: ValidationPanelProps) {
-  const [validation, setValidation] = useState<ValidationResponse | null>(null)
+  const [validation, setValidation] = useState<ValidationResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
   const [error, setError] = useState("")
@@ -52,8 +52,8 @@ export function ValidationPanel({ onValidate }: ValidationPanelProps) {
 
   if (!validation) return null
 
-  const errors = validation.violations.filter((v) => v.severity === "error")
-  const warnings = validation.violations.filter((v) => v.severity === "warning")
+  const errors = validation.violations.filter((v: Violation) => v.severity === "error")
+  const warnings = validation.violations.filter((v: Violation) => v.severity === "warning")
   const hasIssues = errors.length > 0 || warnings.length > 0
 
   return (
@@ -114,7 +114,7 @@ export function ValidationPanel({ onValidate }: ValidationPanelProps) {
                 Errors ({errors.length})
               </h4>
               <div className="space-y-2">
-                {errors.map((violation, idx) => (
+                {errors.map((violation: Violation, idx: number) => (
                   <ViolationItem key={idx} violation={violation} />
                 ))}
               </div>
@@ -128,7 +128,7 @@ export function ValidationPanel({ onValidate }: ValidationPanelProps) {
                 Warnings ({warnings.length})
               </h4>
               <div className="space-y-2">
-                {warnings.map((violation, idx) => (
+                {warnings.map((violation: Violation, idx: number) => (
                   <ViolationItem key={idx} violation={violation} />
                 ))}
               </div>

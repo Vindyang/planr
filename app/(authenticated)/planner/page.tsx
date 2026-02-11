@@ -1,14 +1,14 @@
 import { getPlannerData } from "@/lib/planner/actions"
 import { getAllCoursesForUniversity } from "@/lib/data/courses"
-import { requireStudent } from "@/lib/auth"
-import { getStudentByUserId } from "@/lib/data/students"
+import { requireSession } from "@/lib/auth"
+import { getStudentProfile } from "@/lib/data/students"
 import PlannerClient from "./PlannerClient"
 
 export default async function PlannerPage() {
-  const user = await requireStudent()
+  const session = await requireSession()
 
   // Fetch student profile to get university
-  const student = await getStudentByUserId(user.id)
+  const student = await getStudentProfile(session.user.id)
 
   if (!student) {
     return <div>Student profile not found</div>
@@ -22,7 +22,7 @@ export default async function PlannerPage() {
 
   // Calculate completed units
   const completedUnits = student.completedCourses?.reduce(
-    (sum, cc) => sum + (cc.course?.units || 0),
+    (sum: number, cc) => sum + (cc.course?.units || 0),
     0
   ) || 0
 

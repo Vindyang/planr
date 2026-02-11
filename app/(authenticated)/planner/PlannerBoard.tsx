@@ -9,7 +9,7 @@ import { DragOverlay } from "@dnd-kit/core"
 import { CourseCard } from "./CourseCard"
 
 type PlannerData = {
-  semesterPlans: (Prisma.SemesterPlanGetPayload<{
+  semesterPlans: (Prisma.semesterPlanGetPayload<{
     include: { plannedCourses: { include: { course: true } } }
   }>)[]
   availableCourses: any[] // Using any for now to simplify
@@ -53,7 +53,7 @@ export function PlannerBoard({
 
   // Calculate total planned units
   const totalPlannedUnits = data.semesterPlans.reduce(
-    (sum, plan) => sum + plan.plannedCourses.reduce((s, pc) => s + pc.course.units, 0),
+    (sum: number, plan) => sum + plan.plannedCourses.reduce((s: number, pc) => s + pc.course.units, 0),
     0
   )
 
@@ -88,7 +88,7 @@ export function PlannerBoard({
                 year={plan.year}
                 courses={plan.plannedCourses}
                 onRemoveCourse={onRemoveCourse}
-                totalUnits={plan.plannedCourses.reduce((sum, item) => sum + item.course.units, 0)}
+                totalUnits={plan.plannedCourses.reduce((sum: number, item) => sum + item.course.units, 0)}
                 onDeletePlan={onDeletePlan}
               />
             ))}

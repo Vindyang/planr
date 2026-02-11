@@ -46,10 +46,20 @@
   - [x] Eligibility status badges on courses
   - [x] "Why not eligible" explanations
   - [x] Suggested course sequence display
+- [x] **Step 6: Multi-Semester Planner**
+  - [x] Created `lib/planner/` module with validation engine
+  - [x] Created semester ordering utilities
+  - [x] Implemented 5 validators (prerequisites, corequisites, duplicates, overload, term availability)
+  - [x] Created planner API routes (GET/POST /api/planner, semesters, courses)
+  - [x] Created validation API endpoint (POST /api/planner/validate)
+  - [x] Integrated drag-and-drop with @dnd-kit
+  - [x] Created ValidationPanel component with real-time validation
+  - [x] Created GraduationTracker component with progress bars
+  - [x] Fixed hardcoded university (now uses student's actual university)
 
 ### 🚧 In Progress
 
-- [ ] **Step 6: Multi-Semester Planner** - Not started
+- [ ] **Step 7: Enhanced Dashboard** - Partially complete
 - [ ] **Step 7: Enhanced Dashboard** - Not started
 - [ ] **Step 8: User Experience Enhancements** - Not started
 - [ ] **Step 9: Testing & Data Population** - Not started

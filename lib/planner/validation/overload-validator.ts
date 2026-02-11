@@ -13,7 +13,7 @@ export function validateOverload(context: ValidationContext): Violation[] {
   const { semesters } = context
 
   for (const semester of semesters) {
-    const semesterLabel = getSemesterLabel(semester.term, semester.year)
+    const semesterLabel = getSemesterLabel(semester)
 
     // Calculate total units for this semester
     const totalUnits = semester.courses.reduce((sum, pc) => sum + pc.course.units, 0)
