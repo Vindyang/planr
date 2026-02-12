@@ -78,10 +78,18 @@
   - [x] Added keyboard shortcuts hook (/ for search focus)
   - [x] Updated layout.tsx with Toaster and KeyboardShortcuts
 
+### ✅ Recently Completed
+
+- [x] **Step 9: Testing & Data Population** - Complete
+  - [x] Created comprehensive seed script with 155 courses (105 SMU + 50 NUS)
+  - [x] Added 133 prerequisite relationships (HARD, SOFT, COREQUISITE types)
+  - [x] Created 6 test student accounts with academic history
+  - [x] Installed bcryptjs for password hashing
+  - [x] Created TESTING.md manual testing guide
+  - [x] All test accounts working (password123)
+
 ### 🚧 In Progress
 
-- [ ] **Step 9: Testing & Data Population** - Not started
-- [ ] **Step 9: Testing & Data Population** - Not started
 - [ ] **Step 10: Responsive Design & Mobile Optimization** - Not started
 
 ### 📝 Notes

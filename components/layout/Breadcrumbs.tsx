@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { IconChevronRight } from "@tabler/icons-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 // Map route segments to friendly labels
@@ -37,18 +37,22 @@ function getLabel(segment: string, path: string, courseTitles: Record<string, st
 export function Breadcrumbs() {
   const pathname = usePathname()
   const [courseTitles, setCourseTitles] = useState<Record<string, string>>({})
+  const fetchedIds = useRef<Set<string>>(new Set())
 
   // Fetch course titles for IDs in the path
   useEffect(() => {
     const segments = pathname.split("/").filter(Boolean)
-    
+
     segments.forEach((segment, index) => {
       // Check if this segment is a Course ID
       // Logic: Previous segment is "courses" and this segment looks like a UUID
       const prevSegment = segments[index - 1]
       const isCourseId = prevSegment === "courses" && segment.length > 20 // simple check for UUID-like length
 
-      if (isCourseId && !courseTitles[segment]) {
+      if (isCourseId && !fetchedIds.current.has(segment)) {
+        // Mark as fetched to prevent duplicates
+        fetchedIds.current.add(segment)
+
         // Fetch course details
         fetch(`/api/courses/${segment}`)
           .then(res => {
@@ -65,10 +69,12 @@ export function Breadcrumbs() {
           })
           .catch(err => {
             console.error("Error fetching course title for breadcrumb:", err)
+            // Remove from fetched set on error so it can be retried
+            fetchedIds.current.delete(segment)
           })
       }
     })
-  }, [pathname, courseTitles])
+  }, [pathname])
 
   // Don't show breadcrumbs on root or auth pages
   if (pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/signup")) {

@@ -1692,7 +1692,7 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
       accounts: {
         create: {
           id: "account-freshman",
-          accountId: "account-freshman",
+          accountId: "freshman@smu.edu.sg",
           providerId: "credential",
           password: passwordHash,
         },
@@ -1720,7 +1720,7 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
       accounts: {
         create: {
           id: "account-sophomore",
-          accountId: "account-sophomore",
+          accountId: "sophomore@smu.edu.sg",
           providerId: "credential",
           password: passwordHash,
         },
@@ -1762,7 +1762,7 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
       accounts: {
         create: {
           id: "account-junior",
-          accountId: "account-junior",
+          accountId: "junior@smu.edu.sg",
           providerId: "credential",
           password: passwordHash,
         },
@@ -1819,7 +1819,7 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
       accounts: {
         create: {
           id: "account-senior",
-          accountId: "account-senior",
+          accountId: "senior@smu.edu.sg",
           providerId: "credential",
           password: passwordHash,
         },
@@ -1889,7 +1889,7 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
       accounts: {
         create: {
           id: "account-struggling",
-          accountId: "account-struggling",
+          accountId: "struggling@smu.edu.sg",
           providerId: "credential",
           password: passwordHash,
         },
@@ -1938,7 +1938,7 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
       accounts: {
         create: {
           id: "account-nus",
-          accountId: "account-nus",
+          accountId: "nus-student@nus.edu.sg",
           providerId: "credential",
           password: passwordHash,
         },
