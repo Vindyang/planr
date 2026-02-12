@@ -100,11 +100,22 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   }
 
   const handleCreatePlan = async (term: string, year: number) => {
+     // Check if year already has 4 terms
+     const yearPlans = initialData.semesterPlans.filter((p: any) => p.year === year)
+     if (yearPlans.length >= 4) {
+         toast.error("Year Limit Reached", {
+             description: `Academic year ${year} already has the maximum of 4 terms.`
+         })
+         return
+     }
+
      startTransition(async () => {
          try {
              await createSemesterPlan(term, year)
          } catch (e) {
-             alert((e as Error).message)
+             toast.error("Failed to create semester", {
+                 description: (e as Error).message
+             })
          }
      })
   }

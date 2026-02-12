@@ -92,6 +92,18 @@ export async function createSemesterPlan(term: string, year: number) {
     throw new Error("A plan for this semester already exists.")
   }
 
+  // Check if year limit reached
+  const yearCount = await prisma.semesterPlan.count({
+    where: {
+      studentId,
+      year: validated.year,
+    },
+  })
+
+  if (yearCount >= 4) {
+    throw new Error(`Academic year ${validated.year} already has the maximum of 4 terms.`)
+  }
+
   await prisma.semesterPlan.create({
     data: {
       studentId,

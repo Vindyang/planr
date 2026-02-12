@@ -46,7 +46,7 @@ export function YearSection({ year, plans, onRemoveCourse, onDeletePlan, onCreat
           Academic Year {year}
       </span>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-[1px] bg-[#DAD6CF] border border-[#DAD6CF]">
+      <div className={`grid grid-cols-1 md:grid-cols-${Math.min(sortedPlans.length, 4) || 1} lg:grid-cols-${Math.min(sortedPlans.length, 4) || 1} xl:grid-cols-${Math.min(sortedPlans.length, 4) || 1} gap-[1px] bg-[#DAD6CF] border border-[#DAD6CF]`}>
         {sortedPlans.map(plan => (
            <SemesterCard
              key={plan.id}
