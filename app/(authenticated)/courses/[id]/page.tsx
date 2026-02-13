@@ -34,8 +34,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   }
 
   // 2. Derive State
-  const completedIds = new Set(student?.completedCourses.map((c: { courseId: string }) => c.courseId) ?? [])
-  const completedGrades = new Map(student?.completedCourses.map((c: { courseId: string; grade: string | null }) => [c.courseId, c.grade] as const) ?? [])
+  const completedCourses = student?.completedCourses ?? []
+  const completedIds = new Set(completedCourses.map((c) => c.courseId))
+  const completedGrades = new Map(completedCourses.map((c) => [c.courseId, c.grade] as const))
   const isCompleted = completedIds.has(course.id)
 
   // 3. Check Eligibility (if needed)
