@@ -117,6 +117,8 @@ model prerequisite {
   course             course @relation("CoursePrerequisites", fields: [courseId], references: [id], onDelete: Cascade)
   prerequisiteCourse course @relation("PrerequisiteCourses", fields: [prerequisiteCourseId], references: [id], onDelete: Cascade)
 
+  @@index([courseId])
+  @@index([prerequisiteCourseId])
   @@map("prerequisites")
 }
 
@@ -132,6 +134,8 @@ model completedCourse {
   student student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course  course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
+  @@index([studentId])
+  @@index([courseId])
   @@map("completed_courses")
 }
 
@@ -147,6 +151,7 @@ model semesterPlan {
   student        student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
   plannedCourses plannedCourse[]
 
+  @@index([studentId])
   @@map("semester_plans")
 }
 
@@ -160,6 +165,8 @@ model plannedCourse {
   semesterPlan semesterPlan @relation(fields: [semesterPlanId], references: [id], onDelete: Cascade)
   course       course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
+  @@index([semesterPlanId])
+  @@index([courseId])
   @@map("planned_courses")
 }
 
@@ -219,6 +226,7 @@ model courseReview {
   course  course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId])
+  @@index([courseId])
   @@map("course_reviews")
 }
 
@@ -241,6 +249,8 @@ model professorReview {
   course    course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   @@unique([studentId, professorId])
+  @@index([professorId])
+  @@index([courseId])
   @@map("professor_reviews")
 }
 

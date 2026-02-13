@@ -49,23 +49,20 @@ export const getProfessorReviewsForUniversity = cache(async (university: Univers
 })
 
 export const getReviewAggregates = cache(async (courseId: string) => {
-  const reviews = await prisma.courseReview.findMany({
+  const result = await prisma.courseReview.aggregate({
     where: { courseId },
-    select: {
+    _avg: {
       rating: true,
       difficultyRating: true,
       workloadRating: true,
     },
+    _count: true,
   })
 
-  if (reviews.length === 0) {
-    return { averageRating: 0, averageDifficulty: 0, averageWorkload: 0, totalReviews: 0 }
-  }
-
   return {
-    averageRating: reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length,
-    averageDifficulty: reviews.reduce((sum, r) => sum + r.difficultyRating, 0) / reviews.length,
-    averageWorkload: reviews.reduce((sum, r) => sum + r.workloadRating, 0) / reviews.length,
-    totalReviews: reviews.length,
+    averageRating: result._avg.rating ?? 0,
+    averageDifficulty: result._avg.difficultyRating ?? 0,
+    averageWorkload: result._avg.workloadRating ?? 0,
+    totalReviews: result._count,
   }
 })
