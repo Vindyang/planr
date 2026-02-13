@@ -121,15 +121,6 @@ export default function LoginPage() {
             </div>
           </div>
         </form>
-        
-        <div className="mt-10 pt-6 border-t border-[#DAD6CF] text-center">
-             <div className="text-[10px] uppercase tracking-[0.1em] text-[#666460]/60 mb-2">
-                Test Account
-             </div>
-             <div className="inline-block px-3 py-1 bg-[#F4F1ED] border border-[#DAD6CF/50]">
-                <code className="text-[10px] text-[#666460]">student@smu.edu.sg / password123</code>
-             </div>
-        </div>
       </div>
     </div>
   );
