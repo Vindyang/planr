@@ -35,12 +35,32 @@ const items = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { data: session } = useSession()
+  const [studentInfo, setStudentInfo] = useState<{ university: string; year: number } | null>(null)
+
+  useEffect(() => {
+    async function fetchStudentProfile() {
+      try {
+        const res = await fetch("/api/student/profile")
+        if (res.ok) {
+          const data = await res.json()
+          setStudentInfo({ university: data.student.university, year: data.student.year })
+        }
+      } catch {
+        // Silently fail — footer will show fallback
+      }
+    }
+    if (session?.user) {
+      fetchStudentProfile()
+    }
+  }, [session?.user])
 
   return (
     <Sidebar collapsible="icon" className="border-r border-[#DAD6CF] bg-[#F4F1ED]">
-      <SidebarHeader className="h-[120px] p-8 border-b border-[#DAD6CF]">
-        <div className="flex flex-col gap-2 group-data-[collapsible=icon]:items-center">
+      <SidebarHeader className="h-[120px] p-8 border-b border-[#DAD6CF] group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:p-2">
+        <div className="flex flex-col gap-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:h-12">
             <span className="font-semibold text-2xl tracking-tight text-[#0A0A0A] group-data-[collapsible=icon]:hidden">Planr.</span>
+            <span className="hidden font-semibold text-xl tracking-tight text-[#0A0A0A] group-data-[collapsible=icon]:block">P.</span>
         </div>
       </SidebarHeader>
       <SidebarContent className="gap-0">
@@ -61,21 +81,12 @@ export function AppSidebar() {
                                             hover:bg-white/60 active:bg-white/80
                                             data-[active=true]:bg-white/40 data-[active=true]:text-[#0A0A0A]
                                             transition-colors
+                                            group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:!size-12 group-data-[collapsible=icon]:!gap-0
+                                            group-data-[collapsible=icon]:border-none
                                         `}
                                     >
-                                        <Link href={item.url} className="flex w-full items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                {/* Hidden icon in full view to match text-only reference, or keep icon? Reference was text-only. 
-                                                   Let's keep text-only for full view to match reference, but maybe icons are useful? 
-                                                   Actually reference has 'Dashboard' text only. 
-                                                   But Shadcn sidebar usually expects icons for collapsed state.
-                                                   Let's show icons only when collapsed, or maybe always if user prefers. 
-                                                   Reference didn't have icons. Let's try to match reference more closely: Text only.
-                                                   BUT, for collapsed mode to work, we need something. 
-                                                   Let's keep icons but maybe make them subtle or hidden if strictly following reference.
-                                                   The user said "don't need to make it 100% similar". 
-                                                   So I will keep icons for better UX, but style the row like reference.
-                                                */}
+                                        <Link href={item.url} className="flex w-full h-full items-center justify-between group-data-[collapsible=icon]:justify-center">
+                                            <div className="flex items-center gap-3 group-data-[collapsible=icon]:gap-0">
                                                 <item.icon className="size-4 text-[#0A0A0A]" />
                                                 <span className="text-[#0A0A0A] group-data-[collapsible=icon]:hidden">{item.title}</span>
                                             </div>
@@ -92,15 +103,17 @@ export function AppSidebar() {
             </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarFooter className="p-6 border-t border-[#DAD6CF]">
+      <SidebarFooter className="p-6 border-t border-[#DAD6CF] group-data-[collapsible=icon]:p-2">
         <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                <span className="text-sm font-semibold text-[#0A0A0A]">Peter Lim</span>
-                <span className="text-xs text-[#666460]">SMU • Year 2</span>
+                <span className="text-sm font-semibold text-[#0A0A0A]">{session?.user?.name ?? "..."}</span>
+                <span className="text-xs text-[#666460]">
+                  {studentInfo ? `${studentInfo.university} • Year ${studentInfo.year}` : "..."}
+                </span>
             </div>
              <SidebarMenuButton 
                 size="sm"
-                className="w-auto h-auto p-2 hover:bg-transparent text-[#0A0A0A]"
+                className="w-auto h-auto p-2 hover:bg-transparent text-[#0A0A0A] group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center"
                 onClick={async () => {
                 await signOut()
                 router.push("/login")
