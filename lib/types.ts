@@ -93,3 +93,48 @@ export interface CourseListResponse {
     }>;
   }>;
 }
+
+// Review types
+
+export interface CourseReviewData {
+  id: string;
+  rating: number;
+  difficultyRating: number;
+  workloadRating: number;
+  content: string;
+  term: string;
+  isAnonymous: boolean;
+  createdAt: string;
+  course: { id: string; code: string; title: string };
+  studentName: string | null;
+  isOwn: boolean;
+}
+
+export interface ProfessorReviewData {
+  id: string;
+  rating: number;
+  difficultyRating: number;
+  workloadRating: number;
+  content: string;
+  term: string | null;
+  isAnonymous: boolean;
+  createdAt: string;
+  professor: { id: string; name: string; department: string };
+  course: { id: string; code: string; title: string } | null;
+  studentName: string | null;
+  isOwn: boolean;
+}
+
+export interface ReviewAggregates {
+  averageRating: number;
+  averageDifficulty: number;
+  averageWorkload: number;
+  totalReviews: number;
+}
+
+export interface ProfessorData {
+  id: string;
+  name: string;
+  department: string;
+  courses: Array<{ id: string; code: string; title: string }>;
+}

@@ -1,7 +1,7 @@
 import { PrismaClient, University } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
-import bcrypt from "bcryptjs"
+import { hashPassword } from "better-auth/crypto"
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
@@ -14,6 +14,10 @@ async function clearAllData() {
   console.log("🧹 Clearing existing data...")
 
   // Delete in correct order (respecting foreign keys)
+  await prisma.professorReview.deleteMany()
+  await prisma.courseReview.deleteMany()
+  await prisma.courseInstructor.deleteMany()
+  await prisma.professor.deleteMany()
   await prisma.plannedCourse.deleteMany()
   await prisma.semesterPlan.deleteMany()
   await prisma.completedCourse.deleteMany()
@@ -1681,7 +1685,7 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
     [...smuCourses, ...nusCourses].find((c) => c.code === code)
 
   // Hash password for all test accounts
-  const passwordHash = await bcrypt.hash("password123", 10)
+  const passwordHash = await hashPassword("password123")
 
   // 1. FRESHMAN - Fresh start, no courses completed
   await prisma.user.create({
@@ -1977,6 +1981,255 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
 }
 
 // ============================================================
+// 6. Seed Professors & Course Instructors
+// (SMU SCIS faculty scraped from computing.smu.edu.sg)
+// ============================================================
+async function seedProfessors(smuCourses: any[], nusCourses: any[]) {
+  const findCourse = (code: string) =>
+    [...smuCourses, ...nusCourses].find((c) => c.code === code)
+
+  // Real SMU SCIS Faculty (scraped from computing.smu.edu.sg/faculty/profile/)
+  const scisFaculty = [
+    // Professors
+    { name: "Sun Jun", university: "SMU" as University, department: "Computer Science" },
+    { name: "Debin Gao", university: "SMU" as University, department: "Computer Science" },
+    { name: "Lim Ee Peng", university: "SMU" as University, department: "Computer Science" },
+    { name: "Rajesh Krishna Balan", university: "SMU" as University, department: "Computer Science" },
+    { name: "Zheng Baihua", university: "SMU" as University, department: "Computer Science" },
+    { name: "Venky Shankararaman", university: "SMU" as University, department: "Information Systems" },
+    { name: "Michelle Cheong", university: "SMU" as University, department: "Information Systems" },
+    // Associate Professors
+    { name: "Chris Poskitt", university: "SMU" as University, department: "Computer Science" },
+    { name: "Dai Bing Tian", university: "SMU" as University, department: "Computer Science" },
+    { name: "Don Ta", university: "SMU" as University, department: "Computer Science" },
+    { name: "Ouh Eng Lieh", university: "SMU" as University, department: "Computer Science" },
+    { name: "Yang Guomin", university: "SMU" as University, department: "Computer Science" },
+    { name: "He Shengfeng", university: "SMU" as University, department: "Computer Science" },
+    { name: "Kyong Jin Shim", university: "SMU" as University, department: "Information Systems" },
+    { name: "Qian Tang", university: "SMU" as University, department: "Information Systems" },
+    // Assistant Professors
+    { name: "Antoine Ledent", university: "SMU" as University, department: "Computer Science" },
+    { name: "Duan Yue", university: "SMU" as University, department: "Computer Science" },
+    { name: "Xie Xiaofei", university: "SMU" as University, department: "Computer Science" },
+    { name: "Jonathan David Chase", university: "SMU" as University, department: "Computer Science" },
+    // Principal Lecturer
+    { name: "Lee Yeow Leong", university: "SMU" as University, department: "Computer Science" },
+  ]
+
+  await prisma.professor.createMany({ data: scisFaculty })
+  const allProfessors = await prisma.professor.findMany()
+  const findProf = (name: string) => allProfessors.find((p) => p.name === name)
+
+  // Link professors to SMU courses (based on research areas)
+  const instructorLinks = [
+    // Sun Jun - Software Engineering, AI, Cybersecurity
+    { prof: "Sun Jun", course: "CS203", term: "2024-Fall" },
+    { prof: "Sun Jun", course: "CS400", term: "2025-Fall" },
+    // Debin Gao - Cybersecurity, Software Engineering
+    { prof: "Debin Gao", course: "CS206", term: "2024-Fall" },
+    { prof: "Debin Gao", course: "CS420", term: "2025-Spring" },
+    // Lim Ee Peng - AI, Data Science
+    { prof: "Lim Ee Peng", course: "CS207", term: "2024-Fall" },
+    { prof: "Lim Ee Peng", course: "CS410", term: "2025-Fall" },
+    // Zheng Baihua - Data Management, AI
+    { prof: "Zheng Baihua", course: "CS204", term: "2024-Fall" },
+    { prof: "Zheng Baihua", course: "CS204", term: "2025-Spring" },
+    // Chris Poskitt - Software Engineering, Cybersecurity
+    { prof: "Chris Poskitt", course: "CS203", term: "2025-Spring" },
+    { prof: "Chris Poskitt", course: "CS305", term: "2025-Spring" },
+    // Dai Bing Tian - ML, AI
+    { prof: "Dai Bing Tian", course: "CS301", term: "2024-Fall" },
+    { prof: "Dai Bing Tian", course: "CS411", term: "2025-Spring" },
+    // Don Ta - ML, Software Engineering
+    { prof: "Don Ta", course: "CS101", term: "2024-Fall" },
+    { prof: "Don Ta", course: "CS101", term: "2025-Spring" },
+    // Ouh Eng Lieh - ML, HCI, Software Engineering
+    { prof: "Ouh Eng Lieh", course: "CS102", term: "2024-Fall" },
+    { prof: "Ouh Eng Lieh", course: "CS102", term: "2025-Spring" },
+    // Yang Guomin - Cybersecurity
+    { prof: "Yang Guomin", course: "CS421", term: "2025-Spring" },
+    { prof: "Yang Guomin", course: "CS422", term: "2025-Fall" },
+    // He Shengfeng - ML, Multimedia
+    { prof: "He Shengfeng", course: "CS301", term: "2025-Spring" },
+    { prof: "He Shengfeng", course: "CS412", term: "2025-Fall" },
+    // Venky Shankararaman - IS, Software Engineering
+    { prof: "Venky Shankararaman", course: "IS101", term: "2024-Fall" },
+    { prof: "Venky Shankararaman", course: "IS102", term: "2025-Spring" },
+    // Michelle Cheong - AI, Decision Making
+    { prof: "Michelle Cheong", course: "CS207", term: "2025-Spring" },
+    { prof: "Michelle Cheong", course: "CS414", term: "2025-Fall" },
+    // Kyong Jin Shim - ML, HCI, Analytics
+    { prof: "Kyong Jin Shim", course: "CS205", term: "2024-Fall" },
+    { prof: "Kyong Jin Shim", course: "CS205", term: "2025-Spring" },
+    // Qian Tang - IS Management, Analytics
+    { prof: "Qian Tang", course: "IS101", term: "2025-Spring" },
+    // Antoine Ledent - AI, ML
+    { prof: "Antoine Ledent", course: "CS201", term: "2024-Fall" },
+    { prof: "Antoine Ledent", course: "CS201", term: "2025-Spring" },
+    // Duan Yue - Cybersecurity, Software Engineering
+    { prof: "Duan Yue", course: "CS305", term: "2024-Fall" },
+    { prof: "Duan Yue", course: "CS423", term: "2025-Fall" },
+    // Xie Xiaofei - ML, Software Engineering, Cybersecurity
+    { prof: "Xie Xiaofei", course: "CS302", term: "2024-Fall" },
+    { prof: "Xie Xiaofei", course: "CS302", term: "2025-Spring" },
+    // Jonathan David Chase - Optimization, AI
+    { prof: "Jonathan David Chase", course: "CS451", term: "2025-Spring" },
+    { prof: "Jonathan David Chase", course: "CS418", term: "2025-Fall" },
+    // Lee Yeow Leong - Software Engineering
+    { prof: "Lee Yeow Leong", course: "CS203", term: "2024-Fall" },
+    { prof: "Lee Yeow Leong", course: "CS400", term: "2024-Fall" },
+    // Rajesh Krishna Balan - Pervasive Systems
+    { prof: "Rajesh Krishna Balan", course: "CS208", term: "2024-Fall" },
+    { prof: "Rajesh Krishna Balan", course: "CS208", term: "2025-Spring" },
+  ]
+
+  const instructorData = instructorLinks
+    .map((link) => {
+      const prof = findProf(link.prof)
+      const course = findCourse(link.course)
+      if (!prof || !course) return null
+      return { professorId: prof.id, courseId: course.id, term: link.term }
+    })
+    .filter(Boolean) as any[]
+
+  await prisma.courseInstructor.createMany({ data: instructorData })
+
+  return allProfessors
+}
+
+// ============================================================
+// 7. Seed Reviews
+// ============================================================
+async function seedReviews(smuCourses: any[], nusCourses: any[]) {
+  const findCourse = (code: string) =>
+    [...smuCourses, ...nusCourses].find((c) => c.code === code)
+
+  // Get students and professors
+  const juniorUser = await prisma.user.findUnique({ where: { email: "junior@smu.edu.sg" }, include: { student: true } })
+  const seniorUser = await prisma.user.findUnique({ where: { email: "senior@smu.edu.sg" }, include: { student: true } })
+  const sophomoreUser = await prisma.user.findUnique({ where: { email: "sophomore@smu.edu.sg" }, include: { student: true } })
+  const nusUser = await prisma.user.findUnique({ where: { email: "nus-student@nus.edu.sg" }, include: { student: true } })
+
+  const allProfessors = await prisma.professor.findMany()
+  const findProf = (name: string) => allProfessors.find((p) => p.name === name)
+
+  // Course reviews
+  const courseReviewsData = [
+    // Junior's reviews
+    { student: juniorUser!.student!, courseCode: "CS101", rating: 5, difficulty: 2, workload: 2, term: "2023-Fall",
+      content: "Great introductory course. Professor explains concepts clearly and the assignments build on each other nicely. Highly recommend for first-year students." },
+    { student: juniorUser!.student!, courseCode: "CS102", rating: 4, difficulty: 3, workload: 3, term: "2024-Spring",
+      content: "Solid course on data structures. The lab sessions were very helpful for understanding linked lists and trees. Exams can be tricky though." },
+    { student: juniorUser!.student!, courseCode: "CS201", rating: 5, difficulty: 4, workload: 4, term: "2024-Fall",
+      content: "Challenging but rewarding. Dynamic programming section was tough but the professor broke it down well. Office hours were essential." },
+    { student: juniorUser!.student!, courseCode: "CS203", rating: 4, difficulty: 3, workload: 3, term: "2024-Fall",
+      content: "Good overview of software engineering practices. Group project was a great learning experience. Could use more on modern DevOps practices." },
+    { student: juniorUser!.student!, courseCode: "MATH101", rating: 3, difficulty: 3, workload: 2, term: "2023-Fall",
+      content: "Standard calculus course. Nothing extraordinary but covers the fundamentals well. Textbook is helpful for self-study." },
+    { student: juniorUser!.student!, courseCode: "CS301", rating: 5, difficulty: 5, workload: 5, term: "2025-Fall",
+      content: "The most challenging course I have taken. Machine learning concepts are fascinating. Heavy math prerequisites but incredibly rewarding." },
+    // Senior's reviews
+    { student: seniorUser!.student!, courseCode: "CS101", rating: 4, difficulty: 2, workload: 2, term: "2022-Fall",
+      content: "Well-structured intro course. Python is a great first language. Weekly quizzes kept you on track. Wish there were more real-world examples." },
+    { student: seniorUser!.student!, courseCode: "CS102", rating: 5, difficulty: 3, workload: 3, term: "2023-Spring",
+      content: "Essential for any CS student. The progression from arrays to trees to graphs is logical. Best TA team I have encountered." },
+    { student: seniorUser!.student!, courseCode: "CS201", rating: 4, difficulty: 4, workload: 4, term: "2023-Fall",
+      content: "Algorithm design thinking changes how you approach problems. Graph algorithms section was my favorite. Start the assignments early." },
+    { student: seniorUser!.student!, courseCode: "CS203", rating: 5, difficulty: 3, workload: 4, term: "2023-Fall",
+      content: "Excellent preparation for industry. Agile methodology practice was very practical. The group project simulates real work environments." },
+    { student: seniorUser!.student!, courseCode: "CS301", rating: 4, difficulty: 5, workload: 5, term: "2024-Fall",
+      content: "Steep learning curve but the content is cutting-edge. Neural network assignments were particularly interesting. Need strong math background." },
+    { student: seniorUser!.student!, courseCode: "CS400", rating: 5, difficulty: 4, workload: 4, term: "2024-Fall",
+      content: "Advanced software engineering at its best. Design patterns and architecture discussions were invaluable. Code reviews taught me a lot." },
+    { student: seniorUser!.student!, courseCode: "CS450", rating: 4, difficulty: 3, workload: 3, term: "2024-Fall",
+      content: "Fun and creative course. Building a game from scratch was incredibly satisfying. Unity engine has a learning curve but worth it." },
+    // Sophomore's reviews
+    { student: sophomoreUser!.student!, courseCode: "CS101", rating: 5, difficulty: 1, workload: 2, term: "2024-Fall",
+      content: "Perfect introduction to programming. I had no prior coding experience and this course made everything click. Highly recommended for beginners." },
+    { student: sophomoreUser!.student!, courseCode: "CS102", rating: 4, difficulty: 3, workload: 3, term: "2025-Spring",
+      content: "Good follow-up to CS101. The jump in difficulty is noticeable but manageable. Binary trees took some time to fully understand." },
+    { student: sophomoreUser!.student!, courseCode: "MATH101", rating: 3, difficulty: 2, workload: 2, term: "2024-Fall",
+      content: "Decent math course. Covers what you need for CS. Some topics felt rushed but overall adequate preparation for further courses." },
+    // NUS student's reviews
+    { student: nusUser!.student!, courseCode: "CS1101S", rating: 5, difficulty: 3, workload: 3, term: "2024-Fall",
+      content: "Excellent introduction to programming using functional paradigms. The Source language is unique and the missions are engaging." },
+    { student: nusUser!.student!, courseCode: "CS1020", rating: 4, difficulty: 3, workload: 3, term: "2025-Spring",
+      content: "Good coverage of basic data structures. Lab exercises are well-designed. Lecture recordings are helpful for revision." },
+    { student: nusUser!.student!, courseCode: "CS2030", rating: 4, difficulty: 4, workload: 4, term: "2025-Fall",
+      content: "Object-oriented programming done right. Java generics and streams were challenging but the labs guide you through step by step." },
+    { student: nusUser!.student!, courseCode: "CS2040", rating: 5, difficulty: 4, workload: 4, term: "2025-Fall",
+      content: "Best CS course at NUS. The Kattis problem sets are addictive. Prepare to spend many hours but you will emerge a much stronger programmer." },
+  ]
+
+  for (const r of courseReviewsData) {
+    const course = findCourse(r.courseCode)
+    if (!course) continue
+    await prisma.courseReview.create({
+      data: {
+        studentId: r.student.id,
+        courseId: course.id,
+        rating: r.rating,
+        difficultyRating: r.difficulty,
+        workloadRating: r.workload,
+        content: r.content,
+        term: r.term,
+        isAnonymous: true,
+      },
+    })
+  }
+
+  // Professor reviews (using real SCIS faculty names)
+  const profReviewsData = [
+    // Junior's professor reviews
+    { student: juniorUser!.student!, profName: "Don Ta", courseCode: "CS101", rating: 5, difficulty: 2, workload: 2, term: "2023-Fall",
+      content: "Don Ta is one of the best professors in SCIS. Explains complex concepts with simple analogies. Always available during office hours and genuinely cares about students." },
+    { student: juniorUser!.student!, profName: "Dai Bing Tian", courseCode: "CS102", rating: 4, difficulty: 3, workload: 3, term: "2024-Spring",
+      content: "Knowledgeable professor with a deep understanding of data structures. Lectures are well-organized and the coding demos really help reinforce the concepts." },
+    { student: juniorUser!.student!, profName: "Ouh Eng Lieh", courseCode: "CS201", rating: 5, difficulty: 4, workload: 4, term: "2024-Fall",
+      content: "Ouh Eng Lieh makes algorithms come alive. His enthusiasm is contagious and he genuinely cares about student understanding. Office hours are always packed." },
+    { student: juniorUser!.student!, profName: "Chris Poskitt", courseCode: "CS203", rating: 4, difficulty: 3, workload: 4, term: "2024-Fall",
+      content: "Chris Poskitt runs a tight ship for software engineering. Great at teaching testing and verification concepts. The group project is very well-structured." },
+    { student: juniorUser!.student!, profName: "He Shengfeng", courseCode: "CS301", rating: 5, difficulty: 5, workload: 5, term: "2025-Fall",
+      content: "He Shengfeng is incredibly knowledgeable in ML. Lectures are research-level but he makes the material accessible. Assignments are tough but you learn so much." },
+    // Senior's professor reviews
+    { student: seniorUser!.student!, profName: "Don Ta", courseCode: "CS101", rating: 5, difficulty: 2, workload: 2, term: "2022-Fall",
+      content: "Outstanding teacher. Makes programming feel accessible even for complete beginners. Patient and encouraging. Best prof for intro courses." },
+    { student: seniorUser!.student!, profName: "He Shengfeng", courseCode: "CS301", rating: 4, difficulty: 5, workload: 5, term: "2024-Fall",
+      content: "Very knowledgeable in ML and AI. Research-focused teaching style. Assignments are challenging but you learn a lot from the process." },
+    { student: seniorUser!.student!, profName: "Lee Yeow Leong", courseCode: "CS400", rating: 5, difficulty: 4, workload: 4, term: "2024-Fall",
+      content: "Lee Yeow Leong brings real industry experience to the classroom. His code review sessions are legendary. Highly recommended for aspiring software engineers." },
+    { student: seniorUser!.student!, profName: "Sun Jun", courseCode: "CS203", rating: 5, difficulty: 3, workload: 3, term: "2023-Fall",
+      content: "Sun Jun is an excellent lecturer for software engineering. Clear explanations of design patterns and architecture. Very responsive on the forums." },
+    // Sophomore's professor reviews
+    { student: sophomoreUser!.student!, profName: "Don Ta", courseCode: "CS101", rating: 5, difficulty: 1, workload: 2, term: "2024-Fall",
+      content: "Best professor for first-year students. Breaks down programming concepts beautifully. Very approachable and always willing to help after class." },
+    { student: sophomoreUser!.student!, profName: "Dai Bing Tian", courseCode: "CS102", rating: 4, difficulty: 3, workload: 3, term: "2025-Spring",
+      content: "Clear teaching style for data structures. The lab exercises complement the lectures perfectly. Would take another course with him." },
+  ]
+
+  for (const r of profReviewsData) {
+    const prof = findProf(r.profName)
+    const course = findCourse(r.courseCode)
+    if (!prof || !course) continue
+    await prisma.professorReview.create({
+      data: {
+        studentId: r.student.id,
+        professorId: prof.id,
+        courseId: course.id,
+        rating: r.rating,
+        difficultyRating: r.difficulty,
+        workloadRating: r.workload,
+        content: r.content,
+        term: r.term,
+        isAnonymous: true,
+      },
+    })
+  }
+
+  return { courseReviews: courseReviewsData.length, professorReviews: profReviewsData.length }
+}
+
+// ============================================================
 // Main Execution
 // ============================================================
 async function main() {
@@ -2001,13 +2254,24 @@ async function main() {
   await createTestStudents(smuCourses, nusCourses)
   console.log(`✅ Created 6 test students with academic history\n`)
 
-  // 6. Summary
+  // 6. Seed professors & course instructors
+  const professors = await seedProfessors(smuCourses, nusCourses)
+  console.log(`✅ Created ${professors.length} professors with course assignments\n`)
+
+  // 7. Seed reviews
+  const reviewCounts = await seedReviews(smuCourses, nusCourses)
+  console.log(`✅ Created ${reviewCounts.courseReviews} course reviews and ${reviewCounts.professorReviews} professor reviews\n`)
+
+  // 8. Summary
   console.log("🎉 Seed completed successfully!\n")
   console.log("📊 Summary:")
   console.log(`  - SMU Courses: ${smuCourses.length}`)
   console.log(`  - NUS Courses: ${nusCourses.length}`)
   console.log(`  - Total Courses: ${smuCourses.length + nusCourses.length}`)
   console.log(`  - Prerequisites: ${prereqCount}`)
+  console.log(`  - Professors: ${professors.length}`)
+  console.log(`  - Course Reviews: ${reviewCounts.courseReviews}`)
+  console.log(`  - Professor Reviews: ${reviewCounts.professorReviews}`)
   console.log(`  - Test Students: 6`)
   console.log(`  - Completed Course Records: 75+\n`)
   console.log("📝 Test Accounts (all use password: password123):")

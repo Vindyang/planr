@@ -76,6 +76,8 @@ model student {
   user             user              @relation(fields: [userId], references: [id], onDelete: Cascade)
   completedCourses completedCourse[]
   semesterPlans    semesterPlan[]
+  courseReviews    courseReview[]
+  professorReviews professorReview[]
 
   @@map("students")
 }
@@ -97,6 +99,9 @@ model course {
   prerequisiteFor  prerequisite[]    @relation("PrerequisiteCourses")
   completedCourses completedCourse[]
   plannedCourses   plannedCourse[]
+  courseInstructors courseInstructor[]
+  courseReviews     courseReview[]
+  professorReviews professorReview[]
 
   @@unique([code, university])
   @@map("courses")
@@ -168,6 +173,76 @@ model graduationRequirement {
   @@map("graduation_requirements")
 }
 
+
+model professor {
+  id         String     @id @default(uuid())
+  name       String
+  university University
+  department String
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  courseInstructors courseInstructor[]
+  reviews          professorReview[]
+
+  @@unique([name, university, department])
+  @@map("professors")
+}
+
+model courseInstructor {
+  id          String  @id @default(uuid())
+  courseId     String  @map("course_id")
+  professorId String  @map("professor_id")
+  term        String?
+
+  course    course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  professor professor @relation(fields: [professorId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, professorId, term])
+  @@map("course_instructors")
+}
+
+model courseReview {
+  id               String   @id @default(uuid())
+  studentId        String   @map("student_id")
+  courseId          String   @map("course_id")
+  rating           Int
+  difficultyRating Int      @map("difficulty_rating")
+  workloadRating   Int      @map("workload_rating")
+  content          String   @db.Text
+  term             String
+  isAnonymous      Boolean  @default(true) @map("is_anonymous")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  student student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@map("course_reviews")
+}
+
+model professorReview {
+  id               String   @id @default(uuid())
+  studentId        String   @map("student_id")
+  professorId      String   @map("professor_id")
+  courseId          String?  @map("course_id")
+  rating           Int
+  difficultyRating Int      @map("difficulty_rating")
+  workloadRating   Int      @map("workload_rating")
+  content          String   @db.Text
+  term             String?
+  isAnonymous      Boolean  @default(true) @map("is_anonymous")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  student   student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  professor professor  @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  course    course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@unique([studentId, professorId])
+  @@map("professor_reviews")
+}
 
 model session {
   id        String   @id
