@@ -16,7 +16,9 @@ export async function proxy(request: NextRequest) {
     pathname === path || pathname.startsWith(`${path}/`)
   )
 
-  const sessionToken = request.cookies.get("better-auth.session_token")?.value
+  const sessionToken =
+    request.cookies.get("better-auth.session_token")?.value ||
+    request.cookies.get("__Secure-better-auth.session_token")?.value
 
   // Redirect unauthenticated users from protected routes to login
   if (isProtectedPath && !sessionToken) {
@@ -36,6 +38,7 @@ export async function proxy(request: NextRequest) {
     // Session cookie is stale/expired — clear it and let user access login
     const response = NextResponse.next()
     response.cookies.delete("better-auth.session_token")
+    response.cookies.delete("__Secure-better-auth.session_token")
     return response
   }
 
