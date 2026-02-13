@@ -1,7 +1,6 @@
 import { getSession } from "@/lib/auth"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { AppLayout } from "@/components/layout/AppLayout"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
@@ -60,9 +59,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   }
 
   return (
-    <AppLayout>
-      <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
-        {/* Back link */}
+    <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
+      {/* Back link */}
         <Link
           href="/courses"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit"
@@ -358,7 +356,6 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             </div>
           </div>
         </div>
-      </div>
-    </AppLayout>
+    </div>
   )
 }

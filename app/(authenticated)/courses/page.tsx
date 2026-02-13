@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { AppLayout } from "@/components/layout/AppLayout"
 import { Input } from "@/components/ui/input"
 import { IconSearch } from "@tabler/icons-react"
 import {
@@ -149,18 +148,15 @@ function CoursesContent() {
 
   if (isLoading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading courses...</p>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading courses...</p>
+      </div>
     )
   }
 
   return (
-    <AppLayout>
-      <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
-        <header className="flex justify-between items-end border-b border-border pb-8">
+    <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
+      <header className="flex justify-between items-end border-b border-border pb-8">
           <div>
             <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
               Courses
@@ -303,8 +299,7 @@ function CoursesContent() {
             })}
           </div>
         )}
-      </div>
-    </AppLayout>
+    </div>
   )
 }
 
@@ -312,11 +307,9 @@ export default function CoursesPage() {
   return (
     <Suspense
       fallback={
-        <AppLayout>
-          <div className="flex items-center justify-center h-64">
-            <p className="text-muted-foreground">Loading courses...</p>
-          </div>
-        </AppLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading courses...</p>
+        </div>
       }
     >
       <CoursesContent />

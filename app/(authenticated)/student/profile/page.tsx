@@ -3,7 +3,6 @@ import { redirect } from "next/navigation"
 import { getStudentProfile } from "@/lib/data/students"
 import { getAllCoursesForUniversity } from "@/lib/data/courses"
 import ProfileClient from "./ProfileClient"
-import { AppLayout } from "@/components/layout/AppLayout"
 
 export default async function ProfilePage() {
   const session = await getSession()
@@ -15,11 +14,9 @@ export default async function ProfilePage() {
 
   if (!student) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-red-500">Student profile not found</p>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-red-500">Student profile not found</p>
+      </div>
     )
   }
 

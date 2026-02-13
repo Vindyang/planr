@@ -1,7 +1,6 @@
 "use client"
 
 import { Suspense, useEffect, useState, useMemo } from "react"
-import { AppLayout } from "@/components/layout/AppLayout"
 import { CourseReviewCard } from "@/components/reviews/CourseReviewCard"
 import { ProfessorReviewCard } from "@/components/reviews/ProfessorReviewCard"
 import { WriteReviewDialog } from "@/components/reviews/WriteReviewDialog"
@@ -108,16 +107,14 @@ function MyReviewsContent() {
 
   if (isLoading) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading your reviews...</p>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading your reviews...</p>
+      </div>
     )
   }
 
   return (
-    <AppLayout>
+    <>
       <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
         <header className="flex justify-between items-end border-b border-border pb-8">
           <div>
@@ -210,7 +207,7 @@ function MyReviewsContent() {
           onSuccess={fetchData}
         />
       )}
-    </AppLayout>
+    </>
   )
 }
 
@@ -218,11 +215,9 @@ export default function ReviewsPage() {
   return (
     <Suspense
       fallback={
-        <AppLayout>
-          <div className="flex items-center justify-center h-64">
-            <p className="text-muted-foreground">Loading your reviews...</p>
-          </div>
-        </AppLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Loading your reviews...</p>
+        </div>
       }
     >
       <MyReviewsContent />

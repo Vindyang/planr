@@ -1005,479 +1005,13 @@ async function seedSMUCourses() {
   return await prisma.course.findMany({ where: { university: "SMU" } })
 }
 
-// ============================================================
-// 3. Seed NUS Courses (50 courses)
-// ============================================================
-async function seedNUSCourses() {
-  const nusCoursesData = [
-    // Foundation Year 1 (10 courses)
-    {
-      code: "CS1101S",
-      title: "Programming Methodology",
-      description: "Introduction to programming using functional and imperative paradigms. Emphasis on problem-solving and computational thinking.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Programming"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS1231",
-      title: "Discrete Structures",
-      description: "Mathematical foundations for computer science: logic, sets, relations, functions, graphs, and proof techniques.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Math"],
-      university: "NUS" as University,
-    },
-    {
-      code: "MA1521",
-      title: "Calculus for Computing",
-      description: "Differential and integral calculus with applications to computing.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Math"],
-      university: "NUS" as University,
-    },
-    {
-      code: "MA1101R",
-      title: "Linear Algebra I",
-      description: "Systems of linear equations, matrices, determinants, vector spaces, eigenvalues.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Math"],
-      university: "NUS" as University,
-    },
-    {
-      code: "IS1103",
-      title: "Computing and Society",
-      description: "Ethical, legal, and social issues in computing.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Breadth"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS1010",
-      title: "Programming Methodology (Python)",
-      description: "Basic programming concepts using Python for non-majors.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Programming"],
-      university: "NUS" as University,
-    },
-    {
-      code: "ST2334",
-      title: "Probability and Statistics",
-      description: "Probability theory, random variables, distributions, statistical inference.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Math"],
-      university: "NUS" as University,
-    },
-    {
-      code: "GER1000",
-      title: "Quantitative Reasoning",
-      description: "Critical thinking and data analysis skills.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Breadth"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS1020",
-      title: "Data Structures and Algorithms I",
-      description: "Basic data structures: arrays, linked lists, stacks, queues. Introduction to algorithm analysis.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Core", "Programming"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS2030",
-      title: "Programming Methodology II",
-      description: "Object-oriented programming, design patterns, Java programming.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Programming"],
-      university: "NUS" as University,
-    },
-
-    // Core Year 2 (10 courses)
-    {
-      code: "CS2040",
-      title: "Data Structures and Algorithms",
-      description: "Advanced data structures: trees, heaps, hash tables, graphs. Algorithm design and analysis.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Algorithms"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS2100",
-      title: "Computer Organization",
-      description: "Digital logic, processor design, assembly programming, memory hierarchy.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Systems"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS2103T",
-      title: "Software Engineering",
-      description: "Software development lifecycle, design patterns, testing, version control.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Software Engineering"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS2105",
-      title: "Introduction to Computer Networks",
-      description: "Network protocols, TCP/IP, routing, network security fundamentals.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Networks"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS2106",
-      title: "Introduction to Operating Systems",
-      description: "Process management, memory management, file systems, concurrency.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Systems"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS2109S",
-      title: "Introduction to AI and Machine Learning",
-      description: "Search algorithms, knowledge representation, supervised learning basics.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Core", "AI"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS2101",
-      title: "Effective Communication for Computing Professionals",
-      description: "Technical writing, presentation skills, documentation.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Breadth"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS2102",
-      title: "Database Systems",
-      description: "Relational model, SQL, database design, normalization, transactions.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Core", "Database"],
-      university: "NUS" as University,
-    },
-    {
-      code: "MA2101",
-      title: "Linear Algebra II",
-      description: "Advanced topics in linear algebra with computational applications.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Math"],
-      university: "NUS" as University,
-    },
-    {
-      code: "ST2131",
-      title: "Probability",
-      description: "Advanced probability theory for computing applications.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Math"],
-      university: "NUS" as University,
-    },
-
-    // Advanced Year 3-4 (30 courses)
-    {
-      code: "CS3230",
-      title: "Design and Analysis of Algorithms",
-      description: "Advanced algorithm design: divide-and-conquer, dynamic programming, greedy, graph algorithms.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Advanced", "Algorithms"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3243",
-      title: "Introduction to Artificial Intelligence",
-      description: "Search, planning, logic, probabilistic reasoning, machine learning fundamentals.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Advanced", "AI"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3244",
-      title: "Machine Learning",
-      description: "Supervised and unsupervised learning, neural networks, deep learning.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Advanced", "AI"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3235",
-      title: "Computer Security",
-      description: "Security principles, cryptography, authentication, secure coding.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Security"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3236",
-      title: "Introduction to Information Theory",
-      description: "Entropy, source coding, channel coding, applications to compression.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Theory"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3240",
-      title: "Interaction Design",
-      description: "User-centered design, prototyping, usability testing.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "UI/UX"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3241",
-      title: "Computer Graphics",
-      description: "Rendering pipeline, transformations, lighting, texture mapping.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Graphics"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3203",
-      title: "Software Engineering Project",
-      description: "Large-scale team software development project.",
-      units: 4,
-      termsOffered: ["Fall", "Spring"],
-      tags: ["Advanced", "Software Engineering"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3217",
-      title: "Software Engineering on Modern Application Platforms",
-      description: "Mobile and web application development using modern frameworks.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Software Engineering"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3219",
-      title: "Software Engineering Principles and Patterns",
-      description: "Advanced design patterns, SOLID principles, refactoring.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Software Engineering"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3220",
-      title: "Computer Networks Practice",
-      description: "Hands-on network programming, protocol implementation.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Networks"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3210",
-      title: "Parallel Computing",
-      description: "Parallel architectures, CUDA, OpenMP, MapReduce.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Systems"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS3211",
-      title: "Parallel and Concurrent Programming",
-      description: "Concurrency models, synchronization, deadlock avoidance.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Systems"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4211",
-      title: "Formal Methods for Software Engineering",
-      description: "Program verification, model checking, theorem proving.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Theory"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4212",
-      title: "Compiler Design",
-      description: "Lexical analysis, parsing, optimization, code generation.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Systems"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4220",
-      title: "Knowledge Discovery and Data Mining",
-      description: "Association rules, clustering, classification, pattern mining.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Data Science"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4221",
-      title: "Database Applications Design and Tuning",
-      description: "Query optimization, indexing, database performance.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Database"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4222",
-      title: "Wireless Networking",
-      description: "Wireless protocols, mobile networks, IoT communications.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Networks"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4231",
-      title: "Parallel and Distributed Algorithms",
-      description: "Distributed consensus, fault tolerance, blockchain algorithms.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Algorithms"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4238",
-      title: "Computer Security Practice",
-      description: "Penetration testing, vulnerability analysis, secure deployment.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Security"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4239",
-      title: "Software Security",
-      description: "Secure coding, static analysis, dynamic testing.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Security"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4240",
-      title: "Interaction Design for Virtual and Augmented Reality",
-      description: "VR/AR interface design, 3D interaction techniques.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Graphics"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4243",
-      title: "Computer Vision and Pattern Recognition",
-      description: "Image processing, object detection, scene understanding.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "AI"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4244",
-      title: "Knowledge Representation and Reasoning",
-      description: "Ontologies, semantic web, automated reasoning.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "AI"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4245",
-      title: "Big Data Systems for Data Science",
-      description: "Hadoop, Spark, distributed data processing.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Data Science"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4246",
-      title: "AI Planning and Decision Making",
-      description: "Planning algorithms, reinforcement learning, game theory.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "AI"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4247",
-      title: "Graphics Rendering Techniques",
-      description: "Ray tracing, global illumination, physically-based rendering.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "Graphics"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4248",
-      title: "Natural Language Processing",
-      description: "Text processing, language models, machine translation.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "AI"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4249",
-      title: "Phenomena and Theories of Human-Computer Interaction",
-      description: "HCI research methods, user studies, interface evaluation.",
-      units: 4,
-      termsOffered: ["Spring"],
-      tags: ["Advanced", "UI/UX"],
-      university: "NUS" as University,
-    },
-    {
-      code: "CS4274",
-      title: "Mobile and Pervasive Computing",
-      description: "Mobile systems, context-aware computing, edge computing.",
-      units: 4,
-      termsOffered: ["Fall"],
-      tags: ["Advanced", "Systems"],
-      university: "NUS" as University,
-    },
-  ]
-
-  await prisma.course.createMany({ data: nusCoursesData })
-  return await prisma.course.findMany({ where: { university: "NUS" } })
-}
 
 // ============================================================
 // 4. Create Prerequisites (220+ relationships)
 // ============================================================
-async function createPrerequisites(smuCourses: any[], nusCourses: any[]) {
-  // Helper to find course by code
+async function createPrerequisites(smuCourses: any[]) {
   const findCourse = (code: string) =>
-    [...smuCourses, ...nusCourses].find((c) => c.code === code)
+    smuCourses.find((c) => c.code === code)
 
   const prerequisites: { from: string; to: string; type: string }[] = [
     // ========== SMU PREREQUISITES ==========
@@ -1595,61 +1129,6 @@ async function createPrerequisites(smuCourses: any[], nusCourses: any[]) {
     { from: "CS301", to: "CS302", type: "COREQUISITE" },
     { from: "CS410", to: "CS418", type: "COREQUISITE" },
     { from: "CS420", to: "CS423", type: "COREQUISITE" },
-
-    // ========== NUS PREREQUISITES ==========
-
-    // Foundation chains
-    { from: "CS1101S", to: "CS1020", type: "HARD" },
-    { from: "CS1020", to: "CS2030", type: "HARD" },
-    { from: "CS2030", to: "CS2040", type: "HARD" },
-    { from: "CS1010", to: "CS1020", type: "HARD" },
-
-    // Math prerequisites
-    { from: "MA1521", to: "MA1101R", type: "SOFT" },
-    { from: "MA1101R", to: "MA2101", type: "HARD" },
-    { from: "ST2334", to: "ST2131", type: "SOFT" },
-
-    // Core Year 2
-    { from: "CS2040", to: "CS2100", type: "SOFT" },
-    { from: "CS2030", to: "CS2103T", type: "HARD" },
-    { from: "CS2040", to: "CS2105", type: "SOFT" },
-    { from: "CS2100", to: "CS2106", type: "HARD" },
-    { from: "CS2040", to: "CS2109S", type: "SOFT" },
-    { from: "CS2030", to: "CS2102", type: "HARD" },
-
-    // Advanced Year 3-4
-    { from: "CS2040", to: "CS3230", type: "HARD" },
-    { from: "CS2109S", to: "CS3243", type: "HARD" },
-    { from: "CS3243", to: "CS3244", type: "HARD" },
-    { from: "CS2106", to: "CS3235", type: "SOFT" },
-    { from: "CS2040", to: "CS3236", type: "HARD" },
-    { from: "CS2103T", to: "CS3240", type: "SOFT" },
-    { from: "CS2100", to: "CS3241", type: "SOFT" },
-    { from: "CS2103T", to: "CS3203", type: "HARD" },
-    { from: "CS2103T", to: "CS3217", type: "HARD" },
-    { from: "CS2103T", to: "CS3219", type: "HARD" },
-    { from: "CS2105", to: "CS3220", type: "HARD" },
-    { from: "CS2106", to: "CS3210", type: "HARD" },
-    { from: "CS2106", to: "CS3211", type: "HARD" },
-
-    // Year 4 courses
-    { from: "CS3203", to: "CS4211", type: "SOFT" },
-    { from: "CS3230", to: "CS4212", type: "HARD" },
-    { from: "CS2102", to: "CS4220", type: "HARD" },
-    { from: "CS2102", to: "CS4221", type: "HARD" },
-    { from: "CS2105", to: "CS4222", type: "HARD" },
-    { from: "CS3230", to: "CS4231", type: "HARD" },
-    { from: "CS3235", to: "CS4238", type: "HARD" },
-    { from: "CS3235", to: "CS4239", type: "HARD" },
-    { from: "CS3241", to: "CS4240", type: "SOFT" },
-    { from: "CS3244", to: "CS4243", type: "HARD" },
-    { from: "CS3243", to: "CS4244", type: "HARD" },
-    { from: "CS2102", to: "CS4245", type: "HARD" },
-    { from: "CS3244", to: "CS4246", type: "HARD" },
-    { from: "CS3241", to: "CS4247", type: "HARD" },
-    { from: "CS3244", to: "CS4248", type: "HARD" },
-    { from: "CS3240", to: "CS4249", type: "HARD" },
-    { from: "CS2106", to: "CS4274", type: "SOFT" },
   ]
 
   // Create prerequisite records
@@ -1679,10 +1158,9 @@ async function createPrerequisites(smuCourses: any[], nusCourses: any[]) {
 // ============================================================
 // 5. Create Test Students with Academic History
 // ============================================================
-async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
-  // Helper to find course by code
+async function createTestStudents(smuCourses: any[]) {
   const findCourse = (code: string) =>
-    [...smuCourses, ...nusCourses].find((c) => c.code === code)
+    smuCourses.find((c) => c.code === code)
 
   // Hash password for all test accounts
   const passwordHash = await hashPassword("password123")
@@ -1932,61 +1410,15 @@ async function createTestStudents(smuCourses: any[], nusCourses: any[]) {
     ],
   })
   console.log(`  ✅ Created struggling@smu.edu.sg (12 courses, GPA 2.3, D in CS102)`)
-
-  // 6. NUS STUDENT - Different university
-  const nusStudent = await prisma.user.create({
-    data: {
-      email: "nus-student@nus.edu.sg",
-      name: "Jamie NUS",
-      emailVerified: true,
-      accounts: {
-        create: {
-          id: "account-nus",
-          accountId: "nus-student@nus.edu.sg",
-          providerId: "credential",
-          password: passwordHash,
-        },
-      },
-      student: {
-        create: {
-          university: "NUS",
-          major: "Computer Science",
-          year: 2,
-          enrollmentYear: 2024,
-          expectedGraduationYear: 2028,
-          gpa: 3.6,
-        },
-      },
-    },
-    include: { student: true },
-  })
-
-  await prisma.completedCourse.createMany({
-    data: [
-      // Year 1 NUS courses
-      { studentId: nusStudent.student!.id, courseId: findCourse("CS1101S")!.id, grade: "A", term: "2024-Fall" },
-      { studentId: nusStudent.student!.id, courseId: findCourse("CS1231")!.id, grade: "A-", term: "2024-Fall" },
-      { studentId: nusStudent.student!.id, courseId: findCourse("MA1521")!.id, grade: "B+", term: "2024-Fall" },
-      { studentId: nusStudent.student!.id, courseId: findCourse("MA1101R")!.id, grade: "A", term: "2024-Fall" },
-      { studentId: nusStudent.student!.id, courseId: findCourse("IS1103")!.id, grade: "A", term: "2025-Spring" },
-      { studentId: nusStudent.student!.id, courseId: findCourse("CS1020")!.id, grade: "A-", term: "2025-Spring" },
-      { studentId: nusStudent.student!.id, courseId: findCourse("ST2334")!.id, grade: "B+", term: "2025-Spring" },
-      { studentId: nusStudent.student!.id, courseId: findCourse("GER1000")!.id, grade: "A", term: "2025-Spring" },
-      // Year 2 started
-      { studentId: nusStudent.student!.id, courseId: findCourse("CS2030")!.id, grade: "A", term: "2025-Fall" },
-      { studentId: nusStudent.student!.id, courseId: findCourse("CS2040")!.id, grade: "A-", term: "2025-Fall" },
-    ],
-  })
-  console.log(`  ✅ Created nus-student@nus.edu.sg (10 NUS courses, GPA 3.6)`)
 }
 
 // ============================================================
 // 6. Seed Professors & Course Instructors
 // (SMU SCIS faculty scraped from computing.smu.edu.sg)
 // ============================================================
-async function seedProfessors(smuCourses: any[], nusCourses: any[]) {
+async function seedProfessors(smuCourses: any[]) {
   const findCourse = (code: string) =>
-    [...smuCourses, ...nusCourses].find((c) => c.code === code)
+    smuCourses.find((c) => c.code === code)
 
   // Real SMU SCIS Faculty (scraped from computing.smu.edu.sg/faculty/profile/)
   const scisFaculty = [
@@ -2100,15 +1532,14 @@ async function seedProfessors(smuCourses: any[], nusCourses: any[]) {
 // ============================================================
 // 7. Seed Reviews
 // ============================================================
-async function seedReviews(smuCourses: any[], nusCourses: any[]) {
+async function seedReviews(smuCourses: any[]) {
   const findCourse = (code: string) =>
-    [...smuCourses, ...nusCourses].find((c) => c.code === code)
+    smuCourses.find((c) => c.code === code)
 
   // Get students and professors
   const juniorUser = await prisma.user.findUnique({ where: { email: "junior@smu.edu.sg" }, include: { student: true } })
   const seniorUser = await prisma.user.findUnique({ where: { email: "senior@smu.edu.sg" }, include: { student: true } })
   const sophomoreUser = await prisma.user.findUnique({ where: { email: "sophomore@smu.edu.sg" }, include: { student: true } })
-  const nusUser = await prisma.user.findUnique({ where: { email: "nus-student@nus.edu.sg" }, include: { student: true } })
 
   const allProfessors = await prisma.professor.findMany()
   const findProf = (name: string) => allProfessors.find((p) => p.name === name)
@@ -2150,15 +1581,6 @@ async function seedReviews(smuCourses: any[], nusCourses: any[]) {
       content: "Good follow-up to CS101. The jump in difficulty is noticeable but manageable. Binary trees took some time to fully understand." },
     { student: sophomoreUser!.student!, courseCode: "MATH101", rating: 3, difficulty: 2, workload: 2, term: "2024-Fall",
       content: "Decent math course. Covers what you need for CS. Some topics felt rushed but overall adequate preparation for further courses." },
-    // NUS student's reviews
-    { student: nusUser!.student!, courseCode: "CS1101S", rating: 5, difficulty: 3, workload: 3, term: "2024-Fall",
-      content: "Excellent introduction to programming using functional paradigms. The Source language is unique and the missions are engaging." },
-    { student: nusUser!.student!, courseCode: "CS1020", rating: 4, difficulty: 3, workload: 3, term: "2025-Spring",
-      content: "Good coverage of basic data structures. Lab exercises are well-designed. Lecture recordings are helpful for revision." },
-    { student: nusUser!.student!, courseCode: "CS2030", rating: 4, difficulty: 4, workload: 4, term: "2025-Fall",
-      content: "Object-oriented programming done right. Java generics and streams were challenging but the labs guide you through step by step." },
-    { student: nusUser!.student!, courseCode: "CS2040", rating: 5, difficulty: 4, workload: 4, term: "2025-Fall",
-      content: "Best CS course at NUS. The Kattis problem sets are addictive. Prepare to spend many hours but you will emerge a much stronger programmer." },
   ]
 
   for (const r of courseReviewsData) {
@@ -2242,45 +1664,38 @@ async function main() {
   const smuCourses = await seedSMUCourses()
   console.log(`✅ Created ${smuCourses.length} SMU courses\n`)
 
-  // 3. Seed NUS courses
-  const nusCourses = await seedNUSCourses()
-  console.log(`✅ Created ${nusCourses.length} NUS courses\n`)
-
-  // 4. Create prerequisites
-  const prereqCount = await createPrerequisites(smuCourses, nusCourses)
+  // 3. Create prerequisites
+  const prereqCount = await createPrerequisites(smuCourses)
   console.log(`✅ Created ${prereqCount} prerequisite relationships\n`)
 
-  // 5. Create test students
-  await createTestStudents(smuCourses, nusCourses)
-  console.log(`✅ Created 6 test students with academic history\n`)
+  // 4. Create test students
+  await createTestStudents(smuCourses)
+  console.log(`✅ Created 5 test students with academic history\n`)
 
-  // 6. Seed professors & course instructors
-  const professors = await seedProfessors(smuCourses, nusCourses)
+  // 5. Seed professors & course instructors
+  const professors = await seedProfessors(smuCourses)
   console.log(`✅ Created ${professors.length} professors with course assignments\n`)
 
-  // 7. Seed reviews
-  const reviewCounts = await seedReviews(smuCourses, nusCourses)
+  // 6. Seed reviews
+  const reviewCounts = await seedReviews(smuCourses)
   console.log(`✅ Created ${reviewCounts.courseReviews} course reviews and ${reviewCounts.professorReviews} professor reviews\n`)
 
-  // 8. Summary
+  // 7. Summary
   console.log("🎉 Seed completed successfully!\n")
   console.log("📊 Summary:")
-  console.log(`  - SMU Courses: ${smuCourses.length}`)
-  console.log(`  - NUS Courses: ${nusCourses.length}`)
-  console.log(`  - Total Courses: ${smuCourses.length + nusCourses.length}`)
+  console.log(`  - Courses: ${smuCourses.length}`)
   console.log(`  - Prerequisites: ${prereqCount}`)
   console.log(`  - Professors: ${professors.length}`)
   console.log(`  - Course Reviews: ${reviewCounts.courseReviews}`)
   console.log(`  - Professor Reviews: ${reviewCounts.professorReviews}`)
-  console.log(`  - Test Students: 6`)
-  console.log(`  - Completed Course Records: 75+\n`)
+  console.log(`  - Test Students: 5`)
+  console.log(`  - Completed Course Records: 65+\n`)
   console.log("📝 Test Accounts (all use password: password123):")
   console.log("  - freshman@smu.edu.sg - Year 1, GPA 0.0, 0 completed")
   console.log("  - sophomore@smu.edu.sg - Year 2, GPA 3.5, 8 completed")
   console.log("  - junior@smu.edu.sg - Year 3, GPA 3.7, 20 completed")
   console.log("  - senior@smu.edu.sg - Year 4, GPA 3.8, 32 completed")
-  console.log("  - struggling@smu.edu.sg - Year 3, GPA 2.3, 12 completed (D in CS102)")
-  console.log("  - nus-student@nus.edu.sg - Year 2 NUS, GPA 3.6, 10 completed\n")
+  console.log("  - struggling@smu.edu.sg - Year 3, GPA 2.3, 12 completed (D in CS102)\n")
 }
 
 main()

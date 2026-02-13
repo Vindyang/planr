@@ -12,10 +12,11 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { IconDashboard, IconCalendarEvent, IconBook, IconMessageCircle, IconSettings, IconLogout } from "@tabler/icons-react"
+import { IconDashboard, IconCalendarEvent, IconBook, IconMessageCircle, IconLogout } from "@tabler/icons-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { signOut } from "@/lib/auth-client"
+import { signOut, useSession } from "@/lib/auth-client"
+import { useEffect, useState } from "react"
 
 
 // Enriched items with metadata for the new design
@@ -29,12 +30,6 @@ const items = [
         { title: "My Reviews", url: "/reviews", icon: IconMessageCircle, number: "004" },
     ]
   },
-  {
-    title: "Account",
-    items: [
-        { title: "Preferences", url: "/settings", icon: IconSettings, number: "005" },
-    ]
-  }
 ]
 
 export function AppSidebar() {

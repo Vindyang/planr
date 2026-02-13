@@ -1,6 +1,5 @@
 import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { AppLayout } from "@/components/layout/AppLayout"
 import { StatCards } from "./components/StatCards"
 import { EligibleCoursesList } from "./components/EligibleCoursesList"
 import {
@@ -25,11 +24,9 @@ export default async function DashboardPage() {
 
   if (!student) {
     return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-red-500">Student profile not found</p>
-        </div>
-      </AppLayout>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-red-500">Student profile not found</p>
+      </div>
     )
   }
 
@@ -96,53 +93,51 @@ export default async function DashboardPage() {
   const remainingUnits = Math.max(0, 120 - completedUnits - plannedUnits)
 
   return (
-    <AppLayout>
-      <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
-        <header className="flex justify-between items-start border-b border-border pb-8">
-          <div>
-            <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
-              Home <br />
-            </h1>
-          </div>
-          <div className="text-right">
-            <span className="block text-sm mt-1 uppercase tracking-wider font-medium text-foreground">
-              Welcome back, {student.user.name}
-            </span>
-            <span className="font-serif text-xl italic text-muted-foreground">
-              Year {student.year} • {student.major}
-            </span>
-          </div>
-        </header>
+    <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
+      <header className="flex justify-between items-start border-b border-border pb-8">
+        <div>
+          <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
+            Home <br />
+          </h1>
+        </div>
+        <div className="text-right">
+          <span className="block text-sm mt-1 uppercase tracking-wider font-medium text-foreground">
+            Welcome back, {student.user.name}
+          </span>
+          <span className="font-serif text-xl italic text-muted-foreground">
+            Year {student.year} • {student.major}
+          </span>
+        </div>
+      </header>
 
-        {/* Enhanced Stat Cards - 3x2 Grid */}
-        <StatCards
-          gpa={student.gpa}
-          unitsEarned={completedUnits}
-          year={student.year}
-          major={student.major}
-          nextSemesterCourses={nextSemester.coursesCount}
-          totalCoursesTaken={student.completedCourses.length}
-          remainingUnits={remainingUnits}
-        />
+      {/* Enhanced Stat Cards - 3x2 Grid */}
+      <StatCards
+        gpa={student.gpa}
+        unitsEarned={completedUnits}
+        year={student.year}
+        major={student.major}
+        nextSemesterCourses={nextSemester.coursesCount}
+        totalCoursesTaken={student.completedCourses.length}
+        remainingUnits={remainingUnits}
+      />
 
-        {/* Main Content: Eligible Courses + Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <h3 className="text-xl font-semibold tracking-tight mb-4">
-              Eligible Courses for Next Semester
-            </h3>
-            <EligibleCoursesList
-              courses={eligibleCoursesWithDisplay}
-              semesterPlans={plannerData.semesterPlans}
-            />
-          </div>
+      {/* Main Content: Eligible Courses + Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <h3 className="text-xl font-semibold tracking-tight mb-4">
+            Eligible Courses for Next Semester
+          </h3>
+          <EligibleCoursesList
+            courses={eligibleCoursesWithDisplay}
+            semesterPlans={plannerData.semesterPlans}
+          />
+        </div>
 
-          <div className="space-y-6">
-            <PlanSummary semesterPlans={plannerData.semesterPlans} />
-            <UpcomingDeadlines />
-          </div>
+        <div className="space-y-6">
+          <PlanSummary semesterPlans={plannerData.semesterPlans} />
+          <UpcomingDeadlines />
         </div>
       </div>
-    </AppLayout>
+    </div>
   )
 }

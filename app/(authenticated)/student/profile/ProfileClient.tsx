@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { AppLayout } from "@/components/layout/AppLayout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -227,16 +226,14 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
 
   if (!student) {
       return (
-        <AppLayout>
-          <div className="flex items-center justify-center h-full min-h-[50vh]">
-            <p className="text-muted-foreground">No profile found</p>
-          </div>
-        </AppLayout>
+        <div className="flex items-center justify-center h-full min-h-[50vh]">
+          <p className="text-muted-foreground">No profile found</p>
+        </div>
       )
   }
 
   return (
-    <AppLayout>
+    <>
       <div className="flex flex-col space-y-8 animate-in fade-in duration-500">
         {/* Header Section */}
         <header className="flex items-end justify-between pb-6 border-b border-border">
@@ -612,6 +609,6 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
           </SheetFooter>
         </SheetContent>
       </Sheet>
-    </AppLayout>
+    </>
   )
 }
