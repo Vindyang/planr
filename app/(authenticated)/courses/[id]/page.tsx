@@ -186,7 +186,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                   Prerequisites
                 </h2>
                 <div className="space-y-2">
-                  {course.prerequisites.map((prereq) => {
+                  {course.prerequisites.map((prereq: (typeof course.prerequisites)[number]) => {
                     const completed = completedIds.has(prereq.prerequisiteCourse.id)
                     const grade = completedGrades.get(prereq.prerequisiteCourse.id)
                     const gradeDeficiency = getGradeDeficiency(prereq.prerequisiteCourse.id)
@@ -251,7 +251,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                   Unlocks
                 </h2>
                 <div className="grid gap-2 md:grid-cols-2">
-                  {course.prerequisiteFor.map((dep) => (
+                  {course.prerequisiteFor.map((dep: (typeof course.prerequisiteFor)[number]) => (
                     <Link
                       key={dep.id}
                       href={`/courses/${dep.course.id}`}
