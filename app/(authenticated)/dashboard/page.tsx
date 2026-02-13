@@ -10,9 +10,29 @@ import {
 import { getStudentProfile } from "@/lib/data/students"
 import { getAllCoursesForUniversity } from "@/lib/data/courses"
 import { getPlannerData } from "@/lib/planner/actions"
-import { getNextSemesterSummary } from "@/lib/data/dashboard"
 import { PlanSummary } from "./components/PlanSummary"
 import { UpcomingDeadlines } from "./components/UpcomingDeadlines"
+
+function getNextSemesterFromPlans(
+  semesterPlans: Awaited<ReturnType<typeof getPlannerData>>["semesterPlans"]
+) {
+  const now = new Date()
+  const month = now.getMonth()
+  const year = now.getFullYear()
+  const targetTerm = month >= 0 && month <= 4 ? "Spring" : "Fall"
+
+  const plan = semesterPlans.find(
+    (p) => p.term === targetTerm && p.year === year
+  )
+
+  return {
+    coursesCount: plan?.plannedCourses.length ?? 0,
+    totalUnits:
+      plan?.plannedCourses.reduce((sum, pc) => sum + pc.course.units, 0) ?? 0,
+    term: targetTerm,
+    year,
+  }
+}
 
 export default async function DashboardPage() {
   const session = await getSession()
@@ -30,13 +50,13 @@ export default async function DashboardPage() {
     )
   }
 
-  const courses = await getAllCoursesForUniversity(student.university)
-
-  // Fetch planner data and next semester summary
-  const [plannerData, nextSemester] = await Promise.all([
-    getPlannerData(),
-    getNextSemesterSummary(student.id)
+  // Fetch courses and planner data in parallel (2 queries instead of 4)
+  const [courses, plannerData] = await Promise.all([
+    getAllCoursesForUniversity(student.university),
+    getPlannerData(student.id),
   ])
+
+  const nextSemester = getNextSemesterFromPlans(plannerData.semesterPlans)
 
   // Transform courses to match CourseWithPrereqs type
   const transformedCourses: CourseWithPrereqs[] = courses.map((course) => ({

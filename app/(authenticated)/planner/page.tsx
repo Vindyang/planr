@@ -16,7 +16,7 @@ export default async function PlannerPage() {
 
   // Parallel data fetching with student's actual university
   const [plannerData, allCourses] = await Promise.all([
-    getPlannerData(),
+    getPlannerData(student.id),
     getAllCoursesForUniversity(student.university)
   ])
 

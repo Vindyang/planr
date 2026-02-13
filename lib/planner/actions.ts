@@ -46,32 +46,23 @@ const moveCourseSchema = z.object({
 
 // --- Actions ---
 
-export async function getPlannerData(): Promise<PlannerData> {
-  const studentId = await getStudentId()
+export async function getPlannerData(studentId?: string): Promise<PlannerData> {
+  const id = studentId ?? await getStudentId()
 
-  const [semesterPlans, completedCourses] = await Promise.all([
-    prisma.semesterPlan.findMany({
-      where: { studentId },
-      include: {
-        plannedCourses: {
-          include: {
-            course: true,
-          },
-          orderBy: { addedAt: "asc" },
+  const semesterPlans = await prisma.semesterPlan.findMany({
+    where: { studentId: id },
+    include: {
+      plannedCourses: {
+        include: {
+          course: true,
         },
+        orderBy: { addedAt: "asc" },
       },
-      orderBy: [{ year: "asc" }, { term: "desc" }], // Fall/Spring ordering logic might need custom sort later
-    }),
-    prisma.completedCourse.findMany({
-      where: { studentId },
-      include: {
-        course: true,
-      },
-      orderBy: { createdAt: "desc" },
-    }),
-  ])
+    },
+    orderBy: [{ year: "asc" }, { term: "desc" }],
+  })
 
-  return { semesterPlans, completedCourses }
+  return { semesterPlans, completedCourses: [] }
 }
 
 export async function createSemesterPlan(term: string, year: number) {
