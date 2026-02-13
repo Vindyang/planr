@@ -54,7 +54,7 @@ export function WriteReviewDialog({
 }: WriteReviewDialogProps) {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<"course" | "professor">(defaultMode)
-  const [selectedCourseId, setSelectedCourseId] = useState("")
+  const [selectedCourseId, setSelectedCourseId] = useState(defaultCourseId || "")
   const [selectedProfessorId, setSelectedProfessorId] = useState("")
   const [profCourseId, setProfCourseId] = useState("")
   const [rating, setRating] = useState(0)
@@ -67,7 +67,7 @@ export function WriteReviewDialog({
   const availableProfessors = professors.filter((p) => !reviewedProfessorIds.has(p.id))
 
   const resetForm = () => {
-    setSelectedCourseId("")
+    setSelectedCourseId(defaultCourseId || "")
     setSelectedProfessorId("")
     setProfCourseId("")
     setRating(0)
@@ -152,7 +152,7 @@ export function WriteReviewDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm() }}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { resetForm(); setMode(defaultMode) } }}>
       <DialogTrigger asChild>
         {children || (
           <Button className="text-xs uppercase tracking-wider">

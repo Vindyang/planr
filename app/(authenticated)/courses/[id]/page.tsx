@@ -10,6 +10,8 @@ import { getCourseWithPrerequisites } from "@/lib/data/courses"
 import { getStudentProfile } from "@/lib/data/students"
 import { getEligibilityForCourse } from "@/lib/eligibility/service"
 import { getCourseReviewsByCourse, getReviewAggregates } from "@/lib/data/reviews"
+import { getProfessorsByCourse } from "@/lib/data/professors"
+import { CourseReviewsSection } from "./_components/CourseReviewsSection"
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -20,11 +22,12 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
 
   // 1. Parallel Data Fetching
-  const [course, student, courseReviews, reviewAggregates] = await Promise.all([
+  const [course, student, courseReviews, reviewAggregates, courseProfessors] = await Promise.all([
     getCourseWithPrerequisites(id),
     getStudentProfile(session.user.id),
     getCourseReviewsByCourse(id),
     getReviewAggregates(id),
+    getProfessorsByCourse(id),
   ])
 
   if (!course) {
@@ -269,69 +272,35 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             )}
 
             {/* Reviews Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-                  Reviews
-                </h2>
-                {reviewAggregates.totalReviews > 3 && (
-                  <Link
-                    href={`/reviews?courseId=${course.id}`}
-                    className="text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    See all {reviewAggregates.totalReviews} reviews
-                  </Link>
-                )}
-              </div>
-
-              {reviewAggregates.totalReviews > 0 ? (
-                <div className="space-y-4">
-                  {/* Aggregate stats */}
-                  <div className="border border-border bg-card p-4 flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-serif italic">
-                        {reviewAggregates.averageRating.toFixed(1)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        / 5 ({reviewAggregates.totalReviews} {reviewAggregates.totalReviews === 1 ? "review" : "reviews"})
-                      </span>
-                    </div>
-                    <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span>Difficulty: {reviewAggregates.averageDifficulty.toFixed(1)}/5</span>
-                      <span>Workload: {reviewAggregates.averageWorkload.toFixed(1)}/5</span>
-                    </div>
-                  </div>
-
-                  {/* Recent reviews (max 3) */}
-                  {courseReviews.slice(0, 3).map((review) => (
-                    <div key={review.id} className="border border-border bg-card p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium">{review.rating}/5</span>
-                          <span className="text-xs text-muted-foreground">{review.term}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground italic">
-                          {review.isAnonymous ? "Anonymous" : review.student.user.name}
-                        </span>
-                      </div>
-                      <p className="text-sm text-foreground line-clamp-3">{review.content}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="border border-border bg-card p-6 text-center">
-                  <p className="text-sm text-muted-foreground">No reviews yet for this course.</p>
-                </div>
-              )}
-
-              {isCompleted && !courseReviews.some((r) => r.studentId === student?.id) && (
-                <Link href="/reviews">
-                  <Button variant="outline" className="w-full text-xs uppercase tracking-wider">
-                    Write a Review
-                  </Button>
-                </Link>
-              )}
-            </div>
+            <CourseReviewsSection
+              courseId={course.id}
+              studentId={student?.id ?? null}
+              isCompleted={isCompleted}
+              hasReviewed={courseReviews.some((r) => r.studentId === student?.id)}
+              initialCourseReviews={courseReviews.map((r) => ({
+                id: r.id,
+                rating: r.rating,
+                difficultyRating: r.difficultyRating,
+                workloadRating: r.workloadRating,
+                content: r.content,
+                term: r.term,
+                isAnonymous: r.isAnonymous,
+                createdAt: r.createdAt.toISOString(),
+                course: r.course,
+                studentName: r.isAnonymous ? null : r.student.user.name,
+                isOwn: r.studentId === student?.id,
+              }))}
+              initialAggregates={reviewAggregates}
+              initialProfessors={courseProfessors}
+              completedCourses={
+                student?.completedCourses.map((cc) => ({
+                  courseId: cc.courseId,
+                  code: cc.course.code,
+                  title: cc.course.title,
+                  term: cc.term,
+                })) ?? []
+              }
+            />
           </div>
 
           {/* Sidebar metadata */}

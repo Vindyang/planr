@@ -26,7 +26,7 @@ const items = [
         { title: "Dashboard", url: "/dashboard", icon: IconDashboard, number: "001" },
         { title: "Planner", url: "/planner", icon: IconCalendarEvent, number: "002" },
         { title: "Courses", url: "/courses", icon: IconBook, number: "003" },
-        { title: "Reviews", url: "/reviews", icon: IconMessageCircle, number: "004" },
+        { title: "My Reviews", url: "/reviews", icon: IconMessageCircle, number: "004" },
     ]
   },
   {

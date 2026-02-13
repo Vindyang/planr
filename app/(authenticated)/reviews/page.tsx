@@ -2,11 +2,10 @@
 
 import { Suspense, useEffect, useState, useMemo } from "react"
 import { AppLayout } from "@/components/layout/AppLayout"
-import { Input } from "@/components/ui/input"
-import { IconSearch } from "@tabler/icons-react"
 import { CourseReviewCard } from "@/components/reviews/CourseReviewCard"
 import { ProfessorReviewCard } from "@/components/reviews/ProfessorReviewCard"
 import { WriteReviewDialog } from "@/components/reviews/WriteReviewDialog"
+import { EditReviewDialog } from "@/components/reviews/EditReviewDialog"
 import { toast } from "@/components/ui/toast"
 import type { CourseReviewData, ProfessorReviewData, ProfessorData } from "@/lib/types"
 
@@ -17,21 +16,23 @@ interface CompletedCourseOption {
   term: string
 }
 
-function ReviewsContent() {
+function MyReviewsContent() {
   const [activeTab, setActiveTab] = useState<"courses" | "professors">("courses")
   const [courseReviews, setCourseReviews] = useState<CourseReviewData[]>([])
   const [professorReviews, setProfessorReviews] = useState<ProfessorReviewData[]>([])
   const [completedCourses, setCompletedCourses] = useState<CompletedCourseOption[]>([])
   const [professors, setProfessors] = useState<ProfessorData[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [search, setSearch] = useState("")
-  const [sortBy, setSortBy] = useState<"recent" | "rating">("recent")
+  const [editingReview, setEditingReview] = useState<{
+    review: CourseReviewData | ProfessorReviewData
+    type: "course" | "professor"
+  } | null>(null)
 
   const fetchData = async () => {
     try {
       const [courseRes, profRes, profileRes, professorsRes] = await Promise.all([
-        fetch("/api/reviews/courses"),
-        fetch("/api/reviews/professors"),
+        fetch("/api/reviews/courses?mine=true"),
+        fetch("/api/reviews/professors?mine=true"),
         fetch("/api/student/profile"),
         fetch("/api/professors"),
       ])
@@ -72,48 +73,14 @@ function ReviewsContent() {
   }, [])
 
   const reviewedCourseIds = useMemo(
-    () => new Set(courseReviews.filter((r) => r.isOwn).map((r) => r.course.id)),
+    () => new Set(courseReviews.map((r) => r.course.id)),
     [courseReviews]
   )
 
   const reviewedProfessorIds = useMemo(
-    () => new Set(professorReviews.filter((r) => r.isOwn).map((r) => r.professor.id)),
+    () => new Set(professorReviews.map((r) => r.professor.id)),
     [professorReviews]
   )
-
-  const filteredCourseReviews = useMemo(() => {
-    let filtered = courseReviews
-    if (search) {
-      const q = search.toLowerCase()
-      filtered = filtered.filter(
-        (r) =>
-          r.course.code.toLowerCase().includes(q) ||
-          r.course.title.toLowerCase().includes(q) ||
-          r.content.toLowerCase().includes(q)
-      )
-    }
-    if (sortBy === "rating") {
-      filtered = [...filtered].sort((a, b) => b.rating - a.rating)
-    }
-    return filtered
-  }, [courseReviews, search, sortBy])
-
-  const filteredProfessorReviews = useMemo(() => {
-    let filtered = professorReviews
-    if (search) {
-      const q = search.toLowerCase()
-      filtered = filtered.filter(
-        (r) =>
-          r.professor.name.toLowerCase().includes(q) ||
-          r.professor.department.toLowerCase().includes(q) ||
-          r.content.toLowerCase().includes(q)
-      )
-    }
-    if (sortBy === "rating") {
-      filtered = [...filtered].sort((a, b) => b.rating - a.rating)
-    }
-    return filtered
-  }, [professorReviews, search, sortBy])
 
   const handleDeleteCourseReview = async (id: string) => {
     try {
@@ -137,14 +104,13 @@ function ReviewsContent() {
     }
   }
 
-  const totalReviews =
-    activeTab === "courses" ? filteredCourseReviews.length : filteredProfessorReviews.length
+  const totalReviews = courseReviews.length + professorReviews.length
 
   if (isLoading) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading reviews...</p>
+          <p className="text-muted-foreground">Loading your reviews...</p>
         </div>
       </AppLayout>
     )
@@ -156,7 +122,7 @@ function ReviewsContent() {
         <header className="flex justify-between items-end border-b border-border pb-8">
           <div>
             <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
-              Reviews
+              My Reviews
             </h1>
           </div>
           <div className="flex items-center gap-4">
@@ -183,7 +149,7 @@ function ReviewsContent() {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Course Reviews
+            Course Reviews ({courseReviews.length})
           </button>
           <button
             onClick={() => setActiveTab("professors")}
@@ -193,83 +159,57 @@ function ReviewsContent() {
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
-            Professor Reviews
+            Professor Reviews ({professorReviews.length})
           </button>
-        </div>
-
-        {/* Search & Sort */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1 max-w-md">
-            <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder={
-                activeTab === "courses"
-                  ? "Search by course code, title, or content..."
-                  : "Search by professor name, department, or content..."
-              }
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-transparent"
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setSortBy("recent")}
-              className={`px-3 py-1.5 text-xs uppercase tracking-wider border transition-colors ${
-                sortBy === "recent"
-                  ? "bg-foreground text-background border-foreground"
-                  : "border-border hover:border-foreground"
-              }`}
-            >
-              Most Recent
-            </button>
-            <button
-              onClick={() => setSortBy("rating")}
-              className={`px-3 py-1.5 text-xs uppercase tracking-wider border transition-colors ${
-                sortBy === "rating"
-                  ? "bg-foreground text-background border-foreground"
-                  : "border-border hover:border-foreground"
-              }`}
-            >
-              Highest Rated
-            </button>
-          </div>
         </div>
 
         {/* Review list */}
         {activeTab === "courses" ? (
-          filteredCourseReviews.length === 0 ? (
+          courseReviews.length === 0 ? (
             <div className="text-center py-16 text-muted-foreground">
-              <p>No course reviews yet. Be the first to write one!</p>
+              <p>You haven&apos;t written any course reviews yet.</p>
             </div>
           ) : (
             <div className="grid gap-6">
-              {filteredCourseReviews.map((review) => (
+              {courseReviews.map((review) => (
                 <CourseReviewCard
                   key={review.id}
                   review={review}
-                  onDelete={review.isOwn ? handleDeleteCourseReview : undefined}
+                  onEdit={(r) => setEditingReview({ review: r, type: "course" })}
+                  onDelete={handleDeleteCourseReview}
                 />
               ))}
             </div>
           )
-        ) : filteredProfessorReviews.length === 0 ? (
+        ) : professorReviews.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
-            <p>No professor reviews yet. Be the first to write one!</p>
+            <p>You haven&apos;t written any professor reviews yet.</p>
           </div>
         ) : (
           <div className="grid gap-6">
-            {filteredProfessorReviews.map((review) => (
+            {professorReviews.map((review) => (
               <ProfessorReviewCard
                 key={review.id}
                 review={review}
-                onDelete={review.isOwn ? handleDeleteProfessorReview : undefined}
+                onEdit={(r) => setEditingReview({ review: r, type: "professor" })}
+                onDelete={handleDeleteProfessorReview}
               />
             ))}
           </div>
         )}
       </div>
+
+      {editingReview && (
+        <EditReviewDialog
+          review={editingReview.review}
+          type={editingReview.type}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setEditingReview(null)
+          }}
+          onSuccess={fetchData}
+        />
+      )}
     </AppLayout>
   )
 }
@@ -280,12 +220,12 @@ export default function ReviewsPage() {
       fallback={
         <AppLayout>
           <div className="flex items-center justify-center h-64">
-            <p className="text-muted-foreground">Loading reviews...</p>
+            <p className="text-muted-foreground">Loading your reviews...</p>
           </div>
         </AppLayout>
       }
     >
-      <ReviewsContent />
+      <MyReviewsContent />
     </Suspense>
   )
 }
