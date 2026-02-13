@@ -291,12 +291,14 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
               initialAggregates={reviewAggregates}
               initialProfessors={courseProfessors}
               completedCourses={
-                student?.completedCourses.map((cc) => ({
-                  courseId: cc.courseId,
-                  code: cc.course.code,
-                  title: cc.course.title,
-                  term: cc.term,
-                })) ?? []
+                student?.completedCourses
+                  .filter((cc) => cc.status === "COMPLETED")
+                  .map((cc) => ({
+                    courseId: cc.courseId,
+                    code: cc.course.code,
+                    title: cc.course.title,
+                    term: cc.term,
+                  })) ?? []
               }
             />
           </div>

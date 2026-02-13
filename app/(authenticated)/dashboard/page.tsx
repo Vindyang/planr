@@ -79,6 +79,18 @@ export default async function DashboardPage() {
     }
   })
 
+  // Filter out courses that are already in the planner
+  const plannedCourseIds = new Set<string>()
+  plannerData.semesterPlans.forEach((plan) => {
+    plan.plannedCourses.forEach((pc) => {
+      plannedCourseIds.add(pc.courseId)
+    })
+  })
+
+  const filteredEligibleCourses = eligibleCoursesWithDisplay.filter(
+    (ec) => !plannedCourseIds.has(ec.course.id)
+  )
+
   // Calculate statistics
   const completedUnits = student.completedCourses.reduce(
     (sum, cc) => sum + cc.course.units,
@@ -128,7 +140,7 @@ export default async function DashboardPage() {
             Eligible Courses for Next Semester
           </h3>
           <EligibleCoursesList
-            courses={eligibleCoursesWithDisplay}
+            courses={filteredEligibleCourses}
             semesterPlans={plannerData.semesterPlans}
           />
         </div>

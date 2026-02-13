@@ -46,14 +46,18 @@ function MyReviewsContent() {
       }
       if (profileRes.ok) {
         const data = await profileRes.json()
-        const courses = (data.student?.completedCourses || []).map(
-          (cc: { courseId: string; term: string; course: { code: string; title: string } }) => ({
-            courseId: cc.courseId,
-            code: cc.course.code,
-            title: cc.course.title,
-            term: cc.term,
-          })
-        )
+        const courses = (data.student?.completedCourses || [])
+          .filter(
+            (cc: { status: string }) => cc.status === "COMPLETED"
+          )
+          .map(
+            (cc: { courseId: string; term: string; course: { code: string; title: string } }) => ({
+              courseId: cc.courseId,
+              code: cc.course.code,
+              title: cc.course.title,
+              term: cc.term,
+            })
+          )
         setCompletedCourses(courses)
       }
       if (professorsRes.ok) {
