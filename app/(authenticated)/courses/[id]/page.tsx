@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
 import { EligibilityStatus } from "@/lib/eligibility"
 import { getCourseWithPrerequisites } from "@/lib/data/courses"
-import { getStudentProfile, type StudentProfile } from "@/lib/data/students"
+import { getStudentProfile } from "@/lib/data/students"
 import { getEligibilityForCourse } from "@/lib/eligibility/service"
 import { getCourseReviewsByCourse, getReviewAggregates } from "@/lib/data/reviews"
 import { getProfessorsByCourse } from "@/lib/data/professors"
@@ -34,7 +34,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   }
 
   // 2. Derive State
-  const completedCourses: StudentProfile['completedCourses'] = student?.completedCourses ?? []
+  const completedCourses = student?.completedCourses ?? []
   const completedIds = new Set(completedCourses.map((c) => c.courseId))
   const completedGrades = new Map(completedCourses.map((c) => [c.courseId, c.grade] as const))
   const isCompleted = completedIds.has(course.id)
