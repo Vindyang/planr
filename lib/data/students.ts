@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
 
+export type StudentProfile = NonNullable<Awaited<ReturnType<typeof getStudentProfile>>>
+
 export const getStudentProfile = cache(async (userId: string) => {
   return await prisma.student.findUnique({
     where: { userId },
