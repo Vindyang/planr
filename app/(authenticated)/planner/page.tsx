@@ -1,5 +1,5 @@
 import { getPlannerData } from "@/lib/planner/actions"
-import { getAllCoursesForUniversity } from "@/lib/data/courses"
+import { getCoursesWithDisplayData } from "@/lib/data/courses"
 import { requireSession } from "@/lib/auth"
 import { getStudentProfile } from "@/lib/data/students"
 import PlannerClient from "./PlannerClient"
@@ -14,10 +14,10 @@ export default async function PlannerPage() {
     return <div>Student profile not found</div>
   }
 
-  // Parallel data fetching with student's actual university
+  // Parallel data fetching - both queries now cached
   const [plannerData, allCourses] = await Promise.all([
     getPlannerData(student.id),
-    getAllCoursesForUniversity(student.university)
+    getCoursesWithDisplayData(student.university)
   ])
 
   // Calculate completed units

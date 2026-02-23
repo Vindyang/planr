@@ -104,6 +104,7 @@ model course {
   professorReviews professorReview[]
 
   @@unique([code, university])
+  @@index([university, isActive])
   @@map("courses")
 }
 

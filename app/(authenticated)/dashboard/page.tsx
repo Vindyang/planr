@@ -8,7 +8,7 @@ import {
   CompletedCourseInfo,
 } from "@/lib/eligibility"
 import { getStudentProfile } from "@/lib/data/students"
-import { getAllCoursesForUniversity } from "@/lib/data/courses"
+import { getCoursesWithDisplayData } from "@/lib/data/courses"
 import { getPlannerData } from "@/lib/planner/actions"
 import { PlanSummary } from "./components/PlanSummary"
 import { UpcomingDeadlines } from "./components/UpcomingDeadlines"
@@ -50,26 +50,13 @@ export default async function DashboardPage() {
     )
   }
 
-  // Fetch courses and planner data in parallel (2 queries instead of 4)
+  // Fetch courses and planner data in parallel (2 cached queries)
   const [courses, plannerData] = await Promise.all([
-    getAllCoursesForUniversity(student.university),
+    getCoursesWithDisplayData(student.university),
     getPlannerData(student.id),
   ])
 
   const nextSemester = getNextSemesterFromPlans(plannerData.semesterPlans)
-
-  // Transform courses to match CourseWithPrereqs type
-  const transformedCourses: CourseWithPrereqs[] = courses.map((course) => ({
-    id: course.id,
-    code: course.code,
-    title: course.title,
-    units: course.units,
-    prerequisites: course.prerequisites.map((p) => ({
-      prerequisiteCourseId: p.prerequisiteCourseId,
-      type: p.type,
-      prerequisiteCourse: p.prerequisiteCourse,
-    })),
-  }))
 
   // Transform completed courses for eligibility checking
   const completedCoursesInfo: CompletedCourseInfo[] = student.completedCourses.map((cc) => ({
@@ -78,26 +65,12 @@ export default async function DashboardPage() {
     course: cc.course,
   }))
 
-  // Get eligible courses using enhanced eligibility system
+  // Get eligible courses - courses already have all display fields (description, tags, termsOffered)
   const eligibleCourses = getEligibleCoursesWithDetails(
-    transformedCourses,
+    courses as CourseWithPrereqs[],
     completedCoursesInfo,
     { university: student.university }
   )
-
-  // Add descriptions and tags back for display
-  const eligibleCoursesWithDisplay = eligibleCourses.map((ec) => {
-    const originalCourse = courses.find((c) => c.id === ec.course.id)
-    return {
-      ...ec,
-      course: {
-        ...ec.course,
-        description: originalCourse?.description ?? "",
-        tags: originalCourse?.tags ?? [],
-        termsOffered: originalCourse?.termsOffered ?? [],
-      },
-    }
-  })
 
   // Filter out courses that are already in the planner
   const plannedCourseIds = new Set<string>()
@@ -107,7 +80,7 @@ export default async function DashboardPage() {
     })
   })
 
-  const filteredEligibleCourses = eligibleCoursesWithDisplay.filter(
+  const filteredEligibleCourses = eligibleCourses.filter(
     (ec) => !plannedCourseIds.has(ec.course.id)
   )
 

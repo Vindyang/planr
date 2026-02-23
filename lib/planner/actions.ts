@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { PlanStatus, Prisma } from "@prisma/client"
 import { requireSession } from "@/lib/auth"
 import { z } from "zod"
+import { cache } from "react"
 
 async function getStudentId() {
   const session = await requireSession()
@@ -46,15 +47,13 @@ const moveCourseSchema = z.object({
 
 // --- Actions ---
 
-export async function getPlannerData(studentId?: string): Promise<PlannerData> {
-  const id = studentId ?? await getStudentId()
-
+export const getPlannerData = cache(async (studentId: string): Promise<PlannerData> => {
   const semesterPlans = await prisma.semesterPlan.findMany({
-    where: { studentId: id },
+    where: { studentId },
     include: {
       plannedCourses: {
         include: {
-          course: true,
+          course: true, // Include all course fields for now - components need them
         },
         orderBy: { addedAt: "asc" },
       },
@@ -63,7 +62,7 @@ export async function getPlannerData(studentId?: string): Promise<PlannerData> {
   })
 
   return { semesterPlans, completedCourses: [] }
-}
+})
 
 export async function createSemesterPlan(term: string, year: number) {
   const studentId = await getStudentId()
