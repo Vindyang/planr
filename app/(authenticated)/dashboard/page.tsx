@@ -3,13 +3,13 @@ import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getStudentProfile } from "@/lib/data/students"
 import { StatCardsSection } from "./components/StatCardsSection"
-import { StatCardsSkeleton } from "./components/StatCardsSkeleton"
+import { StatCardsSkeleton } from "./components/skeleton/StatCardsSkeleton"
 import { EligibleCoursesSection } from "./components/EligibleCoursesSection"
-import { EligibleCoursesListSkeleton } from "./components/EligibleCoursesListSkeleton"
+import { EligibleCoursesListSkeleton } from "./components/skeleton/EligibleCoursesListSkeleton"
 import { PlanSummarySection } from "./components/PlanSummarySection"
-import { PlanSummarySkeleton } from "./components/PlanSummarySkeleton"
+import { PlanSummarySkeleton } from "./components/skeleton/PlanSummarySkeleton"
 import { UpcomingDeadlines } from "./components/UpcomingDeadlines"
-import { UpcomingDeadlinesSkeleton } from "./components/UpcomingDeadlinesSkeleton"
+import { UpcomingDeadlinesSkeleton } from "./components/skeleton/UpcomingDeadlinesSkeleton"
 
 export default async function DashboardPage() {
   const session = await getSession()
