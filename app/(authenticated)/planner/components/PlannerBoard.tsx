@@ -12,6 +12,7 @@ import { CourseCard } from "./CourseCard"
 import { CreateSemesterDialog } from "./CreateSemesterDialog"
 import { IconPlus, IconBook } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
+import type { ValidationResult } from "@/lib/planner/types"
 
 type PlannerData = {
   semesterPlans: (Prisma.semesterPlanGetPayload<{
@@ -27,6 +28,7 @@ type PlannerBoardProps = {
   onDeletePlan: (id: string) => void
   onCreatePlan: (term: string, year: number) => Promise<void>
   completedUnits?: number
+  initialValidation: ValidationResult
 }
 
 export function PlannerBoard({
@@ -36,6 +38,7 @@ export function PlannerBoard({
   onDeletePlan,
   onCreatePlan,
   completedUnits = 0,
+  initialValidation,
 }: PlannerBoardProps) {
   
   // Sidebar State
@@ -158,12 +161,13 @@ export function PlannerBoard({
           </main>
 
           {/* Unified Right Sidebar */}
-          <PlannerSidebar 
-             plans={data.semesterPlans} 
+          <PlannerSidebar
+             plans={data.semesterPlans}
              completedUnits={completedUnits}
              availableCourses={data.availableCourses}
              activeTab={activeTab}
              onTabChange={setActiveTab}
+             initialValidation={initialValidation}
           />
       </div>
 

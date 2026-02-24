@@ -10,6 +10,7 @@ import { IconSearch, IconX, IconBook, IconChartBar } from "@tabler/icons-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import type { ValidationResult } from "@/lib/planner/types"
 
 type Plan = Prisma.semesterPlanGetPayload<{
   include: { plannedCourses: { include: { course: true } } }
@@ -70,14 +71,16 @@ interface PlannerSidebarProps {
   availableCourses: DrawerCourse[]
   activeTab?: "progress" | "catalog"
   onTabChange?: (tab: "progress" | "catalog") => void
+  initialValidation: ValidationResult
 }
 
-export function PlannerSidebar({ 
-  plans, 
+export function PlannerSidebar({
+  plans,
   completedUnits = 0,
   availableCourses,
   activeTab = "progress",
-  onTabChange
+  onTabChange,
+  initialValidation
 }: PlannerSidebarProps) {
   // Local state if not controlled, but we prefer controlled for the header button to work
   const [internalTab, setInternalTab] = useState<"progress" | "catalog">("progress")
@@ -154,7 +157,7 @@ export function PlannerSidebar({
                 </div>
 
                 <div className="p-8 pt-0">
-                    <ValidationPanel />
+                    <ValidationPanel initialValidation={initialValidation} />
                 </div>
             </div>
         )}

@@ -1,22 +1,21 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { IconAlertTriangle, IconX, IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 import { Violation, ValidationResult } from "@/lib/planner/types"
 
 interface ValidationPanelProps {
+  initialValidation: ValidationResult
   onValidate?: () => void
 }
 
-export function ValidationPanel({ onValidate }: ValidationPanelProps) {
-  const [validation, setValidation] = useState<ValidationResult | null>(null)
+export function ValidationPanel({ initialValidation, onValidate }: ValidationPanelProps) {
+  const [validation, setValidation] = useState<ValidationResult>(initialValidation)
   const [isLoading, setIsLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
-  const [error, setError] = useState("")
 
   const fetchValidation = async () => {
     setIsLoading(true)
-    setError("")
     try {
       const res = await fetch("/api/planner/validate", { method: "POST" })
       if (!res.ok) throw new Error("Failed to validate plan")
@@ -24,33 +23,11 @@ export function ValidationPanel({ onValidate }: ValidationPanelProps) {
       setValidation(data)
       onValidate?.()
     } catch (err) {
-      setError((err as Error).message)
+      console.error("Validation error:", err)
     } finally {
       setIsLoading(false)
     }
   }
-
-  useEffect(() => {
-    fetchValidation()
-  }, [])
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 p-4">
-        <p className="text-red-700 text-sm">Error: {error}</p>
-      </div>
-    )
-  }
-
-  if (isLoading && !validation) {
-    return (
-      <div className="bg-card border border-border p-4">
-        <p className="text-muted-foreground text-sm">Validating plan...</p>
-      </div>
-    )
-  }
-
-  if (!validation) return null
 
   const errors = validation.violations.filter((v: Violation) => v.severity === "error")
   const warnings = validation.violations.filter((v: Violation) => v.severity === "warning")

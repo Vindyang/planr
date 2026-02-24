@@ -13,6 +13,7 @@ import { PlannerBoard } from "./components/PlannerBoard"
 import { addCourseToPlan, moveCourse, removeCourseFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
 import { useRouter } from "next/navigation"
 import { toast } from "@/components/ui/toast"
+import type { ValidationResult } from "@/lib/planner/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,9 +29,10 @@ type PlannerClientProps = {
   initialData: any
   allCourses: any[]
   completedUnits?: number
+  initialValidation: ValidationResult
 }
 
-export default function PlannerClient({ initialData, allCourses, completedUnits = 0 }: PlannerClientProps) {
+export default function PlannerClient({ initialData, allCourses, completedUnits = 0, initialValidation }: PlannerClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -137,6 +139,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           onDeletePlan={setPlanToDelete}
           onCreatePlan={handleCreatePlan}
           completedUnits={completedUnits}
+          initialValidation={initialValidation}
         />
       </DndContext>
 

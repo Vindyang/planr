@@ -3,6 +3,7 @@
 import { GraduationTracker } from "./GraduationTracker"
 import { ValidationPanel } from "./ValidationPanel"
 import { Prisma } from "@prisma/client"
+import type { ValidationResult } from "@/lib/planner/types"
 
 type Plan = Prisma.semesterPlanGetPayload<{
   include: { plannedCourses: { include: { course: true } } }
@@ -11,9 +12,10 @@ type Plan = Prisma.semesterPlanGetPayload<{
 interface PlannerRightSidebarProps {
   plans: Plan[]
   completedUnits?: number
+  initialValidation?: ValidationResult
 }
 
-export function PlannerRightSidebar({ plans, completedUnits = 0 }: PlannerRightSidebarProps) {
+export function PlannerRightSidebar({ plans, completedUnits = 0, initialValidation }: PlannerRightSidebarProps) {
   const plannedUnits = plans.reduce(
     (total: number, plan) =>
       total + plan.plannedCourses.reduce((sum: number, item) => sum + item.course.units, 0),
@@ -43,7 +45,7 @@ export function PlannerRightSidebar({ plans, completedUnits = 0 }: PlannerRightS
         </div>
 
         <div className="p-8">
-            <ValidationPanel />
+            {initialValidation && <ValidationPanel initialValidation={initialValidation} />}
         </div>
     </aside>
   )

@@ -153,6 +153,7 @@ model semesterPlan {
   plannedCourses plannedCourse[]
 
   @@index([studentId])
+  @@index([studentId, year, term])
   @@map("semester_plans")
 }
 

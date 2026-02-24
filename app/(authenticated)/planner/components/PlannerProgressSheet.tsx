@@ -13,6 +13,7 @@ import { ValidationPanel } from "./ValidationPanel"
 import { Separator } from "@/components/ui/separator"
 import { IconChartBar } from "@tabler/icons-react"
 import { Prisma } from "@prisma/client"
+import type { ValidationResult } from "@/lib/planner/types"
 
 type Plan = Prisma.semesterPlanGetPayload<{
   include: { plannedCourses: { include: { course: true } } }
@@ -22,9 +23,10 @@ type Plan = Prisma.semesterPlanGetPayload<{
 interface PlannerProgressSheetProps {
   plans: Plan[]
   completedUnits?: number
+  initialValidation?: ValidationResult
 }
 
-export function PlannerProgressSheet({ plans, completedUnits = 0 }: PlannerProgressSheetProps) {
+export function PlannerProgressSheet({ plans, completedUnits = 0, initialValidation }: PlannerProgressSheetProps) {
   const plannedUnits = plans.reduce(
     (total: number, plan) =>
       total + plan.plannedCourses.reduce((sum: number, item) => sum + item.course.units, 0),
@@ -55,7 +57,7 @@ export function PlannerProgressSheet({ plans, completedUnits = 0 }: PlannerProgr
                 completedUnits={completedUnits}
                 requiredUnits={requiredUnits}
             />
-            <ValidationPanel />
+            {initialValidation && <ValidationPanel initialValidation={initialValidation} />}
         </div>
       </SheetContent>
     </Sheet>
