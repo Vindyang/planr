@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { unstable_cache } from "next/cache"
 import CoursesClient from "./CoursesClient"
+import { CoursesPageSkeleton } from "./skeleton/CoursesPageSkeleton"
 
 // Cache courses data for 10 minutes since it rarely changes
 const getCachedCourses = unstable_cache(
@@ -86,13 +87,7 @@ async function CoursesContent() {
 
 export default function CoursesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading courses...</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<CoursesPageSkeleton />}>
       <CoursesContent />
     </Suspense>
   )
