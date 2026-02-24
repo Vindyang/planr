@@ -67,7 +67,7 @@ export const getPlannerData = cache(async (studentId: string): Promise<PlannerDa
   return { semesterPlans, completedCourses: [] }
 })
 
-export async function createSemesterPlan(term: string, year: number) {
+export async function createSemesterPlan(term: string, year: number): Promise<string> {
   const studentId = await getStudentId()
 
   const validated = createPlanSchema.parse({ term, year })
@@ -97,7 +97,7 @@ export async function createSemesterPlan(term: string, year: number) {
     throw new Error(`Academic year ${validated.year} already has the maximum of 4 terms.`)
   }
 
-  await prisma.semesterPlan.create({
+  const newSemester = await prisma.semesterPlan.create({
     data: {
       studentId,
       term: validated.term,
@@ -107,6 +107,7 @@ export async function createSemesterPlan(term: string, year: number) {
   })
 
   revalidatePath("/planner")
+  return newSemester.id
 }
 
 export async function deleteSemesterPlan(planId: string) {
