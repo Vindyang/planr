@@ -90,6 +90,8 @@ export function PlannerBoard({
     })
   })
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+
   return (
     <div className="flex items-start h-full bg-[#F4F1ED] overflow-hidden">
       
@@ -111,14 +113,31 @@ export function PlannerBoard({
                         </h1>
                     </div>
 
-                    <div className="pt-2">
-                        <AddCourseDialog 
+                    <div className="pt-2 flex items-center gap-4">
+                        <AddCourseDialog
                             availableCourses={data.availableCourses}
                             plannedCourseIds={plannedCourseIds}
                             semesterPlans={data.semesterPlans}
                             onAddCourse={onAddCourse}
                             onAddCourses={onAddCourses}
                         />
+                        {/* Sidebar Toggle Button */}
+                        <button
+                            className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        >
+                            {isSidebarOpen ? (
+                                <>
+                                    <IconLayoutSidebarRightCollapse size={18} stroke={1.5} />
+                                    <span>Hide Progress</span>
+                                </>
+                            ) : (
+                                <>
+                                    <IconLayoutSidebarRightExpand size={18} stroke={1.5} />
+                                    <span>Show Progress</span>
+                                </>
+                            )}
+                        </button>
                     </div>
                 </div>
 
@@ -179,6 +198,8 @@ export function PlannerBoard({
                  plans={data.semesterPlans}
                  completedUnits={completedUnits}
                  initialValidation={initialValidation}
+                 isCollapsed={!isSidebarOpen}
+                 onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
               />
           </div>
       </div>
