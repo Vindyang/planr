@@ -14,6 +14,8 @@ import { IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand 
 import { Button } from "@/components/ui/button"
 import type { ValidationResult } from "@/lib/planner/types"
 
+import { AddCourseDialog } from "./AddCourseDialog"
+
 type PlannerData = {
   semesterPlans: (Prisma.semesterPlanGetPayload<{
     include: { plannedCourses: { include: { course: true } } }
@@ -27,6 +29,8 @@ type PlannerBoardProps = {
   onRemoveCourse: (id: string) => void
   onDeletePlan: (id: string) => void
   onCreatePlan: (term: string, year: number) => Promise<void>
+  onAddCourse: (planId: string, courseId: string) => Promise<void>
+  onAddCourses: (planId: string, courseIds: string[]) => Promise<void>
   completedUnits?: number
   initialValidation: ValidationResult
 }
@@ -37,23 +41,11 @@ export function PlannerBoard({
   onRemoveCourse,
   onDeletePlan,
   onCreatePlan,
+  onAddCourse,
+  onAddCourses,
   completedUnits = 0,
   initialValidation,
 }: PlannerBoardProps) {
-  
-  // Sidebar State
-  const [activeTab, setActiveTab] = useState<"progress" | "catalog">("progress")
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-
-  // Set initial collapsed state based on screen size on mount
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 1024px)')
-    setIsSidebarCollapsed(mediaQuery.matches)
-
-    const handler = (e: MediaQueryListEvent) => setIsSidebarCollapsed(e.matches)
-    mediaQuery.addEventListener('change', handler)
-    return () => mediaQuery.removeEventListener('change', handler)
-  }, [])
   
   // Find active item for overlay
   let activeCourse: any = null
@@ -89,6 +81,14 @@ export function PlannerBoard({
 
   // Sort years
   const sortedYears = Object.keys(plansByYear).map(Number).sort((a, b) => a - b)
+  
+  // Compute plannedCourseIds to pass down to AddCourseDialog
+  const plannedCourseIds = new Set<string>()
+  data.semesterPlans.forEach(plan => {
+    plan.plannedCourses.forEach(pc => {
+        plannedCourseIds.add(pc.course.id)
+    })
+  })
 
   return (
     <div className="flex items-start h-full bg-[#F4F1ED] overflow-hidden">
@@ -111,27 +111,15 @@ export function PlannerBoard({
                         </h1>
                     </div>
 
-                    <Button
-                        variant="outline"
-                        onClick={() => {
-                            if (isSidebarCollapsed) {
-                                setIsSidebarCollapsed(false)
-                                setActiveTab("catalog")
-                            } else {
-                                setIsSidebarCollapsed(true)
-                            }
-                        }}
-                        className="uppercase text-xs tracking-[0.1em] font-medium bg-[#F4F1ED] border-[#DAD6CF] hover:bg-[#DAD6CF]/20 text-[#0A0A0A] gap-2 mt-1 h-9 px-4"
-                        title={isSidebarCollapsed ? "Open Catalog" : "Close"}
-                        aria-label="Toggle Sidebar"
-                    >
-                        {isSidebarCollapsed ? (
-                            <IconLayoutSidebarRightExpand stroke={1.5} size={18} />
-                        ) : (
-                            <IconLayoutSidebarRightCollapse stroke={1.5} size={18} />
-                        )}
-                        <span>{isSidebarCollapsed ? "Open Catalog" : "Close"}</span>
-                    </Button>
+                    <div className="pt-2">
+                        <AddCourseDialog 
+                            availableCourses={data.availableCourses}
+                            plannedCourseIds={plannedCourseIds}
+                            semesterPlans={data.semesterPlans}
+                            onAddCourse={onAddCourse}
+                            onAddCourses={onAddCourses}
+                        />
+                    </div>
                 </div>
 
                 {/* Empty State */}
@@ -190,12 +178,7 @@ export function PlannerBoard({
               <PlannerSidebar
                  plans={data.semesterPlans}
                  completedUnits={completedUnits}
-                 availableCourses={data.availableCourses}
-                 activeTab={activeTab}
-                 onTabChange={setActiveTab}
                  initialValidation={initialValidation}
-                 isCollapsed={isSidebarCollapsed}
-                 setIsCollapsed={setIsSidebarCollapsed}
               />
           </div>
       </div>

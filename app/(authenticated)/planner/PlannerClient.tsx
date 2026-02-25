@@ -10,7 +10,7 @@ import {
   DragEndEvent,
 } from "@dnd-kit/core"
 import { PlannerBoard } from "./components/PlannerBoard"
-import { addCourseToPlan, moveCourse, removeCourseFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
+import { addCourseToPlan, addCoursesToPlan, moveCourse, removeCourseFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
 import { useRouter } from "next/navigation"
 import { toast } from "@/components/ui/toast"
 import type { ValidationResult } from "@/lib/planner/types"
@@ -122,6 +122,31 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
      })
   }
 
+
+  const handleAddCourse = async (planId: string, courseId: string) => {
+    startTransition(async () => {
+      try {
+        await addCourseToPlan(planId, courseId)
+      } catch (e) {
+        toast.error("Failed to add course", {
+          description: (e as Error).message
+        })
+      }
+    })
+  }
+
+  const handleAddCourses = async (planId: string, courseIds: string[]) => {
+    startTransition(async () => {
+      try {
+        await addCoursesToPlan(planId, courseIds)
+      } catch (e) {
+        toast.error("Failed to add courses", {
+          description: (e as Error).message
+        })
+      }
+    })
+  }
+
   return (
     <>
       <DndContext
@@ -138,6 +163,8 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           onRemoveCourse={setCourseToRemove}
           onDeletePlan={setPlanToDelete}
           onCreatePlan={handleCreatePlan}
+          onAddCourse={handleAddCourse}
+          onAddCourses={handleAddCourses}
           completedUnits={completedUnits}
           initialValidation={initialValidation}
         />

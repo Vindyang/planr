@@ -257,9 +257,6 @@ export default function CoursesClient({
                       Missing Prereqs
                     </span>
                   )}
-                  {status === "unknown" && (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
                   <span className="uppercase text-[0.65rem] tracking-wider font-medium">
                     {course.units} CU
                   </span>

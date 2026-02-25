@@ -171,6 +171,49 @@ export async function addCourseToPlan(planId: string, courseId: string) {
   revalidatePath("/planner")
 }
 
+const addCoursesSchema = z.object({
+  planId: z.string(),
+  courseIds: z.array(z.string()),
+})
+
+export async function addCoursesToPlan(planId: string, courseIds: string[]) {
+  const studentId = await getStudentId()
+
+  const validated = addCoursesSchema.parse({ planId, courseIds })
+
+  // Verify ownership of plan
+  const plan = await prisma.semesterPlan.findUnique({
+    where: { id: validated.planId },
+  })
+
+  if (!plan || plan.studentId !== studentId) {
+    throw new Error("Plan not found or unauthorized")
+  }
+
+  // Find existing courses
+  const existing = await prisma.plannedCourse.findMany({
+    where: {
+      semesterPlanId: validated.planId,
+      courseId: { in: validated.courseIds },
+    },
+  })
+
+  const existingIds = new Set(existing.map((e) => e.courseId))
+  const toAdd = validated.courseIds.filter((id) => !existingIds.has(id))
+
+  if (toAdd.length > 0) {
+    await prisma.plannedCourse.createMany({
+      data: toAdd.map((courseId) => ({
+        semesterPlanId: validated.planId,
+        courseId,
+        status: PlanStatus.PLANNED,
+      })),
+    })
+  }
+
+  revalidatePath("/planner")
+}
+
 export async function removeCourseFromPlan(plannedCourseId: string) {
   const studentId = await getStudentId()
 
