@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 // import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // Removed
 import { YearSection } from "./YearSection"
 // import { CourseDrawer } from "./CourseDrawer" // Removed
@@ -10,7 +10,7 @@ import { Prisma } from "@prisma/client"
 import { DragOverlay } from "@dnd-kit/core"
 import { CourseCard } from "./CourseCard"
 import { CreateSemesterDialog } from "./CreateSemesterDialog"
-import { IconPlus, IconBook } from "@tabler/icons-react"
+import { IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import type { ValidationResult } from "@/lib/planner/types"
 
@@ -43,7 +43,18 @@ export function PlannerBoard({
   
   // Sidebar State
   const [activeTab, setActiveTab] = useState<"progress" | "catalog">("progress")
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
+  // Set initial collapsed state based on screen size on mount
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1024px)')
+    setIsSidebarCollapsed(mediaQuery.matches)
+
+    const handler = (e: MediaQueryListEvent) => setIsSidebarCollapsed(e.matches)
+    mediaQuery.addEventListener('change', handler)
+    return () => mediaQuery.removeEventListener('change', handler)
+  }, [])
+  
   // Find active item for overlay
   let activeCourse: any = null
 
@@ -80,7 +91,7 @@ export function PlannerBoard({
   const sortedYears = Object.keys(plansByYear).map(Number).sort((a, b) => a - b)
 
   return (
-    <div className="flex items-start h-[calc(100vh-4rem)] bg-[#F4F1ED] overflow-hidden">
+    <div className="flex items-start h-full bg-[#F4F1ED] overflow-hidden">
       
       <div className="flex flex-1 h-full overflow-hidden">
           {/* Center - Scrollable Canvas */}
@@ -88,18 +99,10 @@ export function PlannerBoard({
              <div className="px-[60px] py-12 max-w-[1400px] mx-auto space-y-16">
                 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[#DAD6CF] pb-8">
-                    <div>
-                        <div className="flex gap-6 mb-4">
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => setActiveTab("catalog")}
-                                className="uppercase text-xs tracking-[0.1em] font-medium bg-[#F4F1ED] border-[#DAD6CF] hover:bg-[#DAD6CF]/20"
-                            >
-                                Open Catalog
-                            </Button>
-                            <span className="uppercase text-xs tracking-[0.1em] font-medium bg-[#F4F1ED] px-2 py-1 border border-[#DAD6CF]">
+                <div className="flex justify-between items-start border-b border-[#DAD6CF] pb-8">
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-6 mb-4">
+                            <span className="flex items-center justify-center uppercase text-xs tracking-[0.1em] font-medium bg-[#F4F1ED] px-3 h-8 border border-[#DAD6CF]">
                                 {totalPlannedUnits} Units Planned
                             </span>
                         </div>
@@ -107,6 +110,28 @@ export function PlannerBoard({
                             Degree <span className="font-serif italic">Planner</span>
                         </h1>
                     </div>
+
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            if (isSidebarCollapsed) {
+                                setIsSidebarCollapsed(false)
+                                setActiveTab("catalog")
+                            } else {
+                                setIsSidebarCollapsed(true)
+                            }
+                        }}
+                        className="uppercase text-xs tracking-[0.1em] font-medium bg-[#F4F1ED] border-[#DAD6CF] hover:bg-[#DAD6CF]/20 text-[#0A0A0A] gap-2 mt-1 h-9 px-4"
+                        title={isSidebarCollapsed ? "Open Catalog" : "Close"}
+                        aria-label="Toggle Sidebar"
+                    >
+                        {isSidebarCollapsed ? (
+                            <IconLayoutSidebarRightExpand stroke={1.5} size={18} />
+                        ) : (
+                            <IconLayoutSidebarRightCollapse stroke={1.5} size={18} />
+                        )}
+                        <span>{isSidebarCollapsed ? "Open Catalog" : "Close"}</span>
+                    </Button>
                 </div>
 
                 {/* Empty State */}
@@ -161,14 +186,18 @@ export function PlannerBoard({
           </main>
 
           {/* Unified Right Sidebar */}
-          <PlannerSidebar
-             plans={data.semesterPlans}
-             completedUnits={completedUnits}
-             availableCourses={data.availableCourses}
-             activeTab={activeTab}
-             onTabChange={setActiveTab}
-             initialValidation={initialValidation}
-          />
+          <div className="md:relative h-full flex shrink-0">
+              <PlannerSidebar
+                 plans={data.semesterPlans}
+                 completedUnits={completedUnits}
+                 availableCourses={data.availableCourses}
+                 activeTab={activeTab}
+                 onTabChange={setActiveTab}
+                 initialValidation={initialValidation}
+                 isCollapsed={isSidebarCollapsed}
+                 setIsCollapsed={setIsSidebarCollapsed}
+              />
+          </div>
       </div>
 
       <DragOverlay>

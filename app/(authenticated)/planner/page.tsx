@@ -28,7 +28,7 @@ export default async function PlannerPage() {
   ) || 0
 
   return (
-    <div className="h-[calc(100vh-4rem)] -m-6 md:-m-8 bg-background">
+    <div className="h-[calc(100vh-65px)] -m-6 md:-m-8 bg-background overflow-hidden">
       <PlannerClient
         initialData={plannerData}
         allCourses={allCourses}

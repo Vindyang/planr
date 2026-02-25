@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { GraduationTracker } from "./GraduationTracker"
 import { ValidationPanel } from "./ValidationPanel"
 import { Prisma } from "@prisma/client"
 import { useDraggable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
-import { IconSearch, IconX, IconBook, IconChartBar } from "@tabler/icons-react"
+import { IconSearch, IconX, IconBook, IconChartBar, IconChevronRight, IconChevronLeft } from "@tabler/icons-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -72,6 +72,8 @@ interface PlannerSidebarProps {
   activeTab?: "progress" | "catalog"
   onTabChange?: (tab: "progress" | "catalog") => void
   initialValidation: ValidationResult
+  isCollapsed: boolean
+  setIsCollapsed: (value: boolean) => void
 }
 
 export function PlannerSidebar({
@@ -80,14 +82,31 @@ export function PlannerSidebar({
   availableCourses,
   activeTab = "progress",
   onTabChange,
-  initialValidation
+  initialValidation,
+  isCollapsed,
+  setIsCollapsed
 }: PlannerSidebarProps) {
+  const [mounted, setMounted] = useState(false)
+
   // Local state if not controlled, but we prefer controlled for the header button to work
   const [internalTab, setInternalTab] = useState<"progress" | "catalog">("progress")
   const currentTab = onTabChange ? activeTab : internalTab
+  
+  useEffect(() => {
+      setMounted(true)
+  }, [])
+  
+  // If controlled tab changes from outside, auto-expand
+  useEffect(() => {
+    if (activeTab && mounted && isCollapsed) {
+        setIsCollapsed(false)
+    }
+  }, [activeTab, mounted])
+
   const handleTabChange = (tab: "progress" | "catalog") => {
       if (onTabChange) onTabChange(tab)
       else setInternalTab(tab)
+      if (isCollapsed) setIsCollapsed(false)
   }
 
   // Progress Data Calculation
@@ -107,98 +126,108 @@ export function PlannerSidebar({
   )
 
   return (
-    <aside className="w-[340px] border-l border-[#DAD6CF] bg-white h-full flex flex-col shrink-0 font-sans">
-        
-        {/* Custom Tab Switcher */}
-        <div className="flex border-b border-[#DAD6CF]">
-            <button 
-                onClick={() => handleTabChange("progress")}
-                className={cn(
-                    "flex-1 py-4 text-xs uppercase tracking-[0.1em] font-medium transition-colors flex items-center justify-center gap-2",
-                    currentTab === "progress" 
-                        ? "bg-[#F4F1ED] text-[#0A0A0A] shadow-[inset_0_-2px_0_#0A0A0A]" 
-                        : "text-[#666460] hover:bg-[#F4F1ED]/50 hover:text-[#0A0A0A]"
-                )}
-            >
-                <IconChartBar size={14} />
-                Progress
-            </button>
-            <div className="w-px bg-[#DAD6CF]" />
-            <button 
-                onClick={() => handleTabChange("catalog")}
-                className={cn(
-                    "flex-1 py-4 text-xs uppercase tracking-[0.1em] font-medium transition-colors flex items-center justify-center gap-2",
-                    currentTab === "catalog" 
-                        ? "bg-[#F4F1ED] text-[#0A0A0A] shadow-[inset_0_-2px_0_#0A0A0A]" 
-                        : "text-[#666460] hover:bg-[#F4F1ED]/50 hover:text-[#0A0A0A]"
-                )}
-            >
-                <IconBook size={14} />
-                Catalog
-            </button>
-        </div>
+    <div className={cn(
+        "relative md:h-full transition-all duration-300 ease-in-out shrink-0 z-30 flex",
+        isCollapsed ? "w-0" : "w-[340px]",
+        "absolute right-0 h-[calc(100vh-65px)] md:relative"
+    )}>
+        {/* Collapsed State toggle removed, handled by PlannerBoard header */}
 
-        {/* Tab Content: Progress */}
-        {currentTab === "progress" && (
-            <div className="flex-1 overflow-y-auto">
-                <div className="p-8 pb-0">
-                    <div className="mb-8">
-                        <h2 className="text-xl font-serif text-[#0A0A0A]">Degree Progress</h2>
-                        <p className="text-xs text-[#666460] mt-2 leading-relaxed">
-                            Track your graduation requirements. ensure you meet all major and core units.
-                        </p>
+        <aside className={cn(
+            "w-[340px] border-l border-[#DAD6CF] bg-white h-full flex flex-col font-sans transition-all duration-300 ease-in-out overflow-hidden shadow-[-4px_0_24px_rgba(0,0,0,0.02)] md:shadow-none",
+            isCollapsed && "border-transparent opacity-0 pointer-events-none"
+        )}>
+            {/* Custom Tab Switcher */}
+            <div className="flex border-b border-[#DAD6CF]">
+                <button 
+                    onClick={() => handleTabChange("progress")}
+                    className={cn(
+                        "flex-1 py-4 text-xs uppercase tracking-[0.1em] font-medium transition-colors flex items-center justify-center gap-2",
+                        currentTab === "progress" 
+                            ? "bg-[#F4F1ED] text-[#0A0A0A] shadow-[inset_0_-2px_0_#0A0A0A]" 
+                            : "text-[#666460] hover:bg-[#F4F1ED]/50 hover:text-[#0A0A0A]"
+                    )}
+                >
+                    <IconChartBar size={14} />
+                    Progress
+                </button>
+                <div className="w-px bg-[#DAD6CF]" />
+                <button 
+                    onClick={() => handleTabChange("catalog")}
+                    className={cn(
+                        "flex-1 py-4 text-xs uppercase tracking-[0.1em] font-medium transition-colors flex items-center justify-center gap-2",
+                        currentTab === "catalog" 
+                            ? "bg-[#F4F1ED] text-[#0A0A0A] shadow-[inset_0_-2px_0_#0A0A0A]" 
+                            : "text-[#666460] hover:bg-[#F4F1ED]/50 hover:text-[#0A0A0A]"
+                    )}
+                >
+                    <IconBook size={14} />
+                    Catalog
+                </button>
+            </div>
+
+            {/* Tab Content: Progress */}
+            {currentTab === "progress" && (
+                <div className="flex-1 overflow-y-auto w-[340px] scrollbar-thin">
+                    <div className="p-8 pb-0">
+                        <div className="mb-8">
+                            <h2 className="text-xl font-serif text-[#0A0A0A]">Degree Progress</h2>
+                            <p className="text-xs text-[#666460] mt-2 leading-relaxed">
+                                Track your graduation requirements. ensure you meet all major and core units.
+                            </p>
+                        </div>
+                        
+                        <GraduationTracker
+                            totalUnits={plannedUnits}
+                            completedUnits={completedUnits}
+                            requiredUnits={requiredUnits}
+                        />
+                    </div>
+
+                    <div className="p-8 pt-0">
+                        <ValidationPanel initialValidation={initialValidation} />
+                    </div>
+                </div>
+            )}
+
+            {/* Tab Content: Catalog */}
+            {currentTab === "catalog" && (
+                <div className="flex-1 flex flex-col overflow-hidden w-[340px]">
+                    <div className="p-6 border-b border-[#DAD6CF]">
+                        <div className="relative">
+                            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666460]" />
+                            <Input 
+                                type="text" 
+                                placeholder="Search courses..." 
+                                className="pl-9 pr-8 h-10 text-sm bg-[#F4F1ED] border-none rounded-sm placeholder:text-[#666460]/70 focus-visible:ring-1 focus-visible:ring-[#0A0A0A]"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && (
+                                <button 
+                                onClick={() => setSearchTerm("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666460] hover:text-[#0A0A0A]"
+                                >
+                                <IconX size={14} />
+                                </button>
+                            )}
+                        </div>
                     </div>
                     
-                    <GraduationTracker
-                        totalUnits={plannedUnits}
-                        completedUnits={completedUnits}
-                        requiredUnits={requiredUnits}
-                    />
-                </div>
-
-                <div className="p-8 pt-0">
-                    <ValidationPanel initialValidation={initialValidation} />
-                </div>
-            </div>
-        )}
-
-        {/* Tab Content: Catalog */}
-        {currentTab === "catalog" && (
-            <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="p-6 border-b border-[#DAD6CF]">
-                    <div className="relative">
-                        <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666460]" />
-                        <Input 
-                            type="text" 
-                            placeholder="Search courses..." 
-                            className="pl-9 pr-8 h-10 text-sm bg-[#F4F1ED] border-none rounded-sm placeholder:text-[#666460]/70 focus-visible:ring-1 focus-visible:ring-[#0A0A0A]"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                         {searchTerm && (
-                            <button 
-                              onClick={() => setSearchTerm("")}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666460] hover:text-[#0A0A0A]"
-                            >
-                              <IconX size={14} />
-                            </button>
-                          )}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#F9F8F6] scrollbar-thin">
+                        {filteredCourses.length > 0 ? (
+                        filteredCourses.map(course => (
+                            <DraggableCourseItem key={course.id} course={course} />
+                        ))
+                        ) : (
+                        <div className="text-center py-12 text-[#666460] text-sm font-serif italic">
+                            <p>No courses found</p>
+                        </div>
+                        )}
                     </div>
                 </div>
-                
-                <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#F9F8F6]">
-                    {filteredCourses.length > 0 ? (
-                      filteredCourses.map(course => (
-                        <DraggableCourseItem key={course.id} course={course} />
-                      ))
-                    ) : (
-                      <div className="text-center py-12 text-[#666460] text-sm font-serif italic">
-                        <p>No courses found</p>
-                      </div>
-                    )}
-                </div>
-            </div>
-        )}
-    </aside>
+            )}
+        </aside>
+    </div>
   )
 }
