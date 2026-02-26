@@ -191,6 +191,16 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                   description: "Successfully added course via drag & drop",
                 })
             } else if (activeData?.type === "course") {
+                // Find the current semester plan for this course
+                const currentPlan = optimisticData.semesterPlans.find((plan: any) =>
+                  plan.plannedCourses.some((pc: any) => pc.id === active.id)
+                )
+
+                // If dropping into the same semester, ignore the action
+                if (currentPlan?.id === overId) {
+                  return
+                }
+
                 // Moving existing course - optimistically update
                 addOptimisticUpdate({
                   type: 'MOVE_COURSE',
@@ -213,6 +223,20 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   }
 
   const handleRemoveCourse = (courseId: string) => {
+    // Find the course data before deletion for potential undo
+    const courseToRemove = optimisticData.semesterPlans
+      .flatMap((plan: any) =>
+        plan.plannedCourses.map((pc: any) => ({
+          ...pc,
+          semesterPlanId: plan.id
+        }))
+      )
+      .find((pc: any) => pc.id === courseId)
+
+    if (!courseToRemove) return
+
+    const { semesterPlanId, course } = courseToRemove
+
     // Optimistically remove course immediately (no confirmation dialog)
     startTransition(async () => {
       addOptimisticUpdate({ type: 'REMOVE_COURSE', courseId })
@@ -221,6 +245,26 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
         await removeCourseFromPlan(courseId)
         toast.success("Course removed", {
           description: "Successfully removed course from your plan",
+          action: {
+            label: "Undo",
+            onClick: () => {
+              startTransition(async () => {
+                // Optimistically add the course back
+                addOptimisticUpdate({ type: 'ADD_COURSE', planId: semesterPlanId, course })
+
+                try {
+                  await addCourseToPlan(semesterPlanId, course.id)
+                  toast.success("Course restored", {
+                    description: "Successfully restored the course",
+                  })
+                } catch (error) {
+                  toast.error("Failed to restore course", {
+                    description: (error as Error).message,
+                  })
+                }
+              })
+            }
+          }
         })
       } catch (error) {
         toast.error("Failed to remove course", {
@@ -343,6 +387,19 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
     const courseIds = Array.from(selectedCourses)
 
+    // Capture all courses data before deletion for potential undo
+    const coursesToRemove = optimisticData.semesterPlans
+      .flatMap((plan: any) =>
+        plan.plannedCourses
+          .filter((pc: any) => courseIds.includes(pc.id))
+          .map((pc: any) => ({
+            plannedCourseId: pc.id,
+            courseId: pc.course.id,
+            semesterPlanId: plan.id,
+            course: pc.course
+          }))
+      )
+
     // Clear selection and exit selection mode immediately
     setSelectedCourses(new Set())
     setIsSelectionMode(false)
@@ -355,6 +412,43 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
         await removeCoursesFromPlan(courseIds)
         toast.success("Courses removed", {
           description: `Successfully removed ${courseIds.length} course${courseIds.length > 1 ? 's' : ''}`,
+          action: {
+            label: "Undo",
+            onClick: () => {
+              startTransition(async () => {
+                // Group courses by semester plan for efficient restoration
+                const coursesBySemester: Record<string, any[]> = coursesToRemove.reduce((acc: Record<string, any[]>, item: any) => {
+                  if (!acc[item.semesterPlanId]) {
+                    acc[item.semesterPlanId] = []
+                  }
+                  acc[item.semesterPlanId].push(item.course)
+                  return acc
+                }, {})
+
+                // Optimistically add all courses back
+                Object.entries(coursesBySemester).forEach(([planId, courses]) => {
+                  addOptimisticUpdate({ type: 'ADD_COURSES', planId, courses: courses as any[] })
+                })
+
+                try {
+                  // Restore courses to their original semesters
+                  await Promise.all(
+                    Object.entries(coursesBySemester).map(([planId, courses]) =>
+                      addCoursesToPlan(planId, (courses as any[]).map((c: any) => c.id))
+                    )
+                  )
+
+                  toast.success("Courses restored", {
+                    description: `Successfully restored ${coursesToRemove.length} course${coursesToRemove.length > 1 ? 's' : ''}`,
+                  })
+                } catch (error) {
+                  toast.error("Failed to restore courses", {
+                    description: (error as Error).message,
+                  })
+                }
+              })
+            }
+          }
         })
       } catch (error) {
         toast.error("Failed to remove courses", {
