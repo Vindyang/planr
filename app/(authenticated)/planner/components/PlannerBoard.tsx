@@ -1,20 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
-// import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // Removed
+import { useState } from "react"
 import { YearSection } from "./YearSection"
-// import { CourseDrawer } from "./CourseDrawer" // Removed
-// import { PlannerRightSidebar } from "./PlannerRightSidebar" // Removed
 import { PlannerSidebar } from "./PlannerSidebar"
 import { Prisma } from "@prisma/client"
 import { DragOverlay } from "@dnd-kit/core"
 import { CourseCard } from "./CourseCard"
-import { CreateSemesterDialog } from "./CreateSemesterDialog"
-import { IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand } from "@tabler/icons-react"
-import { Button } from "@/components/ui/button"
+import { CreateSemesterDialog } from "./componentsAction/CreateSemesterDialog"
+import { IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand, IconChecks, IconTrash, IconX } from "@tabler/icons-react"
 import type { ValidationResult } from "@/lib/planner/types"
 
-import { AddCourseDialog } from "./AddCourseDialog"
+import { AddCourseDialog } from "./componentsAction/AddCourseDialog"
 
 type PlannerData = {
   semesterPlans: (Prisma.semesterPlanGetPayload<{
@@ -33,6 +29,12 @@ type PlannerBoardProps = {
   onAddCourses: (planId: string, courseIds: string[]) => Promise<void>
   completedUnits?: number
   initialValidation: ValidationResult
+  isSelectionMode: boolean
+  selectedCourses: Set<string>
+  onToggleSelection: (courseId: string) => void
+  onToggleSelectionMode: () => void
+  onBulkDelete: () => void
+  onCancelSelection: () => void
 }
 
 export function PlannerBoard({
@@ -45,6 +47,12 @@ export function PlannerBoard({
   onAddCourses,
   completedUnits = 0,
   initialValidation,
+  isSelectionMode,
+  selectedCourses,
+  onToggleSelection,
+  onToggleSelectionMode,
+  onBulkDelete,
+  onCancelSelection,
 }: PlannerBoardProps) {
   
   // Find active item for overlay
@@ -114,13 +122,37 @@ export function PlannerBoard({
                     </div>
 
                     <div className="pt-2 flex items-center gap-4">
-                        <AddCourseDialog
-                            availableCourses={data.availableCourses}
-                            plannedCourseIds={plannedCourseIds}
-                            semesterPlans={data.semesterPlans}
-                            onAddCourse={onAddCourse}
-                            onAddCourses={onAddCourses}
-                        />
+                        {!isSelectionMode && (
+                            <>
+                                <AddCourseDialog
+                                    availableCourses={data.availableCourses}
+                                    plannedCourseIds={plannedCourseIds}
+                                    semesterPlans={data.semesterPlans}
+                                    onAddCourse={onAddCourse}
+                                    onAddCourses={onAddCourses}
+                                />
+                                {/* Delete Courses Button */}
+                                <button
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                    onClick={onToggleSelectionMode}
+                                >
+                                    <IconChecks size={18} stroke={1.5} />
+                                    <span>Delete Courses</span>
+                                </button>
+                            </>
+                        )}
+                        {isSelectionMode && (
+                            <>
+                                {/* Cancel Selection Button */}
+                                <button
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                    onClick={onCancelSelection}
+                                >
+                                    <IconX size={18} stroke={1.5} />
+                                    <span>Cancel</span>
+                                </button>
+                            </>
+                        )}
                         {/* Sidebar Toggle Button */}
                         <button
                             className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
@@ -156,13 +188,16 @@ export function PlannerBoard({
                 {/* Year Groups */}
                 <div className="space-y-16">
                     {sortedYears.map(year => (
-                        <YearSection 
-                            key={year} 
-                            year={year} 
-                            plans={plansByYear[year]} 
+                        <YearSection
+                            key={year}
+                            year={year}
+                            plans={plansByYear[year]}
                             onRemoveCourse={onRemoveCourse}
                             onDeletePlan={onDeletePlan}
                             onCreatePlan={onCreatePlan}
+                            isSelectionMode={isSelectionMode}
+                            selectedCourses={selectedCourses}
+                            onToggleSelection={onToggleSelection}
                         />
                     ))}
 
@@ -217,6 +252,32 @@ export function PlannerBoard({
              </div>
         ) : null}
       </DragOverlay>
+
+      {/* Floating Action Bar - Show when courses are selected */}
+      {isSelectionMode && selectedCourses.size > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4">
+          <div className="bg-[#0A0A0A] text-white px-6 py-4 rounded-lg shadow-2xl border border-[#0A0A0A] flex items-center gap-6">
+            <span className="text-sm font-medium">
+              {selectedCourses.size} course{selectedCourses.size > 1 ? 's' : ''} selected
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onCancelSelection}
+                className="uppercase text-xs tracking-[0.1em] font-medium bg-white/10 hover:bg-white/20 text-white gap-2 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onBulkDelete}
+                className="uppercase text-xs tracking-[0.1em] font-medium bg-[#ef4444] hover:bg-[#dc2626] text-white gap-2 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+              >
+                <IconTrash size={16} stroke={1.5} />
+                <span>Delete Selected</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -5,8 +5,6 @@ import { cn } from "@/lib/utils"
 import { CourseCard } from "./CourseCard"
 import { Prisma } from "@prisma/client"
 import { IconTrash, IconX } from "@tabler/icons-react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 
 type PlannedCourseWithCourse = Prisma.plannedCourseGetPayload<{
   include: { course: true }
@@ -21,16 +19,22 @@ type SemesterCardProps = {
   totalUnits: number
   isActive?: boolean
   onDeletePlan: (planId: string) => void
+  isSelectionMode: boolean
+  selectedCourses: Set<string>
+  onToggleSelection: (courseId: string) => void
 }
 
-export function SemesterCard({ 
-  planId, 
-  term, 
-  year, 
-  courses, 
+export function SemesterCard({
+  planId,
+  term,
+  year,
+  courses,
   onRemoveCourse,
   totalUnits,
-  onDeletePlan
+  onDeletePlan,
+  isSelectionMode,
+  selectedCourses,
+  onToggleSelection
 }: SemesterCardProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: planId,
@@ -73,19 +77,24 @@ export function SemesterCard({
           <div className="space-y-3">
             {courses.map((plannedCourse) => (
               <div key={plannedCourse.id} className="relative group/card">
-                 {/* Delete Button (Overlay) */}
-                 <button
-                  onClick={() => onRemoveCourse(plannedCourse.id)}
-                  className="absolute -top-2 -right-2 z-20 bg-white border border-[#DAD6CF] rounded-full p-1 opacity-0 group-hover/card:opacity-100 transition-opacity hover:border-[#ef4444] hover:text-[#ef4444]"
-                >
-                  <IconX size={10} />
-                </button>
-                
+                 {/* Delete Button (Overlay) - Only show when NOT in selection mode */}
+                 {!isSelectionMode && (
+                   <button
+                    onClick={() => onRemoveCourse(plannedCourse.id)}
+                    className="absolute -top-2 -right-2 z-20 bg-white border border-[#DAD6CF] rounded-full p-1 opacity-0 group-hover/card:opacity-100 transition-opacity hover:border-[#ef4444] hover:text-[#ef4444]"
+                  >
+                    <IconX size={10} />
+                  </button>
+                 )}
+
                 <CourseCard
                   id={plannedCourse.id}
                   code={plannedCourse.course.code}
                   title={plannedCourse.course.title}
                   units={plannedCourse.course.units}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedCourses.has(plannedCourse.id)}
+                  onToggleSelection={onToggleSelection}
                 />
               </div>
             ))}

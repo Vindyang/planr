@@ -233,6 +233,36 @@ export async function removeCourseFromPlan(plannedCourseId: string) {
   revalidatePath("/planner")
 }
 
+export async function removeCoursesFromPlan(plannedCourseIds: string[]) {
+  const studentId = await getStudentId()
+
+  // Verify all courses belong to student's plans
+  const plannedCourses = await prisma.plannedCourse.findMany({
+    where: {
+      id: { in: plannedCourseIds },
+    },
+    include: { semesterPlan: true },
+  })
+
+  // Check authorization for all courses
+  const unauthorized = plannedCourses.some(
+    (pc) => pc.semesterPlan.studentId !== studentId
+  )
+
+  if (unauthorized || plannedCourses.length !== plannedCourseIds.length) {
+    throw new Error("Some courses not found or unauthorized")
+  }
+
+  // Delete all courses
+  await prisma.plannedCourse.deleteMany({
+    where: {
+      id: { in: plannedCourseIds },
+    },
+  })
+
+  revalidatePath("/planner")
+}
+
 export async function moveCourse(plannedCourseId: string, targetPlanId: string) {
   const studentId = await getStudentId()
 

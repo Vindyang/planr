@@ -10,7 +10,7 @@ import {
   DragEndEvent,
 } from "@dnd-kit/core"
 import { PlannerBoard } from "./components/PlannerBoard"
-import { addCourseToPlan, addCoursesToPlan, moveCourse, removeCourseFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
+import { addCourseToPlan, addCoursesToPlan, moveCourse, removeCourseFromPlan, removeCoursesFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
 import { toast } from "@/components/ui/toast"
 import type { ValidationResult } from "@/lib/planner/types"
 import {
@@ -33,6 +33,7 @@ type PlannerClientProps = {
 
 type OptimisticAction =
   | { type: 'REMOVE_COURSE'; courseId: string }
+  | { type: 'REMOVE_COURSES'; courseIds: string[] }
   | { type: 'DELETE_PLAN'; planId: string }
   | { type: 'ADD_COURSE'; planId: string; course: any }
   | { type: 'ADD_COURSES'; planId: string; courses: any[] }
@@ -41,6 +42,10 @@ type OptimisticAction =
 export default function PlannerClient({ initialData, allCourses, completedUnits = 0, initialValidation }: PlannerClientProps) {
   const [, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
+
+  // Selection mode state
+  const [isSelectionMode, setIsSelectionMode] = useState(false)
+  const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set())
 
   // Optimistic state management with useOptimistic
   const [optimisticData, addOptimisticUpdate] = useOptimistic(
@@ -54,6 +59,17 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
               ...plan,
               plannedCourses: plan.plannedCourses.filter(
                 (pc: any) => pc.id !== action.courseId
+              ),
+            })),
+          }
+
+        case 'REMOVE_COURSES':
+          return {
+            ...state,
+            semesterPlans: state.semesterPlans.map((plan: any) => ({
+              ...plan,
+              plannedCourses: plan.plannedCourses.filter(
+                (pc: any) => !action.courseIds.includes(pc.id)
               ),
             })),
           }
@@ -133,7 +149,6 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   )
 
   // Dialog States
-  const [courseToRemove, setCourseToRemove] = useState<string | null>(null)
   const [planToDelete, setPlanToDelete] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -172,6 +187,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                 }
 
                 await addCourseToPlan(overId, courseId)
+                toast.success("Course added", {
+                  description: "Successfully added course via drag & drop",
+                })
             } else if (activeData?.type === "course") {
                 // Moving existing course - optimistically update
                 addOptimisticUpdate({
@@ -181,6 +199,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                 })
 
                 await moveCourse(active.id as string, overId)
+                toast.success("Course moved", {
+                  description: "Successfully moved course to another term",
+                })
             }
         } catch (error) {
             console.error("Move failed", error)
@@ -191,24 +212,22 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
     })
   }
 
-  const confirmRemoveCourse = () => {
-    if (courseToRemove) {
-      // Close the dialog immediately
-      setCourseToRemove(null)
+  const handleRemoveCourse = (courseId: string) => {
+    // Optimistically remove course immediately (no confirmation dialog)
+    startTransition(async () => {
+      addOptimisticUpdate({ type: 'REMOVE_COURSE', courseId })
 
-      // Optimistically update the UI (auto-reverts on error)
-      startTransition(async () => {
-        addOptimisticUpdate({ type: 'REMOVE_COURSE', courseId: courseToRemove })
-
-        try {
-          await removeCourseFromPlan(courseToRemove)
-        } catch (error) {
-          toast.error("Failed to remove course", {
-            description: (error as Error).message,
-          })
-        }
-      })
-    }
+      try {
+        await removeCourseFromPlan(courseId)
+        toast.success("Course removed", {
+          description: "Successfully removed course from your plan",
+        })
+      } catch (error) {
+        toast.error("Failed to remove course", {
+          description: (error as Error).message,
+        })
+      }
+    })
   }
 
   const confirmDeletePlan = () => {
@@ -222,6 +241,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
         try {
           await deleteSemesterPlan(planToDelete)
+          toast.success("Semester deleted", {
+            description: "Successfully deleted semester and all its courses",
+          })
         } catch (error) {
           toast.error("Failed to delete semester", {
             description: (error as Error).message,
@@ -244,6 +266,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
      startTransition(async () => {
          try {
              await createSemesterPlan(term, year)
+             toast.success("Semester created", {
+               description: `Successfully created ${term} ${year}`,
+             })
          } catch (e) {
              toast.error("Failed to create semester", {
                  description: (e as Error).message
@@ -265,6 +290,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
       try {
         await addCourseToPlan(planId, courseId)
+        toast.success("Course added", {
+          description: "Successfully added course to your plan",
+        })
       } catch (e) {
         toast.error("Failed to add course", {
           description: (e as Error).message
@@ -287,12 +315,58 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
       try {
         await addCoursesToPlan(planId, courseIds)
+        toast.success("Courses added", {
+          description: `Successfully added ${courseIds.length} course${courseIds.length > 1 ? 's' : ''} to your plan`,
+        })
       } catch (e) {
         toast.error("Failed to add courses", {
           description: (e as Error).message
         })
       }
     })
+  }
+
+  const handleToggleSelection = (courseId: string) => {
+    setSelectedCourses((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(courseId)) {
+        newSet.delete(courseId)
+      } else {
+        newSet.add(courseId)
+      }
+      return newSet
+    })
+  }
+
+  const handleBulkDelete = () => {
+    if (selectedCourses.size === 0) return
+
+    const courseIds = Array.from(selectedCourses)
+
+    // Clear selection and exit selection mode immediately
+    setSelectedCourses(new Set())
+    setIsSelectionMode(false)
+
+    // Optimistically update the UI (auto-reverts on error)
+    startTransition(async () => {
+      addOptimisticUpdate({ type: 'REMOVE_COURSES', courseIds })
+
+      try {
+        await removeCoursesFromPlan(courseIds)
+        toast.success("Courses removed", {
+          description: `Successfully removed ${courseIds.length} course${courseIds.length > 1 ? 's' : ''}`,
+        })
+      } catch (error) {
+        toast.error("Failed to remove courses", {
+          description: (error as Error).message,
+        })
+      }
+    })
+  }
+
+  const handleCancelSelection = () => {
+    setIsSelectionMode(false)
+    setSelectedCourses(new Set())
   }
 
   return (
@@ -308,33 +382,21 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
               availableCourses: allCourses
           }}
           activeId={activeId}
-          onRemoveCourse={setCourseToRemove}
+          onRemoveCourse={handleRemoveCourse}
           onDeletePlan={setPlanToDelete}
           onCreatePlan={handleCreatePlan}
           onAddCourse={handleAddCourse}
           onAddCourses={handleAddCourses}
           completedUnits={completedUnits}
           initialValidation={initialValidation}
+          isSelectionMode={isSelectionMode}
+          selectedCourses={selectedCourses}
+          onToggleSelection={handleToggleSelection}
+          onToggleSelectionMode={() => setIsSelectionMode(!isSelectionMode)}
+          onBulkDelete={handleBulkDelete}
+          onCancelSelection={handleCancelSelection}
         />
       </DndContext>
-
-      {/* Delete Course Dialog */}
-      <AlertDialog open={!!courseToRemove} onOpenChange={(open) => !open && setCourseToRemove(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Course</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove this course from your plan?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRemoveCourse} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Delete Plan Dialog */}
       <AlertDialog open={!!planToDelete} onOpenChange={(open) => !open && setPlanToDelete(null)}>

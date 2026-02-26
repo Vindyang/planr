@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { AddToPlanDialog } from "@/app/(authenticated)/dashboard/components/AddToPlanDialog"
+import { AddToPlanDialog } from "@/app/(authenticated)/dashboard/components/componentsAction/AddToPlanDialog"
 import { Prisma } from "@prisma/client"
 
 type SemesterPlan = Prisma.semesterPlanGetPayload<{
