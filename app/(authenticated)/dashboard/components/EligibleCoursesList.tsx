@@ -1,11 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { DetailedEligibilityResult } from "@/lib/eligibility"
 import { Prisma } from "@prisma/client"
-import { AddToPlanDialog } from "./AddToPlanDialog"
+import { AddToPlanButton } from "@/app/(authenticated)/courses/[id]/_components/AddToPlanButton"
 
 interface CourseDisplay {
   id: string
@@ -33,7 +32,6 @@ export function EligibleCoursesList({
   courses: EligibleCourseDisplay[]
   semesterPlans: SemesterPlan[]
 }) {
-  const [selectedCourse, setSelectedCourse] = useState<CourseDisplay | null>(null)
   if (courses.length === 0) {
     return (
       <div className="text-center p-8 text-muted-foreground">
@@ -120,27 +118,23 @@ export function EligibleCoursesList({
                   View Details
                 </Button>
               </Link>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={() => setSelectedCourse(course)}
-              >
-                Add to Plan
-              </Button>
+              <div className="flex-1">
+                <AddToPlanButton
+                  course={{
+                    id: course.id,
+                    code: course.code,
+                    title: course.title,
+                  }}
+                  semesterPlans={semesterPlans}
+                  isEligible={true}
+                  size="sm"
+                  variant="outline"
+                />
+              </div>
             </div>
           </div>
         </div>
       ))}
-
-      {/* Add to Plan Dialog */}
-      {selectedCourse && (
-        <AddToPlanDialog
-          course={selectedCourse}
-          semesters={semesterPlans}
-          onClose={() => setSelectedCourse(null)}
-        />
-      )}
     </div>
   )
 }

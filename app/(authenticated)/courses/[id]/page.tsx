@@ -2,7 +2,6 @@ import { getSession } from "@/lib/auth"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
 import { EligibilityStatus } from "@/lib/eligibility"
 import { getCourseWithPrerequisites } from "@/lib/data/courses"
@@ -10,7 +9,9 @@ import { getStudentProfile } from "@/lib/data/students"
 import { getEligibilityForCourse } from "@/lib/eligibility/service"
 import { getCourseReviewsByCourse, getReviewAggregates } from "@/lib/data/reviews"
 import { getProfessorsByCourse } from "@/lib/data/professors"
+import { getPlannerData } from "@/lib/planner/actions"
 import { CourseReviewsSection } from "./_components/CourseReviewsSection"
+import { AddToPlanButton } from "./_components/AddToPlanButton"
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -32,6 +33,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   if (!course) {
     notFound()
   }
+
+  // Fetch planner data if student exists
+  const plannerData = student ? await getPlannerData(student.id) : null
 
   // 2. Derive State
   const completedCourses = student?.completedCourses
@@ -343,18 +347,17 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                 </div>
               </div>
 
-              {!isCompleted && eligibility?.eligibility.isEligible && (
-                <Link href="/planner">
-                  <Button className="w-full text-xs uppercase tracking-wider">
-                    Add to Plan
-                  </Button>
-                </Link>
-              )}
-
-              {!isCompleted && !eligibility?.eligibility.isEligible && (
-                <Button className="w-full text-xs uppercase tracking-wider" disabled>
-                  Prerequisites Required
-                </Button>
+              {!isCompleted && plannerData && (
+                <AddToPlanButton
+                  course={{
+                    id: course.id,
+                    code: course.code,
+                    title: course.title,
+                  }}
+                  semesterPlans={plannerData.semesterPlans}
+                  isEligible={eligibility?.eligibility.isEligible ?? false}
+                  className="w-full text-xs uppercase tracking-wider"
+                />
               )}
             </div>
           </div>

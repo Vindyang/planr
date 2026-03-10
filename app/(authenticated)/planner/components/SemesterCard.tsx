@@ -5,8 +5,6 @@ import { cn } from "@/lib/utils"
 import { CourseCard } from "./CourseCard"
 import { Prisma } from "@prisma/client"
 import { IconTrash, IconX } from "@tabler/icons-react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 
 type PlannedCourseWithCourse = Prisma.plannedCourseGetPayload<{
   include: { course: true }
@@ -21,16 +19,22 @@ type SemesterCardProps = {
   totalUnits: number
   isActive?: boolean
   onDeletePlan: (planId: string) => void
+  isSelectionMode: boolean
+  selectedCourses: Set<string>
+  onToggleSelection: (courseId: string) => void
 }
 
-export function SemesterCard({ 
-  planId, 
-  term, 
-  year, 
-  courses, 
+export function SemesterCard({
+  planId,
+  term,
+  year,
+  courses,
   onRemoveCourse,
   totalUnits,
-  onDeletePlan
+  onDeletePlan,
+  isSelectionMode,
+  selectedCourses,
+  onToggleSelection
 }: SemesterCardProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: planId,
@@ -61,7 +65,7 @@ export function SemesterCard({
             <button 
               onClick={() => onDeletePlan(planId)}
               className="text-[#666460] hover:text-[#ef4444] transition-colors"
-              title="Delete Semester"
+               title="Delete Semester"
             >
               <IconTrash size={14} />
             </button>
@@ -69,30 +73,37 @@ export function SemesterCard({
       </div>
 
       {/* Course List - Mimicking the "Seminar Room" block style */}
-      <div className="space-y-3 flex-1">
-        {courses.map((plannedCourse) => (
-          <div key={plannedCourse.id} className="relative group/card">
-             {/* Delete Button (Overlay) */}
-             <button
-              onClick={() => onRemoveCourse(plannedCourse.id)}
-              className="absolute -top-2 -right-2 z-20 bg-white border border-[#DAD6CF] rounded-full p-1 opacity-0 group-hover/card:opacity-100 transition-opacity hover:border-[#ef4444] hover:text-[#ef4444]"
-            >
-              <IconX size={10} />
-            </button>
-            
-            <CourseCard
-              id={plannedCourse.id}
-              code={plannedCourse.course.code}
-              title={plannedCourse.course.title}
-              units={plannedCourse.course.units}
-            />
+      <div className="space-y-3 flex-1 flex flex-col">
+          <div className="space-y-3">
+            {courses.map((plannedCourse) => (
+              <div key={plannedCourse.id} className="relative group/card">
+                 {/* Delete Button (Overlay) - Only show when NOT in selection mode */}
+                 {!isSelectionMode && (
+                   <button
+                    onClick={() => onRemoveCourse(plannedCourse.id)}
+                    className="absolute -top-2 -right-2 z-20 bg-white border border-[#DAD6CF] rounded-full p-1 opacity-0 group-hover/card:opacity-100 transition-opacity hover:border-[#ef4444] hover:text-[#ef4444]"
+                  >
+                    <IconX size={10} />
+                  </button>
+                 )}
+
+                <CourseCard
+                  id={plannedCourse.id}
+                  code={plannedCourse.course.code}
+                  title={plannedCourse.course.title}
+                  units={plannedCourse.course.units}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={selectedCourses.has(plannedCourse.id)}
+                  onToggleSelection={onToggleSelection}
+                />
+              </div>
+            ))}
+            {courses.length === 0 && (
+              <div className="flex flex-col items-center justify-center border border-dashed border-[#DAD6CF] opacity-50 p-6 min-h-[120px]">
+                <span className="text-[0.65rem] uppercase tracking-widest text-[#666460]">Drop Courses</span>
+              </div>
+            )}
           </div>
-        ))}
-        {courses.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center border border-dashed border-[#DAD6CF] opacity-50 p-4">
-            <span className="text-[0.65rem] uppercase tracking-widest text-[#666460]">Drop Courses</span>
-          </div>
-        )}
       </div>
     </div>
   )

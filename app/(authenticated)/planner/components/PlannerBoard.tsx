@@ -1,17 +1,16 @@
 "use client"
 
 import { useState } from "react"
-// import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet" // Removed
 import { YearSection } from "./YearSection"
-// import { CourseDrawer } from "./CourseDrawer" // Removed
-// import { PlannerRightSidebar } from "./PlannerRightSidebar" // Removed
 import { PlannerSidebar } from "./PlannerSidebar"
 import { Prisma } from "@prisma/client"
 import { DragOverlay } from "@dnd-kit/core"
 import { CourseCard } from "./CourseCard"
-import { CreateSemesterDialog } from "./CreateSemesterDialog"
-import { IconPlus, IconBook } from "@tabler/icons-react"
-import { Button } from "@/components/ui/button"
+import { CreateSemesterDialog } from "./componentsAction/CreateSemesterDialog"
+import { IconPlus, IconLayoutSidebarRightCollapse, IconLayoutSidebarRightExpand, IconChecks, IconTrash, IconX } from "@tabler/icons-react"
+import type { ValidationResult } from "@/lib/planner/types"
+
+import { AddCourseDialog } from "./componentsAction/AddCourseDialog"
 
 type PlannerData = {
   semesterPlans: (Prisma.semesterPlanGetPayload<{
@@ -26,7 +25,16 @@ type PlannerBoardProps = {
   onRemoveCourse: (id: string) => void
   onDeletePlan: (id: string) => void
   onCreatePlan: (term: string, year: number) => Promise<void>
+  onAddCourse: (planId: string, courseId: string) => Promise<void>
+  onAddCourses: (planId: string, courseIds: string[]) => Promise<void>
   completedUnits?: number
+  initialValidation: ValidationResult
+  isSelectionMode: boolean
+  selectedCourses: Set<string>
+  onToggleSelection: (courseId: string) => void
+  onToggleSelectionMode: () => void
+  onBulkDelete: () => void
+  onCancelSelection: () => void
 }
 
 export function PlannerBoard({
@@ -35,12 +43,18 @@ export function PlannerBoard({
   onRemoveCourse,
   onDeletePlan,
   onCreatePlan,
+  onAddCourse,
+  onAddCourses,
   completedUnits = 0,
+  initialValidation,
+  isSelectionMode,
+  selectedCourses,
+  onToggleSelection,
+  onToggleSelectionMode,
+  onBulkDelete,
+  onCancelSelection,
 }: PlannerBoardProps) {
   
-  // Sidebar State
-  const [activeTab, setActiveTab] = useState<"progress" | "catalog">("progress")
-
   // Find active item for overlay
   let activeCourse: any = null
 
@@ -75,9 +89,19 @@ export function PlannerBoard({
 
   // Sort years
   const sortedYears = Object.keys(plansByYear).map(Number).sort((a, b) => a - b)
+  
+  // Compute plannedCourseIds to pass down to AddCourseDialog
+  const plannedCourseIds = new Set<string>()
+  data.semesterPlans.forEach(plan => {
+    plan.plannedCourses.forEach(pc => {
+        plannedCourseIds.add(pc.course.id)
+    })
+  })
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
   return (
-    <div className="flex items-start h-[calc(100vh-4rem)] bg-[#F4F1ED] overflow-hidden">
+    <div className="flex items-start h-full bg-[#F4F1ED] overflow-hidden">
       
       <div className="flex flex-1 h-full overflow-hidden">
           {/* Center - Scrollable Canvas */}
@@ -85,24 +109,67 @@ export function PlannerBoard({
              <div className="px-[60px] py-12 max-w-[1400px] mx-auto space-y-16">
                 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[#DAD6CF] pb-8">
-                    <div>
-                        <div className="flex gap-6 mb-4">
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => setActiveTab("catalog")}
-                                className="uppercase text-xs tracking-[0.1em] font-medium bg-[#F4F1ED] border-[#DAD6CF] hover:bg-[#DAD6CF]/20"
-                            >
-                                Open Catalog
-                            </Button>
-                            <span className="uppercase text-xs tracking-[0.1em] font-medium bg-[#F4F1ED] px-2 py-1 border border-[#DAD6CF]">
+                <div className="flex justify-between items-start border-b border-[#DAD6CF] pb-8">
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-6 mb-4">
+                            <span className="flex items-center justify-center uppercase text-xs tracking-[0.1em] font-medium bg-[#F4F1ED] px-3 h-8 border border-[#DAD6CF]">
                                 {totalPlannedUnits} Units Planned
                             </span>
                         </div>
                         <h1 className="text-5xl font-normal uppercase leading-none text-[#0A0A0A]">
                             Degree <span className="font-serif italic">Planner</span>
                         </h1>
+                    </div>
+
+                    <div className="pt-2 flex items-center gap-4">
+                        {!isSelectionMode && (
+                            <>
+                                <AddCourseDialog
+                                    availableCourses={data.availableCourses}
+                                    plannedCourseIds={plannedCourseIds}
+                                    semesterPlans={data.semesterPlans}
+                                    onAddCourse={onAddCourse}
+                                    onAddCourses={onAddCourses}
+                                />
+                                {/* Delete Courses Button */}
+                                <button
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                    onClick={onToggleSelectionMode}
+                                >
+                                    <IconChecks size={18} stroke={1.5} />
+                                    <span>Delete Courses</span>
+                                </button>
+                            </>
+                        )}
+                        {isSelectionMode && (
+                            <>
+                                {/* Cancel Selection Button */}
+                                <button
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                    onClick={onCancelSelection}
+                                >
+                                    <IconX size={18} stroke={1.5} />
+                                    <span>Cancel</span>
+                                </button>
+                            </>
+                        )}
+                        {/* Sidebar Toggle Button */}
+                        <button
+                            className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        >
+                            {isSidebarOpen ? (
+                                <>
+                                    <IconLayoutSidebarRightCollapse size={18} stroke={1.5} />
+                                    <span>Hide Progress</span>
+                                </>
+                            ) : (
+                                <>
+                                    <IconLayoutSidebarRightExpand size={18} stroke={1.5} />
+                                    <span>Show Progress</span>
+                                </>
+                            )}
+                        </button>
                     </div>
                 </div>
 
@@ -121,13 +188,16 @@ export function PlannerBoard({
                 {/* Year Groups */}
                 <div className="space-y-16">
                     {sortedYears.map(year => (
-                        <YearSection 
-                            key={year} 
-                            year={year} 
-                            plans={plansByYear[year]} 
+                        <YearSection
+                            key={year}
+                            year={year}
+                            plans={plansByYear[year]}
                             onRemoveCourse={onRemoveCourse}
                             onDeletePlan={onDeletePlan}
                             onCreatePlan={onCreatePlan}
+                            isSelectionMode={isSelectionMode}
+                            selectedCourses={selectedCourses}
+                            onToggleSelection={onToggleSelection}
                         />
                     ))}
 
@@ -158,13 +228,15 @@ export function PlannerBoard({
           </main>
 
           {/* Unified Right Sidebar */}
-          <PlannerSidebar 
-             plans={data.semesterPlans} 
-             completedUnits={completedUnits}
-             availableCourses={data.availableCourses}
-             activeTab={activeTab}
-             onTabChange={setActiveTab}
-          />
+          <div className="md:relative h-full flex shrink-0">
+              <PlannerSidebar
+                 plans={data.semesterPlans}
+                 completedUnits={completedUnits}
+                 initialValidation={initialValidation}
+                 isCollapsed={!isSidebarOpen}
+                 onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+              />
+          </div>
       </div>
 
       <DragOverlay>
@@ -180,6 +252,32 @@ export function PlannerBoard({
              </div>
         ) : null}
       </DragOverlay>
+
+      {/* Floating Action Bar - Show when courses are selected */}
+      {isSelectionMode && selectedCourses.size > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4">
+          <div className="bg-[#0A0A0A] text-white px-6 py-4 rounded-lg shadow-2xl border border-[#0A0A0A] flex items-center gap-6">
+            <span className="text-sm font-medium">
+              {selectedCourses.size} course{selectedCourses.size > 1 ? 's' : ''} selected
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onCancelSelection}
+                className="uppercase text-xs tracking-[0.1em] font-medium bg-white/10 hover:bg-white/20 text-white gap-2 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onBulkDelete}
+                className="uppercase text-xs tracking-[0.1em] font-medium bg-[#ef4444] hover:bg-[#dc2626] text-white gap-2 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+              >
+                <IconTrash size={16} stroke={1.5} />
+                <span>Delete Selected</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -156,3 +156,38 @@
     @apply font-serif;
   }
 }
+
+@layer utilities {
+  /* Subtle scrollbar for sidebar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #DAD6CF transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #DAD6CF;
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(10, 10, 10, 0.3);
+  }
+
+  /* Hide scrollbar completely */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

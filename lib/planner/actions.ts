@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache"
 import { PlanStatus, Prisma } from "@prisma/client"
 import { requireSession } from "@/lib/auth"
 import { z } from "zod"
+import { cache } from "react"
+import { validatePlan } from "./validation"
+import type { ValidationResult, ValidationContext, SemesterWithCourses } from "./types"
+import type { CourseWithPrereqs, CompletedCourseInfo } from "@/lib/eligibility"
 
 async function getStudentId() {
   const session = await requireSession()
@@ -46,15 +50,13 @@ const moveCourseSchema = z.object({
 
 // --- Actions ---
 
-export async function getPlannerData(studentId?: string): Promise<PlannerData> {
-  const id = studentId ?? await getStudentId()
-
+export const getPlannerData = cache(async (studentId: string): Promise<PlannerData> => {
   const semesterPlans = await prisma.semesterPlan.findMany({
-    where: { studentId: id },
+    where: { studentId },
     include: {
       plannedCourses: {
         include: {
-          course: true,
+          course: true, // Include all course fields for now - components need them
         },
         orderBy: { addedAt: "asc" },
       },
@@ -63,9 +65,9 @@ export async function getPlannerData(studentId?: string): Promise<PlannerData> {
   })
 
   return { semesterPlans, completedCourses: [] }
-}
+})
 
-export async function createSemesterPlan(term: string, year: number) {
+export async function createSemesterPlan(term: string, year: number): Promise<string> {
   const studentId = await getStudentId()
 
   const validated = createPlanSchema.parse({ term, year })
@@ -95,7 +97,7 @@ export async function createSemesterPlan(term: string, year: number) {
     throw new Error(`Academic year ${validated.year} already has the maximum of 4 terms.`)
   }
 
-  await prisma.semesterPlan.create({
+  const newSemester = await prisma.semesterPlan.create({
     data: {
       studentId,
       term: validated.term,
@@ -105,6 +107,7 @@ export async function createSemesterPlan(term: string, year: number) {
   })
 
   revalidatePath("/planner")
+  return newSemester.id
 }
 
 export async function deleteSemesterPlan(planId: string) {
@@ -168,6 +171,49 @@ export async function addCourseToPlan(planId: string, courseId: string) {
   revalidatePath("/planner")
 }
 
+const addCoursesSchema = z.object({
+  planId: z.string(),
+  courseIds: z.array(z.string()),
+})
+
+export async function addCoursesToPlan(planId: string, courseIds: string[]) {
+  const studentId = await getStudentId()
+
+  const validated = addCoursesSchema.parse({ planId, courseIds })
+
+  // Verify ownership of plan
+  const plan = await prisma.semesterPlan.findUnique({
+    where: { id: validated.planId },
+  })
+
+  if (!plan || plan.studentId !== studentId) {
+    throw new Error("Plan not found or unauthorized")
+  }
+
+  // Find existing courses
+  const existing = await prisma.plannedCourse.findMany({
+    where: {
+      semesterPlanId: validated.planId,
+      courseId: { in: validated.courseIds },
+    },
+  })
+
+  const existingIds = new Set(existing.map((e) => e.courseId))
+  const toAdd = validated.courseIds.filter((id) => !existingIds.has(id))
+
+  if (toAdd.length > 0) {
+    await prisma.plannedCourse.createMany({
+      data: toAdd.map((courseId) => ({
+        semesterPlanId: validated.planId,
+        courseId,
+        status: PlanStatus.PLANNED,
+      })),
+    })
+  }
+
+  revalidatePath("/planner")
+}
+
 export async function removeCourseFromPlan(plannedCourseId: string) {
   const studentId = await getStudentId()
 
@@ -182,6 +228,36 @@ export async function removeCourseFromPlan(plannedCourseId: string) {
 
   await prisma.plannedCourse.delete({
     where: { id: plannedCourseId },
+  })
+
+  revalidatePath("/planner")
+}
+
+export async function removeCoursesFromPlan(plannedCourseIds: string[]) {
+  const studentId = await getStudentId()
+
+  // Verify all courses belong to student's plans
+  const plannedCourses = await prisma.plannedCourse.findMany({
+    where: {
+      id: { in: plannedCourseIds },
+    },
+    include: { semesterPlan: true },
+  })
+
+  // Check authorization for all courses
+  const unauthorized = plannedCourses.some(
+    (pc) => pc.semesterPlan.studentId !== studentId
+  )
+
+  if (unauthorized || plannedCourses.length !== plannedCourseIds.length) {
+    throw new Error("Some courses not found or unauthorized")
+  }
+
+  // Delete all courses
+  await prisma.plannedCourse.deleteMany({
+    where: {
+      id: { in: plannedCourseIds },
+    },
   })
 
   revalidatePath("/planner")
@@ -220,3 +296,118 @@ export async function moveCourse(plannedCourseId: string, targetPlanId: string) 
 
   revalidatePath("/planner")
 }
+
+// --- Validation ---
+
+export const getValidationResult = cache(async (studentId: string): Promise<ValidationResult> => {
+  // Fetch student with completed courses
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    include: {
+      completedCourses: {
+        include: {
+          course: {
+            select: {
+              id: true,
+              code: true,
+              title: true,
+              units: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (!student) {
+    throw new Error("Student profile not found")
+  }
+
+  // Fetch semester plans
+  const semesterPlans = await prisma.semesterPlan.findMany({
+    where: { studentId },
+    include: {
+      plannedCourses: {
+        include: {
+          course: {
+            select: {
+              id: true,
+              code: true,
+              title: true,
+              units: true,
+              termsOffered: true,
+              tags: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ year: "asc" }, { term: "asc" }],
+  })
+
+  // Fetch all courses with prerequisites for validation
+  const allCourses = await prisma.course.findMany({
+    where: {
+      university: student.university,
+      isActive: true,
+    },
+    include: {
+      prerequisites: {
+        include: {
+          prerequisiteCourse: {
+            select: {
+              id: true,
+              code: true,
+              title: true,
+              units: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  // Transform data for validation
+  const semesters: SemesterWithCourses[] = semesterPlans.map((sp) => ({
+    id: sp.id,
+    term: sp.term,
+    year: sp.year,
+    isActive: sp.isActive,
+    courses: sp.plannedCourses.map((pc) => ({
+      id: pc.id,
+      courseId: pc.courseId,
+      status: pc.status,
+      addedAt: pc.addedAt.toISOString(),
+      course: pc.course,
+    })),
+  }))
+
+  const completedCourses: CompletedCourseInfo[] = student.completedCourses.map((cc) => ({
+    courseId: cc.courseId,
+    grade: cc.grade,
+    course: cc.course,
+  }))
+
+  const coursesWithPrereqs: CourseWithPrereqs[] = allCourses.map((c) => ({
+    id: c.id,
+    code: c.code,
+    title: c.title,
+    units: c.units,
+    prerequisites: c.prerequisites.map((p) => ({
+      prerequisiteCourseId: p.prerequisiteCourseId,
+      type: p.type,
+      prerequisiteCourse: p.prerequisiteCourse,
+    })),
+  }))
+
+  // Build validation context
+  const context: ValidationContext = {
+    semesters,
+    completedCourses,
+    allCourses: coursesWithPrereqs,
+    university: student.university,
+  }
+
+  // Run validation
+  return validatePlan(context)
+})

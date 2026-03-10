@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { IconEdit, IconCheck, IconX, IconTrash, IconPlus, IconSearch } from "@tabler/icons-react"
-import { updateStudentProfile, addCompletedCourse, removeCompletedCourse } from "./componentsAction/student"
+import { updateStudentProfile, addCompletedCourse, removeCompletedCourse } from "./actions"
 import { VALID_GRADES } from "@/lib/gpa"
 
 interface CompletedCourse {

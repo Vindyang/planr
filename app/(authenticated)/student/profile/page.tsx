@@ -1,10 +1,12 @@
+import { Suspense } from "react"
 import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getStudentProfile } from "@/lib/data/students"
 import { getAllCoursesForUniversity } from "@/lib/data/courses"
 import ProfileClient from "./ProfileClient"
+import { ProfilePageSkeleton } from "./skeleton/ProfilePageSkeleton"
 
-export default async function ProfilePage() {
+async function ProfileContent() {
   const session = await getSession()
   if (!session?.user) {
     redirect("/login")
@@ -32,9 +34,17 @@ export default async function ProfilePage() {
   }))
 
   return (
-    <ProfileClient 
-      initialStudent={student} 
-      initialCourses={availableCourses} 
+    <ProfileClient
+      initialStudent={student}
+      initialCourses={availableCourses}
     />
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfilePageSkeleton />}>
+      <ProfileContent />
+    </Suspense>
   )
 }

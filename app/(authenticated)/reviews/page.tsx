@@ -7,6 +7,7 @@ import { WriteReviewDialog } from "@/components/reviews/WriteReviewDialog"
 import { EditReviewDialog } from "@/components/reviews/EditReviewDialog"
 import { toast } from "@/components/ui/toast"
 import type { CourseReviewData, ProfessorReviewData, ProfessorData } from "@/lib/types"
+import { ReviewsPageSkeleton } from "./skeleton/ReviewsPageSkeleton"
 
 interface CompletedCourseOption {
   courseId: string
@@ -110,11 +111,7 @@ function MyReviewsContent() {
   const totalReviews = courseReviews.length + professorReviews.length
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading your reviews...</p>
-      </div>
-    )
+    return <ReviewsPageSkeleton />
   }
 
   return (
@@ -217,13 +214,7 @@ function MyReviewsContent() {
 
 export default function ReviewsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading your reviews...</p>
-        </div>
-      }
-    >
+    <Suspense fallback={<ReviewsPageSkeleton />}>
       <MyReviewsContent />
     </Suspense>
   )

@@ -3,16 +3,12 @@
 import { SemesterCard } from "./SemesterCard"
 import { Prisma } from "@prisma/client"
 
-type PlannedCourseWithCourse = Prisma.plannedCourseGetPayload<{
-  include: { course: true }
-}>
-
 type SemesterPlanWithCourses = Prisma.semesterPlanGetPayload<{
     include: { plannedCourses: { include: { course: true } } }
 }>
 
 import { IconPlus } from "@tabler/icons-react"
-import { CreateSemesterDialog } from "./CreateSemesterDialog"
+import { CreateSemesterDialog } from "./componentsAction/CreateSemesterDialog"
 
 type YearSectionProps = {
   year: number
@@ -20,9 +16,12 @@ type YearSectionProps = {
   onRemoveCourse: (id: string) => void
   onDeletePlan: (id: string) => void
   onCreatePlan: (term: string, year: number) => Promise<void>
+  isSelectionMode: boolean
+  selectedCourses: Set<string>
+  onToggleSelection: (courseId: string) => void
 }
 
-export function YearSection({ year, plans, onRemoveCourse, onDeletePlan, onCreatePlan }: YearSectionProps) {
+export function YearSection({ year, plans, onRemoveCourse, onDeletePlan, onCreatePlan, isSelectionMode, selectedCourses, onToggleSelection }: YearSectionProps) {
   // Sort plans: Fall -> Winter -> Spring -> Summer
   const termOrder: Record<string, number> = { "Fall": 1, "Winter": 2, "Spring": 3, "Summer": 4 }
   
@@ -58,6 +57,9 @@ export function YearSection({ year, plans, onRemoveCourse, onDeletePlan, onCreat
              onRemoveCourse={onRemoveCourse}
              onDeletePlan={onDeletePlan}
              totalUnits={plan.plannedCourses.reduce((sum, item) => sum + item.course.units, 0)}
+             isSelectionMode={isSelectionMode}
+             selectedCourses={selectedCourses}
+             onToggleSelection={onToggleSelection}
            />
         ))}
 

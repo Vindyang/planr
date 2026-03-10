@@ -3,8 +3,6 @@
 import { useDraggable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
 import { cn } from "@/lib/utils"
-// import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card" // Removing shadcn card for custom flat style
-import { Badge } from "@/components/ui/badge"
 
 type CourseCardProps = {
   id: string
@@ -13,9 +11,12 @@ type CourseCardProps = {
   units: number
   isOverlay?: boolean
   error?: string
+  isSelectionMode?: boolean
+  isSelected?: boolean
+  onToggleSelection?: (courseId: string) => void
 }
 
-export function CourseCard({ id, code, title, units, isOverlay, error }: CourseCardProps) {
+export function CourseCard({ id, code, title, units, isOverlay, error, isSelectionMode = false, isSelected = false, onToggleSelection }: CourseCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: id,
     data: {
@@ -36,15 +37,43 @@ export function CourseCard({ id, code, title, units, isOverlay, error }: CourseC
   // e.g. <div className="bg-white p-2 text-xs border-l-2 border-[#0A0A0A]">
   const CardBody = () => (
     <div className={cn(
-        "bg-white p-3 text-xs border-l-2 border-[#0A0A0A] shadow-sm",
-        error ? "border-l-[#ef4444] bg-[#fff5f5]" : ""
+        "bg-white p-3 text-xs border-l-2 shadow-sm transition-all",
+        error ? "border-l-[#ef4444] bg-[#fff5f5]" : "",
+        isSelectionMode ? (isSelected ? "border-l-[#0A0A0A] bg-[#0A0A0A]/5 border-2" : "border-l-[#DAD6CF] hover:border-l-[#0A0A0A]/30") : "border-l-[#0A0A0A]"
     )}>
       <div className="flex justify-between items-start gap-2 mb-1">
-          <span className="font-semibold text-[#0A0A0A]">{code}</span>
+          <div className="flex items-center gap-2">
+              {isSelectionMode && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onToggleSelection?.(id)
+                  }}
+                  className="flex items-center cursor-pointer p-0.5 -m-0.5"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={(e) => {
+                      e.stopPropagation()
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                    }}
+                    className="w-4 h-4 rounded border-[#DAD6CF] text-[#0A0A0A] focus:ring-[#0A0A0A] focus:ring-offset-0 cursor-pointer pointer-events-none"
+                    readOnly
+                  />
+                </div>
+              )}
+              <span className="font-semibold text-[#0A0A0A]">{code}</span>
+          </div>
           <span className="text-[0.65rem] text-[#666460] font-medium bg-[#F4F1ED] px-1.5 py-0.5 rounded-sm">{units} CU</span>
       </div>
-      <div className="text-[#666460] leading-tight text-[0.75rem]">{title}</div>
-      
+      <div className={cn(
+        "text-[#666460] leading-tight text-[0.75rem]",
+        isSelectionMode && "ml-5"
+      )}>{title}</div>
+
       {error && (
         <div className="mt-2 text-[0.65rem] text-[#ef4444] font-medium">
           {error}
@@ -57,6 +86,22 @@ export function CourseCard({ id, code, title, units, isOverlay, error }: CourseC
     return (
       <div className="w-full shadow-xl rotate-2 cursor-grabbing">
         <CardBody />
+      </div>
+    )
+  }
+
+  // In selection mode, make the card clickable instead of draggable
+  if (isSelectionMode) {
+    return (
+      <div
+        onClick={() => onToggleSelection?.(id)}
+        className={cn(
+          "group relative w-full outline-none mb-2 cursor-pointer"
+        )}
+      >
+        <div className="hover:translate-x-1 transition-transform">
+          <CardBody />
+        </div>
       </div>
     )
   }

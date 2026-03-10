@@ -16,7 +16,7 @@ import { IconDashboard, IconCalendarEvent, IconBook, IconMessageCircle, IconLogo
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { signOut, useSession } from "@/lib/auth-client"
-import { useEffect, useState } from "react"
+import type { StudentProfile } from "@/lib/data/students"
 
 
 // Enriched items with metadata for the new design
@@ -32,28 +32,10 @@ const items = [
   },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({ student }: { student: StudentProfile }) {
   const pathname = usePathname()
   const router = useRouter()
   const { data: session } = useSession()
-  const [studentInfo, setStudentInfo] = useState<{ university: string; year: number } | null>(null)
-
-  useEffect(() => {
-    async function fetchStudentProfile() {
-      try {
-        const res = await fetch("/api/student/profile")
-        if (res.ok) {
-          const data = await res.json()
-          setStudentInfo({ university: data.student.university, year: data.student.year })
-        }
-      } catch {
-        // Silently fail — footer will show fallback
-      }
-    }
-    if (session?.user) {
-      fetchStudentProfile()
-    }
-  }, [session?.user])
 
   return (
     <Sidebar collapsible="icon" className="border-r border-[#DAD6CF] bg-[#F4F1ED]">
@@ -108,7 +90,7 @@ export function AppSidebar() {
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                 <span className="text-sm font-semibold text-[#0A0A0A]">{session?.user?.name ?? "..."}</span>
                 <span className="text-xs text-[#666460]">
-                  {studentInfo ? `${studentInfo.university} • Year ${studentInfo.year}` : "..."}
+                  {student.university} • Year {student.year}
                 </span>
             </div>
              <SidebarMenuButton 
