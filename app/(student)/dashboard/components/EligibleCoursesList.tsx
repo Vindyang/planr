@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { DetailedEligibilityResult } from "@/lib/eligibility"
 import { Prisma } from "@prisma/client"
-import { AddToPlanButton } from "@/app/(authenticated)/courses/[id]/_components/AddToPlanButton"
+import { AddToPlanButton } from "@/app/(student)/courses/[id]/_components/AddToPlanButton"
 
 interface CourseDisplay {
   id: string

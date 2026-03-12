@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/sidebar"
 import { IconDashboard, IconUsers, IconBook, IconUserCircle, IconLogout } from "@tabler/icons-react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
+import { useSession, signOut } from "@/lib/auth-client"
 
 const items = [
   {
@@ -30,7 +31,12 @@ const items = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
+  const { data: session } = useSession()
+
+  const handleLogout = async () => {
+    await signOut()
+    window.location.href = "/"
+  }
 
   return (
     <Sidebar collapsible="icon" className="border-r border-[#DAD6CF] bg-[#F4F1ED]">
@@ -83,13 +89,17 @@ export function AdminSidebar() {
       <SidebarFooter className="p-6 border-t border-[#DAD6CF] group-data-[collapsible=icon]:p-2">
         <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                <span className="text-sm font-semibold text-[#0A0A0A]">Admin User</span>
-                <span className="text-xs text-[#666460]">System Administrator</span>
+                <span className="text-sm font-semibold text-[#0A0A0A]">
+                  {session?.user?.name || "Admin User"}
+                </span>
+                <span className="text-xs text-[#666460]">
+                  {session?.user?.email || "System Administrator"}
+                </span>
             </div>
-             <SidebarMenuButton 
+             <SidebarMenuButton
                 size="sm"
                 className="w-auto h-auto p-2 hover:bg-transparent text-[#0A0A0A] group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center"
-                onClick={() => router.push("/login")}
+                onClick={handleLogout}
                 tooltip="Logout"
             >
                 <IconLogout className="size-4" />
