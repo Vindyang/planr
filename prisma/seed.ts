@@ -1413,6 +1413,71 @@ async function createTestStudents(smuCourses: any[]) {
 }
 
 // ============================================================
+// 5.5. Create Admin Test Users
+// ============================================================
+async function createAdminUsers() {
+  // Hash password for admin accounts
+  const passwordHash = await hashPassword("admin123")
+
+  // 1. SUPER ADMIN - First admin account (highest privilege)
+  await prisma.user.create({
+    data: {
+      email: "user@superadmin.smu.edu.sg",
+      name: "Super Admin",
+      emailVerified: true,
+      role: "SUPER_ADMIN",
+      accounts: {
+        create: {
+          id: "account-superadmin",
+          accountId: "user@superadmin.smu.edu.sg",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+    },
+  })
+  console.log(`  ✅ Created user@superadmin.smu.edu.sg (Super Admin)`)
+
+  // 2. REGULAR ADMIN - Second admin account
+  await prisma.user.create({
+    data: {
+      email: "user@admin.smu.edu.sg",
+      name: "Admin User",
+      emailVerified: true,
+      role: "ADMIN",
+      accounts: {
+        create: {
+          id: "account-admin",
+          accountId: "user@admin.smu.edu.sg",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+    },
+  })
+  console.log(`  ✅ Created user@admin.smu.edu.sg (Admin)`)
+
+  // 3. COORDINATOR - For future coordinator features
+  await prisma.user.create({
+    data: {
+      email: "user@coordinator.smu.edu.sg",
+      name: "Course Coordinator",
+      emailVerified: true,
+      role: "COORDINATOR",
+      accounts: {
+        create: {
+          id: "account-coordinator",
+          accountId: "user@coordinator.smu.edu.sg",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+    },
+  })
+  console.log(`  ✅ Created user@coordinator.smu.edu.sg (Coordinator)`)
+}
+
+// ============================================================
 // 6. Seed Professors & Course Instructors
 // (SMU SCIS faculty scraped from computing.smu.edu.sg)
 // ============================================================
@@ -1672,6 +1737,10 @@ async function main() {
   await createTestStudents(smuCourses)
   console.log(`✅ Created 5 test students with academic history\n`)
 
+  // 4.5 Create admin users
+  await createAdminUsers()
+  console.log(`✅ Created 3 admin/coordinator users\n`)
+
   // 5. Seed professors & course instructors
   const professors = await seedProfessors(smuCourses)
   console.log(`✅ Created ${professors.length} professors with course assignments\n`)
@@ -1690,12 +1759,16 @@ async function main() {
   console.log(`  - Professor Reviews: ${reviewCounts.professorReviews}`)
   console.log(`  - Test Students: 5`)
   console.log(`  - Completed Course Records: 65+\n`)
-  console.log("📝 Test Accounts (all use password: password123):")
+  console.log("📝 Test Accounts (students use password: password123):")
   console.log("  - freshman@smu.edu.sg - Year 1, GPA 0.0, 0 completed")
   console.log("  - sophomore@smu.edu.sg - Year 2, GPA 3.5, 8 completed")
   console.log("  - junior@smu.edu.sg - Year 3, GPA 3.7, 20 completed")
   console.log("  - senior@smu.edu.sg - Year 4, GPA 3.8, 32 completed")
-  console.log("  - struggling@smu.edu.sg - Year 3, GPA 2.3, 12 completed (D in CS102)\n")
+  console.log("  - struggling@smu.edu.sg - Year 3, GPA 2.3, 12 completed (D in CS102)")
+  console.log("\n📝 Admin Accounts (password: admin123):")
+  console.log("  - user@superadmin.smu.edu.sg - Super Admin (highest privileges)")
+  console.log("  - user@admin.smu.edu.sg - Admin")
+  console.log("  - user@coordinator.smu.edu.sg - Course Coordinator\n")
 }
 
 main()

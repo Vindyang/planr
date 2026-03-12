@@ -13,6 +13,7 @@ enum UserRole {
   STUDENT
   COORDINATOR
   ADMIN
+  SUPER_ADMIN
 }
 
 enum CourseStatus {
