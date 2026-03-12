@@ -57,3 +57,10 @@ next-env.d.ts
 
 # reference
 /reference
+
+# agent frameworks
+.agent/
+.agents/
+_agent/
+_agents/
+.claude/
