@@ -122,7 +122,7 @@ export function PlannerBoard({
                     </div>
 
                     <div className="pt-2 flex items-center gap-4">
-                        {!isSelectionMode && (
+                        {!isSelectionMode && data.semesterPlans.length > 0 && (
                             <>
                                 <AddCourseDialog
                                     availableCourses={data.availableCourses}
@@ -132,13 +132,15 @@ export function PlannerBoard({
                                     onAddCourses={onAddCourses}
                                 />
                                 {/* Delete Courses Button */}
-                                <button
-                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
-                                    onClick={onToggleSelectionMode}
-                                >
-                                    <IconChecks size={18} stroke={1.5} />
-                                    <span>Delete Courses</span>
-                                </button>
+                                {plannedCourseIds.size > 0 && (
+                                    <button
+                                        className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                        onClick={onToggleSelectionMode}
+                                    >
+                                        <IconChecks size={18} stroke={1.5} />
+                                        <span>Delete Courses</span>
+                                    </button>
+                                )}
                             </>
                         )}
                         {isSelectionMode && (
