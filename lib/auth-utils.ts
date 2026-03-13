@@ -33,12 +33,12 @@ export async function requireRole(allowedRoles: UserRole[]) {
 }
 
 /**
- * Requires user to be an admin or super admin
+ * Requires user to be an admin, super admin, or coordinator
  * @returns Object containing session, role, and user data
  * @throws Error if unauthorized or not admin
  */
 export async function requireAdmin() {
-  return requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+  return requireRole([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.COORDINATOR]);
 }
 
 /**

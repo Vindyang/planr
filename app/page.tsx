@@ -15,12 +15,12 @@ export default async function Home() {
   const role = await getUserRole(session.user.id)
 
   // Redirect based on role
-  if (role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN) {
+  if (
+    role === UserRole.ADMIN ||
+    role === UserRole.SUPER_ADMIN ||
+    role === UserRole.COORDINATOR
+  ) {
     redirect("/admin")
-  } else if (role === UserRole.COORDINATOR) {
-    // For now, coordinators go to dashboard
-    // Later can add /coordinator routes
-    redirect("/dashboard")
   } else {
     // STUDENT and default
     redirect("/dashboard")
