@@ -17,7 +17,7 @@ export default async function PlannerPage() {
   // Parallel data fetching - all queries now cached
   const [plannerData, allCourses, validationResult] = await Promise.all([
     getPlannerData(student.id),
-    getCoursesWithDisplayData(student.university),
+    getCoursesWithDisplayData(student.universityId),
     getValidationResult(student.id)
   ])
 

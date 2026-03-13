@@ -22,13 +22,20 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
 
   // 1. Parallel Data Fetching
-  const [course, student, courseReviews, reviewAggregates, courseProfessors] = await Promise.all([
+  const [course, student, courseReviews, reviewAggregates, fetchedProfessors] = await Promise.all([
     getCourseWithPrerequisites(id),
     getStudentProfile(session.user.id),
     getCourseReviewsByCourse(id),
     getReviewAggregates(id),
     getProfessorsByCourse(id),
   ])
+
+  // Transform professors to use department name as string
+  const courseProfessors = fetchedProfessors.map((prof) => ({
+    id: prof.id,
+    name: prof.name,
+    department: prof.department.name,
+  }))
 
   if (!course) {
     notFound()

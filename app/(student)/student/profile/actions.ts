@@ -8,8 +8,8 @@ import { calculateGPA } from "@/lib/gpa"
 
 const createProfileSchema = z.object({
   userId: z.string(),
-  university: z.enum(["SMU", "NUS", "NTU", "SUTD", "SUSS"]),
-  major: z.string().min(2),
+  universityId: z.string(),
+  majorId: z.string(),
   year: z.number().min(1).max(4),
   enrollmentYear: z.number(),
 })
@@ -35,8 +35,8 @@ export async function createStudentProfile(
   const student = await prisma.student.create({
     data: {
       userId: validatedData.userId,
-      university: validatedData.university,
-      major: validatedData.major,
+      universityId: validatedData.universityId,
+      majorId: validatedData.majorId,
       year: validatedData.year,
       enrollmentYear: validatedData.enrollmentYear,
       expectedGraduationYear: validatedData.enrollmentYear + 4,
@@ -48,8 +48,8 @@ export async function createStudentProfile(
     success: true,
     student: {
       id: student.id,
-      university: student.university,
-      major: student.major,
+      universityId: student.universityId,
+      majorId: student.majorId,
     },
   }
 }
@@ -64,9 +64,70 @@ export async function updateStudentProfile(
 
   const validatedData = updateProfileSchema.parse(input)
 
+  // Get student's university to look up departments
+  const currentStudent = await prisma.student.findUnique({
+    where: { userId: session.user.id },
+    select: { universityId: true },
+  })
+
+  if (!currentStudent) {
+    return { success: false, error: "Student profile not found" }
+  }
+
+  // Look up department IDs by name if provided
+  const updateData: any = {}
+
+  if (validatedData.major) {
+    const majorDept = await prisma.department.findFirst({
+      where: {
+        universityId: currentStudent.universityId,
+        name: validatedData.major,
+      },
+    })
+    if (majorDept) {
+      updateData.majorId = majorDept.id
+    }
+  }
+
+  if (validatedData.secondMajor !== undefined) {
+    if (validatedData.secondMajor === null) {
+      updateData.secondMajorId = null
+    } else {
+      const secondMajorDept = await prisma.department.findFirst({
+        where: {
+          universityId: currentStudent.universityId,
+          name: validatedData.secondMajor,
+        },
+      })
+      if (secondMajorDept) {
+        updateData.secondMajorId = secondMajorDept.id
+      }
+    }
+  }
+
+  if (validatedData.minor !== undefined) {
+    if (validatedData.minor === null) {
+      updateData.minorId = null
+    } else {
+      const minorDept = await prisma.department.findFirst({
+        where: {
+          universityId: currentStudent.universityId,
+          name: validatedData.minor,
+        },
+      })
+      if (minorDept) {
+        updateData.minorId = minorDept.id
+      }
+    }
+  }
+
+  if (validatedData.year !== undefined) {
+    updateData.year = validatedData.year
+  }
+
   const student = await prisma.student.update({
     where: { userId: session.user.id },
-    data: validatedData,
+    data: updateData,
     include: {
       user: {
         select: {
@@ -74,10 +135,38 @@ export async function updateStudentProfile(
           email: true,
         },
       },
+      university: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+        },
+      },
+      major: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+        },
+      },
+      secondMajor: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+        },
+      },
+      minor: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+        },
+      },
     },
   })
 
-  revalidatePath("/profile")
+  revalidatePath("/student/profile")
   revalidatePath("/dashboard")
 
   return { success: true, student }

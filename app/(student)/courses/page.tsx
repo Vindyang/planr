@@ -7,10 +7,10 @@ import { CoursesPageSkeleton } from "./skeleton/CoursesPageSkeleton"
 
 // Cache courses data for 10 minutes since it rarely changes
 const getCachedCourses = unstable_cache(
-  async (university: string) => {
+  async (universityId: string) => {
     return prisma.course.findMany({
       where: {
-        university: university as any,
+        universityId,
         isActive: true,
       },
       include: {
@@ -48,6 +48,18 @@ async function CoursesContent() {
           email: true,
         },
       },
+      university: {
+        select: {
+          code: true,
+          name: true,
+        },
+      },
+      major: {
+        select: {
+          code: true,
+          name: true,
+        },
+      },
       completedCourses: {
         include: {
           course: {
@@ -75,7 +87,7 @@ async function CoursesContent() {
   }
 
   // Then fetch courses using cached query
-  const courses = await getCachedCourses(student.university)
+  const courses = await getCachedCourses(student.universityId)
 
   return (
     <CoursesClient

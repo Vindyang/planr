@@ -50,7 +50,7 @@ export async function StatCardsSection({ userId }: { userId: string }) {
       gpa={student.gpa}
       unitsEarned={completedUnits}
       year={student.year}
-      major={student.major}
+      major={student.major.name}
       nextSemesterCourses={nextSemester.coursesCount}
       totalCoursesTaken={student.completedCourses.length}
       remainingUnits={remainingUnits}

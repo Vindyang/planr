@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "prisma": {
-    "seed": "bun run prisma/seed.ts"
+    "seed": "bun run prisma/seed-new.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",

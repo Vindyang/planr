@@ -111,3 +111,164 @@ export async function hasRole(userId: string, role: UserRole): Promise<boolean> 
 export async function isAdmin(userId: string): Promise<boolean> {
   return hasRole(userId, UserRole.ADMIN);
 }
+
+/**
+ * Requires user to have access to a specific university
+ * @param university The university to check access for
+ * @returns Object containing session, role, and user data
+ * @throws Error if unauthorized or forbidden
+ */
+export async function requireUniversityAccess(university: string) {
+  const session = await getSession();
+
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      role: true,
+      id: true,
+      email: true,
+      name: true,
+      assignedUniversityId: true,
+      assignedDepartmentId: true,
+      assignedUniversity: {
+        select: {
+          code: true,
+          id: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // SUPER_ADMIN has access to all universities
+  if (user.role === UserRole.SUPER_ADMIN) {
+    return { session, role: user.role, user };
+  }
+
+  // ADMIN and COORDINATOR must have matching assignedUniversity
+  if (
+    user.role === UserRole.ADMIN ||
+    user.role === UserRole.COORDINATOR
+  ) {
+    if (user.assignedUniversity?.code !== university) {
+      throw new Error("Forbidden - No access to this university");
+    }
+    return { session, role: user.role, user };
+  }
+
+  // Students and others cannot access admin routes
+  throw new Error("Forbidden");
+}
+
+/**
+ * Requires user to have access to a specific department within a university
+ * @param university The university to check access for
+ * @param department The department to check access for
+ * @returns Object containing session, role, and user data
+ * @throws Error if unauthorized or forbidden
+ */
+export async function requireDepartmentAccess(university: string, department: string) {
+  const session = await getSession();
+
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      role: true,
+      id: true,
+      email: true,
+      name: true,
+      assignedUniversityId: true,
+      assignedDepartmentId: true,
+      assignedUniversity: {
+        select: {
+          code: true,
+          id: true,
+        },
+      },
+      assignedDepartment: {
+        select: {
+          code: true,
+          name: true,
+          id: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // SUPER_ADMIN has access to all departments
+  if (user.role === UserRole.SUPER_ADMIN) {
+    return { session, role: user.role, user };
+  }
+
+  // ADMIN must have matching university (can access all departments in their university)
+  if (user.role === UserRole.ADMIN) {
+    if (user.assignedUniversity?.code !== university) {
+      throw new Error("Forbidden - No access to this university");
+    }
+    return { session, role: user.role, user };
+  }
+
+  // COORDINATOR must have matching university AND department
+  if (user.role === UserRole.COORDINATOR) {
+    if (user.assignedUniversity?.code !== university) {
+      throw new Error("Forbidden - No access to this university");
+    }
+    if (user.assignedDepartment?.name !== department) {
+      throw new Error("Forbidden - No access to this department");
+    }
+    return { session, role: user.role, user };
+  }
+
+  // Students and others cannot access admin routes
+  throw new Error("Forbidden");
+}
+
+/**
+ * Gets the user with their university and department assignments
+ * @param userId The user ID to look up
+ * @returns User object with assignments or null if not found
+ */
+export const getUserWithAssignments = cache(async (userId: string) => {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      image: true,
+      assignedUniversityId: true,
+      assignedDepartmentId: true,
+      assignedUniversity: {
+        select: {
+          code: true,
+          name: true,
+          id: true,
+        },
+      },
+      assignedDepartment: {
+        select: {
+          code: true,
+          name: true,
+          id: true,
+        },
+      },
+      createdAt: true,
+    },
+  });
+});

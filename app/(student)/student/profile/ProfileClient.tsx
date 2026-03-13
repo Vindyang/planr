@@ -38,10 +38,30 @@ interface CompletedCourse {
 
 interface StudentProfile {
   id: string
-  university: string
-  major: string
-  secondMajor: string | null
-  minor: string | null
+  universityId: string
+  majorId: string
+  secondMajorId: string | null
+  minorId: string | null
+  university: {
+    id: string
+    code: string
+    name: string
+  }
+  major: {
+    id: string
+    code: string
+    name: string
+  }
+  secondMajor: {
+    id: string
+    code: string
+    name: string
+  } | null
+  minor: {
+    id: string
+    code: string
+    name: string
+  } | null
   year: number
   enrollmentYear: number
   expectedGraduationYear: number
@@ -72,9 +92,9 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
   const [error, setError] = useState("")
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
-    major: initialStudent?.major || "",
-    secondMajor: initialStudent?.secondMajor || "",
-    minor: initialStudent?.minor || "",
+    major: initialStudent?.major.name || "",
+    secondMajor: initialStudent?.secondMajor?.name || "",
+    minor: initialStudent?.minor?.name || "",
     year: initialStudent?.year || 1,
   })
 
@@ -267,7 +287,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
                </div>
                <div className="space-y-1">
                  <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">University</Label>
-                 <p className="text-base font-normal text-foreground">{student.university}</p>
+                 <p className="text-base font-normal text-foreground">{student.university.name}</p>
                </div>
             </div>
           </div>
@@ -303,9 +323,9 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
                     onClick={() => {
                       setIsEditing(false)
                       setEditForm({
-                        major: student.major,
-                        secondMajor: student.secondMajor || "",
-                        minor: student.minor || "",
+                        major: student.major.name,
+                        secondMajor: student.secondMajor?.name || "",
+                        minor: student.minor?.name || "",
                         year: student.year,
                       })
                     }}
@@ -376,7 +396,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-1">
                       <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Major</Label>
-                      <p className="text-base font-normal text-foreground">{student.major}</p>
+                      <p className="text-base font-normal text-foreground">{student.major.name}</p>
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Year</Label>
@@ -389,13 +409,13 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
                       {student.secondMajor && (
                         <div className="space-y-1">
                           <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Second Major</Label>
-                          <p className="text-base font-normal text-foreground">{student.secondMajor}</p>
+                          <p className="text-base font-normal text-foreground">{student.secondMajor.name}</p>
                         </div>
                       )}
                       {student.minor && (
                         <div className="space-y-1">
                           <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Minor</Label>
-                          <p className="text-base font-normal text-foreground">{student.minor}</p>
+                          <p className="text-base font-normal text-foreground">{student.minor.name}</p>
                         </div>
                       )}
                     </div>

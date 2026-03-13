@@ -24,7 +24,7 @@ async function ProfileContent() {
 
   // Optimize: we primarily need course codes for the dropdown, but getAllCoursesForUniversity returns detailed data.
   // This is fine as it uses cached query helper.
-  const courses = await getAllCoursesForUniversity(student.university)
+  const courses = await getAllCoursesForUniversity(student.universityId)
 
   const availableCourses = courses.map(c => ({
     id: c.id,

@@ -27,8 +27,10 @@ interface CourseData {
 
 interface StudentData {
   id: string
-  university: string
-  major: string
+  universityId: string
+  majorId: string
+  university: { code: string; name: string }
+  major: { code: string; name: string }
   year: number
   enrollmentYear: number
   gpa: number
@@ -113,7 +115,7 @@ export default function CoursesClient({
     const result = checkCourseEligibility(
       transformed,
       completedCoursesInfo,
-      { university: initialStudent.university }
+      { university: initialStudent.university.code }
     )
 
     if (result.isEligible) {

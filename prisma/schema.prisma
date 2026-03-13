@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,7 +6,9 @@ datasource db {
   provider = "postgresql"
 }
 
-// Enums
+// ============================================================
+// ENUMS
+// ============================================================
 
 enum UserRole {
   STUDENT
@@ -34,78 +35,148 @@ enum PlanStatus {
   DROPPED
 }
 
-enum University {
-  SMU
-  NUS
-  NTU
-  SUTD
-  SUSS
+// ============================================================
+// CORE MULTI-TENANT ENTITIES
+// ============================================================
+
+model university {
+  id          String   @id @default(uuid())
+  code        String   @unique // SMU, NUS, NTU, SUTD, SUSS
+  name        String   // "Singapore Management University"
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  departments              department[]
+  courses                  course[]
+  students                 student[]
+  professors               professor[]
+  assignedAdmins           user[]                  @relation("UniversityAdmins")
+  graduationRequirements   graduationRequirement[]
+
+  @@map("universities")
 }
 
-// Models
+model department {
+  id             String   @id @default(uuid())
+  universityId   String   @map("university_id")
+  code           String   // "IS", "CS", "BUSINESS", "ACCOUNTING"
+  name           String   // "Information Systems", "Computer Science"
+  description    String?  @db.Text
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  university     university @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  courses        course[]
+  students       student[]    @relation("StudentMajor")
+  secondMajors   student[]    @relation("StudentSecondMajor")
+  minors         student[]    @relation("StudentMinor")
+  professors     professor[]
+  coordinators   user[]
+
+  @@unique([universityId, code])
+  @@index([universityId, isActive])
+  @@map("departments")
+}
+
+// ============================================================
+// USER & AUTHENTICATION
+// ============================================================
 
 model user {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  name              String
-  emailVerified     Boolean   @default(false) @map("email_verified")
-  image             String?
-  role              UserRole  @default(STUDENT)
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  id                    String      @id @default(uuid())
+  email                 String      @unique
+  name                  String
+  emailVerified         Boolean     @default(false) @map("email_verified")
+  image                 String?
+  role                  UserRole    @default(STUDENT)
 
-  student  student?
-  sessions session[]
-  accounts account[]
+  // Multi-tenant assignments (for ADMIN and COORDINATOR roles)
+  assignedUniversityId  String?     @map("assigned_university_id")
+  assignedDepartmentId  String?     @map("assigned_department_id")
 
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+
+  assignedUniversity    university? @relation("UniversityAdmins", fields: [assignedUniversityId], references: [id])
+  assignedDepartment    department? @relation(fields: [assignedDepartmentId], references: [id])
+  student               student?
+  sessions              session[]
+  accounts              account[]
+
+  @@index([assignedUniversityId])
+  @@index([assignedUniversityId, assignedDepartmentId])
+  @@index([role])
   @@map("users")
 }
+
+// ============================================================
+// STUDENT PROFILE
+// ============================================================
 
 model student {
   id                     String     @id @default(uuid())
   userId                 String     @unique @map("user_id")
   studentId              String?    @map("student_id")
-  university             University
-  major                  String
-  secondMajor            String?    @map("second_major")
-  minor                  String?
+
+  universityId           String     @map("university_id")
+  majorId                String     @map("major_id")
+  secondMajorId          String?    @map("second_major_id")
+  minorId                String?    @map("minor_id")
+
   year                   Int
   enrollmentYear         Int        @map("enrollment_year")
   expectedGraduationYear Int        @map("expected_graduation_year")
   gpa                    Float      @default(0)
 
-  user             user              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  completedCourses completedCourse[]
-  semesterPlans    semesterPlan[]
-  courseReviews    courseReview[]
-  professorReviews professorReview[]
+  user                user              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  university          university        @relation(fields: [universityId], references: [id])
+  major               department        @relation("StudentMajor", fields: [majorId], references: [id])
+  secondMajor         department?       @relation("StudentSecondMajor", fields: [secondMajorId], references: [id])
+  minor               department?       @relation("StudentMinor", fields: [minorId], references: [id])
 
+  completedCourses    completedCourse[]
+  semesterPlans       semesterPlan[]
+  courseReviews       courseReview[]
+  professorReviews    professorReview[]
+
+  @@index([universityId])
+  @@index([majorId])
   @@map("students")
 }
 
+// ============================================================
+// COURSE CATALOG
+// ============================================================
+
 model course {
-  id           String     @id @default(uuid())
-  code         String
-  university   University
-  title        String
-  description  String     @db.Text
-  units        Int
-  termsOffered String[]   @map("terms_offered")
-  tags         String[]
-  isActive     Boolean    @default(true) @map("is_active")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  id             String     @id @default(uuid())
+  code           String
+  universityId   String     @map("university_id")
+  departmentId   String?    @map("department_id") // Nullable for general education courses
+  title          String
+  description    String     @db.Text
+  units          Int
+  termsOffered   String[]   @map("terms_offered")
+  tags           String[]   // For non-department tags like "Core", "Elective", "Year 1", etc.
+  isActive       Boolean    @default(true) @map("is_active")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  prerequisites    prerequisite[]    @relation("CoursePrerequisites")
-  prerequisiteFor  prerequisite[]    @relation("PrerequisiteCourses")
-  completedCourses completedCourse[]
-  plannedCourses   plannedCourse[]
-  courseInstructors courseInstructor[]
-  courseReviews     courseReview[]
-  professorReviews professorReview[]
+  university          university           @relation(fields: [universityId], references: [id])
+  department          department?          @relation(fields: [departmentId], references: [id])
+  prerequisites       prerequisite[]       @relation("CoursePrerequisites")
+  prerequisiteFor     prerequisite[]       @relation("PrerequisiteCourses")
+  completedCourses    completedCourse[]
+  plannedCourses      plannedCourse[]
+  courseInstructors   courseInstructor[]
+  courseReviews       courseReview[]
+  professorReviews    professorReview[]
 
-  @@unique([code, university])
-  @@index([university, isActive])
+  @@unique([code, universityId])
+  @@index([universityId, isActive])
+  @@index([departmentId])
   @@map("courses")
 }
 
@@ -123,6 +194,10 @@ model prerequisite {
   @@index([prerequisiteCourseId])
   @@map("prerequisites")
 }
+
+// ============================================================
+// STUDENT PROGRESS
+// ============================================================
 
 model completedCourse {
   id        String       @id @default(uuid())
@@ -173,35 +248,49 @@ model plannedCourse {
   @@map("planned_courses")
 }
 
+// ============================================================
+// GRADUATION REQUIREMENTS
+// ============================================================
+
 model graduationRequirement {
   id               String     @id @default(uuid())
-  university       University
+  universityId     String     @map("university_id")
   major            String
   requirementType  String     @map("requirement_type")
   requirementValue Json       @map("requirement_value")
 
+  university university @relation(fields: [universityId], references: [id], onDelete: Cascade)
+
+  @@index([universityId, major])
   @@map("graduation_requirements")
 }
 
+// ============================================================
+// PROFESSORS & INSTRUCTORS
+// ============================================================
 
 model professor {
-  id         String     @id @default(uuid())
-  name       String
-  university University
-  department String
-  createdAt  DateTime   @default(now()) @map("created_at")
-  updatedAt  DateTime   @updatedAt @map("updated_at")
+  id             String     @id @default(uuid())
+  name           String
+  universityId   String     @map("university_id")
+  departmentId   String     @map("department_id")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
-  courseInstructors courseInstructor[]
-  reviews          professorReview[]
+  university         university         @relation(fields: [universityId], references: [id])
+  department         department         @relation(fields: [departmentId], references: [id])
+  courseInstructors  courseInstructor[]
+  reviews            professorReview[]
 
-  @@unique([name, university, department])
+  @@unique([name, universityId, departmentId])
+  @@index([universityId])
+  @@index([departmentId])
   @@map("professors")
 }
 
 model courseInstructor {
   id          String  @id @default(uuid())
-  courseId     String  @map("course_id")
+  courseId    String  @map("course_id")
   professorId String  @map("professor_id")
   term        String?
 
@@ -212,10 +301,14 @@ model courseInstructor {
   @@map("course_instructors")
 }
 
+// ============================================================
+// REVIEWS
+// ============================================================
+
 model courseReview {
   id               String   @id @default(uuid())
   studentId        String   @map("student_id")
-  courseId          String   @map("course_id")
+  courseId         String   @map("course_id")
   rating           Int
   difficultyRating Int      @map("difficulty_rating")
   workloadRating   Int      @map("workload_rating")
@@ -237,7 +330,7 @@ model professorReview {
   id               String   @id @default(uuid())
   studentId        String   @map("student_id")
   professorId      String   @map("professor_id")
-  courseId          String?  @map("course_id")
+  courseId         String?  @map("course_id")
   rating           Int
   difficultyRating Int      @map("difficulty_rating")
   workloadRating   Int      @map("workload_rating")
@@ -256,6 +349,10 @@ model professorReview {
   @@index([courseId])
   @@map("professor_reviews")
 }
+
+// ============================================================
+// AUTHENTICATION & SESSIONS
+// ============================================================
 
 model session {
   id        String   @id

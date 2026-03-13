@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const mine = searchParams.get("mine")
 
     const where: Record<string, unknown> = {
-      course: { university: student.university },
+      course: { universityId: student.universityId },
     }
     if (courseId) {
       where.courseId = courseId

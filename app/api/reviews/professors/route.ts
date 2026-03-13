@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const mine = searchParams.get("mine")
 
     const where: Record<string, unknown> = {
-      professor: { university: student.university },
+      professor: { universityId: student.universityId },
     }
     if (professorId) {
       where.professorId = professorId
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       where: { id: validation.data.professorId },
     })
 
-    if (!professor || professor.university !== student.university) {
+    if (!professor || professor.universityId !== student.universityId) {
       return NextResponse.json({ error: "Professor not found" }, { status: 404 })
     }
 

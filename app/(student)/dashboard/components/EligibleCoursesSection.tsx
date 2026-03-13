@@ -17,7 +17,7 @@ export async function EligibleCoursesSection({ userId }: { userId: string }) {
 
   // Fetch courses and planner data in parallel
   const [courses, plannerData] = await Promise.all([
-    getCoursesWithDisplayData(student.university),
+    getCoursesWithDisplayData(student.universityId),
     getPlannerData(student.id),
   ])
 
@@ -32,7 +32,7 @@ export async function EligibleCoursesSection({ userId }: { userId: string }) {
   const eligibleCourses = getEligibleCoursesWithDetails(
     courses as CourseWithPrereqs[],
     completedCoursesInfo,
-    { university: student.university }
+    { university: student.university.code }
   )
 
   // Filter out courses that are already in the planner

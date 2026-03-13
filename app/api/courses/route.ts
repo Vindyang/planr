@@ -23,7 +23,7 @@ export async function GET() {
 
     const courses = await prisma.course.findMany({
       where: {
-        university: student.university,
+        universityId: student.universityId,
         isActive: true,
       },
       include: {

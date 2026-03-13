@@ -1,10 +1,9 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
-import { University } from "@prisma/client"
 
-export const getCourseReviewsForUniversity = cache(async (university: University) => {
+export const getCourseReviewsForUniversity = cache(async (universityId: string) => {
   return await prisma.courseReview.findMany({
-    where: { course: { university } },
+    where: { course: { universityId } },
     include: {
       course: { select: { id: true, code: true, title: true } },
       student: {
@@ -32,11 +31,19 @@ export const getCourseReviewsByCourse = cache(async (courseId: string) => {
   })
 })
 
-export const getProfessorReviewsForUniversity = cache(async (university: University) => {
+export const getProfessorReviewsForUniversity = cache(async (universityId: string) => {
   return await prisma.professorReview.findMany({
-    where: { professor: { university } },
+    where: { professor: { universityId } },
     include: {
-      professor: { select: { id: true, name: true, department: true } },
+      professor: {
+        select: {
+          id: true,
+          name: true,
+          department: {
+            select: { name: true, code: true },
+          },
+        },
+      },
       course: { select: { id: true, code: true, title: true } },
       student: {
         include: {

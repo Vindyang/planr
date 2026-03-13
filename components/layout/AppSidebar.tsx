@@ -90,7 +90,7 @@ export function AppSidebar({ student }: { student: StudentProfile }) {
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
                 <span className="text-sm font-semibold text-[#0A0A0A]">{session?.user?.name ?? "..."}</span>
                 <span className="text-xs text-[#666460]">
-                  {student.university} • Year {student.year}
+                  {student.university.code} • Year {student.year}
                 </span>
             </div>
              <SidebarMenuButton 

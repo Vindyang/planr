@@ -1,7 +1,5 @@
 import { AdminLayout } from "@/components/layout/AdminLayout"
-import { getSession } from "@/lib/auth"
-import { getUserRole } from "@/lib/auth-utils"
-import { UserRole } from "@prisma/client"
+import { requireAdmin } from "@/lib/auth-utils"
 import { redirect } from "next/navigation"
 
 export default async function AdminRootLayout({
@@ -9,22 +7,12 @@ export default async function AdminRootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getSession()
-
-  // Not authenticated - redirect to login
-  if (!session?.user) {
+  try {
+    // Ensure user has admin role (ADMIN, SUPER_ADMIN, or COORDINATOR)
+    await requireAdmin()
+  } catch (error) {
+    // Not authenticated or not an admin - redirect appropriately
     redirect("/login")
-  }
-
-  const role = await getUserRole(session.user.id)
-
-  // SECURITY: Redirect non-admin users to student dashboard
-  if (
-    role !== UserRole.ADMIN &&
-    role !== UserRole.SUPER_ADMIN &&
-    role !== UserRole.COORDINATOR
-  ) {
-    redirect("/dashboard")
   }
 
   return <AdminLayout>{children}</AdminLayout>

@@ -42,7 +42,7 @@ export default async function DashboardPage() {
             Welcome back, {student.user.name}
           </span>
           <span className="font-serif text-xl italic text-muted-foreground">
-            Year {student.year} • {student.major}
+            Year {student.year} • {student.major.name}
           </span>
         </div>
       </header>

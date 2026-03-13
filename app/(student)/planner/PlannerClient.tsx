@@ -172,8 +172,6 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
     const activeData = active.data.current
     const overId = over.id as string // This is the planId (droppable)
 
-    console.log("DROP", activeData, "ON", overId)
-
     startTransition(async () => {
         try {
             if (activeData?.type === "new-course") {

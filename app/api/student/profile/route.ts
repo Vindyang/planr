@@ -61,11 +61,38 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = createProfileSchema.parse(body)
 
+    // Look up university by code
+    const university = await prisma.university.findUnique({
+      where: { code: validatedData.university },
+    })
+
+    if (!university) {
+      return NextResponse.json(
+        { error: "Invalid university" },
+        { status: 400 }
+      )
+    }
+
+    // Look up major (department) by name
+    const major = await prisma.department.findFirst({
+      where: {
+        universityId: university.id,
+        name: validatedData.major,
+      },
+    })
+
+    if (!major) {
+      return NextResponse.json(
+        { error: "Invalid major for selected university" },
+        { status: 400 }
+      )
+    }
+
     const student = await prisma.student.create({
       data: {
         userId: validatedData.userId,
-        university: validatedData.university,
-        major: validatedData.major,
+        universityId: university.id,
+        majorId: major.id,
         year: validatedData.year,
         enrollmentYear: validatedData.enrollmentYear,
         expectedGraduationYear: validatedData.enrollmentYear + 4,
@@ -78,8 +105,8 @@ export async function POST(request: NextRequest) {
         message: "Student profile created successfully",
         student: {
           id: student.id,
-          university: student.university,
-          major: student.major,
+          universityId: student.universityId,
+          majorId: student.majorId,
         },
       },
       { status: 201 }
