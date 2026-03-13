@@ -119,7 +119,7 @@ export interface ProfessorReviewData {
   term: string | null;
   isAnonymous: boolean;
   createdAt: string;
-  professor: { id: string; name: string; department: string };
+  professor: { id: string; name: string; department: { name: string; code: string } };
   course: { id: string; code: string; title: string } | null;
   studentName: string | null;
   isOwn: boolean;

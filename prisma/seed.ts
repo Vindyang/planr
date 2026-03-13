@@ -177,9 +177,158 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
 }
 
 // ============================================================
-// 4. Create Test Students
+// 4. Create Professors
 // ============================================================
-async function createTestStudents(universityId: string, isDeptId: string) {
+async function createProfessors(universityId: string, isDeptId: string, csDeptId: string) {
+  console.log("👨‍🏫 Creating professors...")
+
+  const professors = []
+
+  // IS Department Professors
+  const prof1 = await prisma.professor.create({
+    data: {
+      name: "Dr. Sarah Johnson",
+      universityId,
+      departmentId: isDeptId,
+    },
+  })
+  professors.push(prof1)
+
+  const prof2 = await prisma.professor.create({
+    data: {
+      name: "Prof. Michael Lee",
+      universityId,
+      departmentId: isDeptId,
+    },
+  })
+  professors.push(prof2)
+
+  const prof3 = await prisma.professor.create({
+    data: {
+      name: "Dr. Rachel Tan",
+      universityId,
+      departmentId: isDeptId,
+    },
+  })
+  professors.push(prof3)
+
+  // CS Department Professors
+  const prof4 = await prisma.professor.create({
+    data: {
+      name: "Prof. David Wong",
+      universityId,
+      departmentId: csDeptId,
+    },
+  })
+  professors.push(prof4)
+
+  const prof5 = await prisma.professor.create({
+    data: {
+      name: "Dr. Emily Zhang",
+      universityId,
+      departmentId: csDeptId,
+    },
+  })
+  professors.push(prof5)
+
+  console.log(`✅ Created ${professors.length} professors`)
+  return professors
+}
+
+// ============================================================
+// 5. Link Professors to Courses
+// ============================================================
+async function createCourseInstructors(courses: any[], professors: any[]) {
+  console.log("🔗 Linking professors to courses...")
+
+  // IS101 - Dr. Sarah Johnson
+  await prisma.courseInstructor.create({
+    data: {
+      courseId: courses[0].id, // IS101
+      professorId: professors[0].id, // Dr. Sarah Johnson
+      term: "Fall 2024",
+    },
+  })
+
+  // IS210 - Prof. Michael Lee
+  await prisma.courseInstructor.create({
+    data: {
+      courseId: courses[1].id, // IS210
+      professorId: professors[1].id, // Prof. Michael Lee
+      term: "Fall 2024",
+    },
+  })
+
+  // IS315 - Dr. Rachel Tan
+  await prisma.courseInstructor.create({
+    data: {
+      courseId: courses[2].id, // IS315
+      professorId: professors[2].id, // Dr. Rachel Tan
+      term: "Spring 2025",
+    },
+  })
+
+  // CS101 - Prof. David Wong
+  await prisma.courseInstructor.create({
+    data: {
+      courseId: courses[3].id, // CS101
+      professorId: professors[3].id, // Prof. David Wong
+      term: "Fall 2024",
+    },
+  })
+
+  // CS201 - Dr. Emily Zhang
+  await prisma.courseInstructor.create({
+    data: {
+      courseId: courses[4].id, // CS201
+      professorId: professors[4].id, // Dr. Emily Zhang
+      term: "Fall 2024",
+    },
+  })
+
+  console.log(`✅ Created course instructor assignments`)
+}
+
+// ============================================================
+// 6. Create Prerequisites
+// ============================================================
+async function createPrerequisites(courses: any[]) {
+  console.log("📋 Creating course prerequisites...")
+
+  // IS210 requires IS101
+  await prisma.prerequisite.create({
+    data: {
+      courseId: courses[1].id, // IS210
+      prerequisiteCourseId: courses[0].id, // IS101
+      type: "HARD",
+    },
+  })
+
+  // IS315 requires IS210
+  await prisma.prerequisite.create({
+    data: {
+      courseId: courses[2].id, // IS315
+      prerequisiteCourseId: courses[1].id, // IS210
+      type: "HARD",
+    },
+  })
+
+  // CS201 requires CS101
+  await prisma.prerequisite.create({
+    data: {
+      courseId: courses[4].id, // CS201
+      prerequisiteCourseId: courses[3].id, // CS101
+      type: "HARD",
+    },
+  })
+
+  console.log(`✅ Created course prerequisites`)
+}
+
+// ============================================================
+// 7. Create Test Students
+// ============================================================
+async function createTestStudents(universityId: string, isDeptId: string, courses: any[]) {
   console.log("👨‍🎓 Creating test students...")
 
   const passwordHash = await hashPassword("student123")
@@ -213,7 +362,96 @@ async function createTestStudents(universityId: string, isDeptId: string) {
     },
   })
 
+  // Add completed courses for the student
+  const student = await prisma.student.findUnique({
+    where: { userId: user1.id },
+  })
+
+  if (student) {
+    // Student completed IS101 and CS101
+    await prisma.completedCourse.createMany({
+      data: [
+        {
+          studentId: student.id,
+          courseId: courses[0].id, // IS101
+          grade: "A",
+          term: "Fall 2023",
+        },
+        {
+          studentId: student.id,
+          courseId: courses[3].id, // CS101
+          grade: "A-",
+          term: "Fall 2023",
+        },
+      ],
+    })
+  }
+
   console.log(`✅ Created test student: ${user1.email}`)
+  return student
+}
+
+// ============================================================
+// 8. Create Course and Professor Reviews
+// ============================================================
+async function createReviews(student: any, courses: any[], professors: any[]) {
+  console.log("⭐ Creating course and professor reviews...")
+
+  // Course Review for IS101
+  await prisma.courseReview.create({
+    data: {
+      studentId: student.id,
+      courseId: courses[0].id, // IS101
+      rating: 5,
+      difficultyRating: 3,
+      workloadRating: 3,
+      content: "Great introductory course! Dr. Johnson explains concepts clearly and the assignments are practical.",
+      term: "Fall 2023",
+    },
+  })
+
+  // Course Review for CS101
+  await prisma.courseReview.create({
+    data: {
+      studentId: student.id,
+      courseId: courses[3].id, // CS101
+      rating: 4,
+      difficultyRating: 2,
+      workloadRating: 3,
+      content: "Solid programming fundamentals. Good for beginners but can be slow if you have prior experience.",
+      term: "Fall 2023",
+    },
+  })
+
+  // Professor Review for Dr. Sarah Johnson (IS101)
+  await prisma.professorReview.create({
+    data: {
+      studentId: student.id,
+      professorId: professors[0].id, // Dr. Sarah Johnson
+      courseId: courses[0].id, // IS101
+      rating: 5,
+      difficultyRating: 3,
+      workloadRating: 3,
+      content: "Dr. Johnson is an excellent teacher. She's approachable, responsive, and really cares about student learning.",
+      term: "Fall 2023",
+    },
+  })
+
+  // Professor Review for Prof. David Wong (CS101)
+  await prisma.professorReview.create({
+    data: {
+      studentId: student.id,
+      professorId: professors[3].id, // Prof. David Wong
+      courseId: courses[3].id, // CS101
+      rating: 4,
+      difficultyRating: 2,
+      workloadRating: 3,
+      content: "Prof. Wong is knowledgeable and organized. Lectures can be a bit dry but the content is solid.",
+      term: "Fall 2023",
+    },
+  })
+
+  console.log(`✅ Created course and professor reviews`)
 }
 
 // ============================================================
@@ -298,9 +536,19 @@ async function main() {
 
   const { smu, isDept, csDept } = await createUniversitiesAndDepartments()
 
-  await createSampleCourses(smu.id, isDept.id, csDept.id)
+  const courses = await createSampleCourses(smu.id, isDept.id, csDept.id)
 
-  await createTestStudents(smu.id, isDept.id)
+  const professors = await createProfessors(smu.id, isDept.id, csDept.id)
+
+  await createCourseInstructors(courses, professors)
+
+  await createPrerequisites(courses)
+
+  const student = await createTestStudents(smu.id, isDept.id, courses)
+
+  if (student) {
+    await createReviews(student, courses, professors)
+  }
 
   await createAdminUsers(smu.id, isDept.id)
 

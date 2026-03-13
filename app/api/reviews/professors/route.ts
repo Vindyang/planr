@@ -54,7 +54,13 @@ export async function GET(request: NextRequest) {
     const reviews = await prisma.professorReview.findMany({
       where,
       include: {
-        professor: { select: { id: true, name: true, department: true } },
+        professor: {
+          select: {
+            id: true,
+            name: true,
+            department: { select: { name: true, code: true } }
+          }
+        },
         course: { select: { id: true, code: true, title: true } },
         student: {
           include: {
@@ -169,7 +175,13 @@ export async function POST(request: NextRequest) {
         isAnonymous: validation.data.isAnonymous,
       },
       include: {
-        professor: { select: { id: true, name: true, department: true } },
+        professor: {
+          select: {
+            id: true,
+            name: true,
+            department: { select: { name: true, code: true } }
+          }
+        },
         course: { select: { id: true, code: true, title: true } },
       },
     })

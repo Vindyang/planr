@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
 import { EligibilityStatus } from "@/lib/eligibility"
 import { getCourseWithPrerequisites } from "@/lib/data/courses"
@@ -119,255 +120,301 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
           </h1>
         </header>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {/* Main content */}
-          <div className="md:col-span-2 space-y-8">
-            {/* Description */}
-            <div className="space-y-3">
-              <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-                Description
-              </h2>
-              <p className="text-foreground leading-relaxed">{course.description}</p>
-            </div>
+{/* Main Content Area */}
+        <div className="pt-4">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="bg-transparent border-b border-border w-full flex justify-start h-auto rounded-none p-0 mb-8 space-x-8">
+              <TabsTrigger 
+                value="overview" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 font-medium uppercase text-xs tracking-wider"
+              >
+                Overview
+              </TabsTrigger>
+              <TabsTrigger 
+                value="requirements" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 font-medium uppercase text-xs tracking-wider"
+              >
+                Requirements & Eligibility
+              </TabsTrigger>
+              <TabsTrigger 
+                value="reviews" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 font-medium uppercase text-xs tracking-wider"
+              >
+                Reviews
+              </TabsTrigger>
+            </TabsList>
 
-            {/* Eligibility Issues */}
-            {eligibility && !eligibility.eligibility.isEligible && (
-              <div className="space-y-3">
-                <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-                  Why Not Eligible
-                </h2>
-                <div className="bg-red-50 border border-red-200 p-4 space-y-2">
-                  {eligibility.eligibility.reasons.map((reason, i) => (
-                    <p key={i} className="text-sm text-red-700">
-                      • {reason}
+            {/* OVERVIEW TAB */}
+            <TabsContent value="overview" className="mt-0">
+              <div className="grid gap-12 md:grid-cols-3">
+                <div className="md:col-span-2 space-y-8">
+                  <div className="space-y-4">
+                    <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                      Description
+                    </h2>
+                    <p className="text-foreground leading-relaxed {course.description.length > 300 ? 'text-lg' : 'text-xl'}">
+                      {course.description}
                     </p>
-                  ))}
+                  </div>
                 </div>
-                {eligibility.eligibility.suggestions.length > 0 && (
-                  <div className="bg-blue-50 border border-blue-200 p-4 space-y-2">
-                    <p className="text-xs uppercase tracking-wider font-medium text-blue-700">
-                      Suggestions
-                    </p>
-                    {eligibility.eligibility.suggestions.map((suggestion, i) => (
-                      <p key={i} className="text-sm text-blue-700">
-                        • {suggestion}
-                      </p>
-                    ))}
+
+                {/* Sidebar metadata */}
+                <div className="space-y-6">
+                  <div className="bg-card border border-border p-6 space-y-6">
+                    <div className="space-y-1">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                        Units
+                      </span>
+                      <p className="text-2xl font-serif italic">{course.units} CU</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                        Terms Offered
+                      </span>
+                      <div className="flex gap-2">
+                        {course.termsOffered.map((term) => (
+                          <span
+                            key={term}
+                            className="px-2 py-1 text-xs uppercase tracking-wider border border-border"
+                          >
+                            {term}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                        Tags
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {course.tags.map((tag) => (
+                          <Badge key={tag} variant="outline" className="rounded-none text-xs uppercase">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {!isCompleted && plannerData && (
+                      <AddToPlanButton
+                        course={{
+                          id: course.id,
+                          code: course.code,
+                          title: course.title,
+                        }}
+                        semesterPlans={plannerData.semesterPlans}
+                        isEligible={eligibility?.eligibility.isEligible ?? false}
+                        className="w-full text-xs uppercase tracking-wider"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* REQUIREMENTS TAB */}
+            <TabsContent value="requirements" className="mt-0">
+              <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
+                <div className="md:col-span-2 space-y-12">
+                  
+                  {/* Eligibility Issues */}
+                  {eligibility && !eligibility.eligibility.isEligible && (
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                          Why Not Eligible
+                        </h2>
+                        <div className="border border-border p-5 bg-transparent space-y-3">
+                          {eligibility.eligibility.reasons.map((reason, i) => (
+                            <p key={i} className="text-sm text-foreground flex items-baseline gap-2">
+                              <span className="text-red-500">•</span> {reason}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {eligibility.eligibility.suggestions.length > 0 && (
+                        <div className="space-y-4">
+                          <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground mt-6">
+                            Suggestions
+                          </h2>
+                          <div className="border border-border p-5 bg-transparent space-y-3">
+                            {eligibility.eligibility.suggestions.map((suggestion, i) => (
+                              <p key={i} className="text-sm text-foreground flex items-baseline gap-2">
+                                <span className="text-foreground">•</span> {suggestion}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Prerequisites */}
+                  {course.prerequisites.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                        Prerequisites
+                      </h2>
+                      <div className="space-y-3">
+                        {course.prerequisites.map((prereq: (typeof course.prerequisites)[number]) => {
+                          const completed = completedIds.has(prereq.prerequisiteCourse.id)
+                          const grade = completedGrades.get(prereq.prerequisiteCourse.id)
+                          const gradeDeficiency = getGradeDeficiency(prereq.prerequisiteCourse.id)
+
+                          return (
+                            <Link
+                              key={prereq.id}
+                              href={`/courses/${prereq.prerequisiteCourse.id}`}
+                              className="flex items-center justify-between p-5 border border-border bg-card hover:border-foreground transition-colors"
+                            >
+                              <div className="flex items-center gap-4">
+                                {completed && !gradeDeficiency ? (
+                                  <IconCheck className="h-5 w-5 text-green-600" />
+                                ) : gradeDeficiency ? (
+                                  <IconAlertTriangle className="h-5 w-5 text-red-500" />
+                                ) : prereq.type === "SOFT" ? (
+                                  <IconAlertTriangle className="h-5 w-5 text-amber-500" />
+                                ) : (
+                                  <IconX className="h-5 w-5 text-red-500" />
+                                )}
+                                <div>
+                                  <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                                    {prereq.prerequisiteCourse.code}
+                                  </span>
+                                  <p className="font-medium text-foreground text-base">
+                                    {prereq.prerequisiteCourse.title}
+                                  </p>
+                                  {gradeDeficiency && (
+                                    <p className="text-sm text-red-600 mt-1">
+                                      Grade {gradeDeficiency.actualGrade} does not meet minimum {gradeDeficiency.requiredGrade}
+                                    </p>
+                                  )}
+                                  {completed && grade && !gradeDeficiency && (
+                                    <p className="text-sm text-green-600 mt-1">
+                                      Completed with grade {grade}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <span
+                                className={`text-xs uppercase tracking-wider px-3 py-1 ${
+                                  prereq.type === "HARD"
+                                    ? "bg-red-50 text-red-700 border border-red-200"
+                                    : prereq.type === "SOFT"
+                                    ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                    : "bg-blue-50 text-blue-700 border border-blue-200"
+                                }`}
+                              >
+                                {typeLabel[prereq.type] || prereq.type}
+                              </span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Unlocks */}
+                  {course.prerequisiteFor.length > 0 && (
+                    <div className="space-y-4">
+                      <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                        Unlocks
+                      </h2>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {course.prerequisiteFor.map((dep: (typeof course.prerequisiteFor)[number]) => (
+                          <Link
+                            key={dep.id}
+                            href={`/courses/${dep.course.id}`}
+                            className="p-5 border border-border bg-card hover:border-foreground transition-colors"
+                          >
+                            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                              {dep.course.code}
+                            </span>
+                            <p className="font-medium text-foreground text-base">
+                              {dep.course.title}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sidebar Sequence if exists */}
+                {eligibility && eligibility.suggestedSequence.length > 0 && (
+                  <div className="space-y-4">
+                    <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                      Suggested Course Sequence
+                    </h2>
+                    <div className="space-y-3">
+                      {eligibility.suggestedSequence.map((suggested) => (
+                        <Link
+                          key={suggested.courseId}
+                          href={`/courses/${suggested.courseId}`}
+                          className="flex items-start gap-4 p-4 border border-border bg-card hover:border-foreground transition-colors"
+                        >
+                          <span className="flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-muted text-sm font-medium">
+                            {suggested.order}
+                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                              {suggested.courseCode}
+                            </span>
+                            <p className="font-medium text-foreground text-base">
+                              {suggested.courseTitle}
+                            </p>
+                            <span className="text-sm text-muted-foreground mt-1">
+                              {suggested.reason}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
-            )}
+            </TabsContent>
 
-            {/* Suggested Sequence */}
-            {eligibility && eligibility.suggestedSequence.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-                  Suggested Course Sequence
-                </h2>
-                <div className="space-y-2">
-                  {eligibility.suggestedSequence.map((suggested) => (
-                    <Link
-                      key={suggested.courseId}
-                      href={`/courses/${suggested.courseId}`}
-                      className="flex items-center gap-3 p-3 border border-border bg-card hover:border-foreground transition-colors"
-                    >
-                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-muted text-xs font-medium">
-                        {suggested.order}
-                      </span>
-                      <div>
-                        <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                          {suggested.courseCode}
-                        </span>
-                        <p className="font-medium text-foreground text-sm">
-                          {suggested.courseTitle}
-                        </p>
-                      </div>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {suggested.reason}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Prerequisites */}
-            {course.prerequisites.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-                  Prerequisites
-                </h2>
-                <div className="space-y-2">
-                  {course.prerequisites.map((prereq: (typeof course.prerequisites)[number]) => {
-                    const completed = completedIds.has(prereq.prerequisiteCourse.id)
-                    const grade = completedGrades.get(prereq.prerequisiteCourse.id)
-                    const gradeDeficiency = getGradeDeficiency(prereq.prerequisiteCourse.id)
-
-                    return (
-                      <Link
-                        key={prereq.id}
-                        href={`/courses/${prereq.prerequisiteCourse.id}`}
-                        className="flex items-center justify-between p-4 border border-border bg-card hover:border-foreground transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          {completed && !gradeDeficiency ? (
-                            <IconCheck className="h-4 w-4 text-green-600" />
-                          ) : gradeDeficiency ? (
-                            <IconAlertTriangle className="h-4 w-4 text-red-500" />
-                          ) : prereq.type === "SOFT" ? (
-                            <IconAlertTriangle className="h-4 w-4 text-amber-500" />
-                          ) : (
-                            <IconX className="h-4 w-4 text-red-500" />
-                          )}
-                          <div>
-                            <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                              {prereq.prerequisiteCourse.code}
-                            </span>
-                            <p className="font-medium text-foreground text-sm">
-                              {prereq.prerequisiteCourse.title}
-                            </p>
-                            {gradeDeficiency && (
-                              <p className="text-xs text-red-600">
-                                Grade {gradeDeficiency.actualGrade} does not meet minimum {gradeDeficiency.requiredGrade}
-                              </p>
-                            )}
-                            {completed && grade && !gradeDeficiency && (
-                              <p className="text-xs text-green-600">
-                                Completed with grade {grade}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <span
-                          className={`text-xs uppercase tracking-wider px-2 py-0.5 ${
-                            prereq.type === "HARD"
-                              ? "bg-red-50 text-red-700 border border-red-200"
-                              : prereq.type === "SOFT"
-                              ? "bg-amber-50 text-amber-700 border border-amber-200"
-                              : "bg-blue-50 text-blue-700 border border-blue-200"
-                          }`}
-                        >
-                          {typeLabel[prereq.type] || prereq.type}
-                        </span>
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Courses that require this one */}
-            {course.prerequisiteFor.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-                  Unlocks
-                </h2>
-                <div className="grid gap-2 md:grid-cols-2">
-                  {course.prerequisiteFor.map((dep: (typeof course.prerequisiteFor)[number]) => (
-                    <Link
-                      key={dep.id}
-                      href={`/courses/${dep.course.id}`}
-                      className="p-4 border border-border bg-card hover:border-foreground transition-colors"
-                    >
-                      <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                        {dep.course.code}
-                      </span>
-                      <p className="font-medium text-foreground text-sm">
-                        {dep.course.title}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Reviews Section */}
-            <CourseReviewsSection
-              courseId={course.id}
-              studentId={student?.id ?? null}
-              isCompleted={isCompleted}
-              hasReviewed={courseReviews.some((r) => r.studentId === student?.id)}
-              initialCourseReviews={courseReviews.map((r) => ({
-                id: r.id,
-                rating: r.rating,
-                difficultyRating: r.difficultyRating,
-                workloadRating: r.workloadRating,
-                content: r.content,
-                term: r.term,
-                isAnonymous: r.isAnonymous,
-                createdAt: r.createdAt.toISOString(),
-                course: r.course,
-                studentName: r.isAnonymous ? null : r.student.user.name,
-                isOwn: r.studentId === student?.id,
-              }))}
-              initialAggregates={reviewAggregates}
-              initialProfessors={courseProfessors}
-              completedCourses={
-                student?.completedCourses
-                  .filter((cc) => cc.status === "COMPLETED")
-                  .map((cc) => ({
-                    courseId: cc.courseId,
-                    code: cc.course.code,
-                    title: cc.course.title,
-                    term: cc.term,
-                  })) ?? []
-              }
-            />
-          </div>
-
-          {/* Sidebar metadata */}
-          <div className="space-y-6">
-            <div className="bg-card border border-border p-6 space-y-6">
-              <div className="space-y-1">
-                <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                  Units
-                </span>
-                <p className="text-2xl font-serif italic">{course.units} CU</p>
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                  Terms Offered
-                </span>
-                <div className="flex gap-2">
-                  {course.termsOffered.map((term) => (
-                    <span
-                      key={term}
-                      className="px-2 py-1 text-xs uppercase tracking-wider border border-border"
-                    >
-                      {term}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                  Tags
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {course.tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="rounded-none text-xs uppercase">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {!isCompleted && plannerData && (
-                <AddToPlanButton
-                  course={{
-                    id: course.id,
-                    code: course.code,
-                    title: course.title,
-                  }}
-                  semesterPlans={plannerData.semesterPlans}
-                  isEligible={eligibility?.eligibility.isEligible ?? false}
-                  className="w-full text-xs uppercase tracking-wider"
+            {/* REVIEWS TAB */}
+            <TabsContent value="reviews" className="mt-0">
+              <div className="max-w-4xl">
+                 <CourseReviewsSection
+                  courseId={course.id}
+                  studentId={student?.id ?? null}
+                  isCompleted={isCompleted}
+                  hasReviewed={courseReviews.some((r) => r.studentId === student?.id)}
+                  initialCourseReviews={courseReviews.map((r) => ({
+                    id: r.id,
+                    rating: r.rating,
+                    difficultyRating: r.difficultyRating,
+                    workloadRating: r.workloadRating,
+                    content: r.content,
+                    term: r.term,
+                    isAnonymous: r.isAnonymous,
+                    createdAt: r.createdAt.toISOString(),
+                    course: r.course,
+                    studentName: r.isAnonymous ? null : r.student.user.name,
+                    isOwn: r.studentId === student?.id,
+                  }))}
+                  initialAggregates={reviewAggregates}
+                  initialProfessors={courseProfessors}
+                  completedCourses={
+                    student?.completedCourses
+                      .filter((cc) => cc.status === "COMPLETED")
+                      .map((cc) => ({
+                        courseId: cc.courseId,
+                        code: cc.course.code,
+                        title: cc.course.title,
+                        term: cc.term,
+                      })) ?? []
+                  }
                 />
-              )}
-            </div>
-          </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
     </div>
   )
