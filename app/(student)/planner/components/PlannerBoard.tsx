@@ -106,7 +106,7 @@ export function PlannerBoard({
       <div className="flex flex-1 h-full overflow-hidden">
           {/* Center - Scrollable Canvas */}
           <main className="flex-1 h-full overflow-y-auto scroll-smooth bg-[#F4F1ED]">
-             <div className="px-[60px] py-12 max-w-[1400px] mx-auto space-y-16">
+             <div className="px-6 md:px-8 py-8 md:py-12 space-y-12">
                 
                 {/* Header */}
                 <div className="flex justify-between items-start border-b border-[#DAD6CF] pb-8">

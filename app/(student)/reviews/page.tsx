@@ -8,7 +8,8 @@ import { EditReviewDialog } from "@/components/reviews/EditReviewDialog"
 import { toast } from "@/components/ui/toast"
 import type { CourseReviewData, ProfessorReviewData, ProfessorData } from "@/lib/types"
 import { ReviewsPageSkeleton } from "./skeleton/ReviewsPageSkeleton"
-
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle, EmptyMedia, EmptyContent } from "@/components/ui/empty"
+import { IconBook, IconUser } from "@tabler/icons-react"
 interface CompletedCourseOption {
   courseId: string
   code: string
@@ -116,7 +117,7 @@ function MyReviewsContent() {
 
   return (
     <>
-      <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
+      <div className="flex flex-col space-y-8 bg-background min-h-[calc(100vh-65px)]">
         <header className="flex justify-between items-end border-b border-border pb-8">
           <div>
             <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
@@ -127,13 +128,15 @@ function MyReviewsContent() {
             <span className="font-serif text-lg italic text-muted-foreground">
               {totalReviews} {totalReviews === 1 ? "review" : "reviews"}
             </span>
-            <WriteReviewDialog
-              completedCourses={completedCourses}
-              professors={professors}
-              reviewedCourseIds={reviewedCourseIds}
-              reviewedProfessorIds={reviewedProfessorIds}
-              onSuccess={fetchData}
-            />
+            {totalReviews > 0 && (
+              <WriteReviewDialog
+                completedCourses={completedCourses}
+                professors={professors}
+                reviewedCourseIds={reviewedCourseIds}
+                reviewedProfessorIds={reviewedProfessorIds}
+                onSuccess={fetchData}
+              />
+            )}
           </div>
         </header>
 
@@ -164,9 +167,26 @@ function MyReviewsContent() {
         {/* Review list */}
         {activeTab === "courses" ? (
           courseReviews.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <p>You haven&apos;t written any course reviews yet.</p>
-            </div>
+            <Empty className="mt-8 border-none bg-transparent">
+              <EmptyMedia>
+                 <IconBook className="h-6 w-6" />
+              </EmptyMedia>
+              <EmptyHeader>
+                <EmptyTitle>No course reviews found</EmptyTitle>
+                <EmptyDescription>
+                  You haven&apos;t written any course reviews yet.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <WriteReviewDialog
+                  completedCourses={completedCourses}
+                  professors={professors}
+                  reviewedCourseIds={reviewedCourseIds}
+                  reviewedProfessorIds={reviewedProfessorIds}
+                  onSuccess={fetchData}
+                />
+              </EmptyContent>
+            </Empty>
           ) : (
             <div className="grid gap-6">
               {courseReviews.map((review) => (
@@ -180,9 +200,26 @@ function MyReviewsContent() {
             </div>
           )
         ) : professorReviews.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
-            <p>You haven&apos;t written any professor reviews yet.</p>
-          </div>
+          <Empty className="mt-8 border-none bg-transparent">
+            <EmptyMedia>
+               <IconUser className="h-6 w-6" />
+            </EmptyMedia>
+            <EmptyHeader>
+              <EmptyTitle>No professor reviews found</EmptyTitle>
+              <EmptyDescription>
+                You haven&apos;t written any professor reviews yet.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <WriteReviewDialog
+                completedCourses={completedCourses}
+                professors={professors}
+                reviewedCourseIds={reviewedCourseIds}
+                reviewedProfessorIds={reviewedProfessorIds}
+                onSuccess={fetchData}
+              />
+            </EmptyContent>
+          </Empty>
         ) : (
           <div className="grid gap-6">
             {professorReviews.map((review) => (
