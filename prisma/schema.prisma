@@ -35,6 +35,39 @@ enum PlanStatus {
   DROPPED
 }
 
+// Announcement system enums
+enum AnnouncementScope {
+  PLATFORM      // All users across all universities
+  UNIVERSITY    // All users in a specific university (requires universityId)
+  DEPARTMENT    // All users in a specific department (requires departmentId)
+}
+
+enum AnnouncementPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// Audit logging enums
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  PERMISSION_CHANGE
+}
+
+enum AuditEntityType {
+  USER
+  COURSE
+  DEPARTMENT
+  UNIVERSITY
+  ANNOUNCEMENT
+  PREREQUISITE
+}
+
 // ============================================================
 // CORE MULTI-TENANT ENTITIES
 // ============================================================
@@ -53,6 +86,7 @@ model university {
   professors               professor[]
   assignedAdmins           user[]                  @relation("UniversityAdmins")
   graduationRequirements   graduationRequirement[]
+  announcements            announcement[]
 
   @@map("universities")
 }
@@ -74,6 +108,7 @@ model department {
   minors         student[]    @relation("StudentMinor")
   professors     professor[]
   coordinators   user[]
+  announcements  announcement[]
 
   @@unique([universityId, code])
   @@index([universityId, isActive])
@@ -104,6 +139,9 @@ model user {
   student               student?
   sessions              session[]
   accounts              account[]
+  createdAnnouncements  announcement[]
+  readAnnouncements     announcementRead[]
+  auditLogs             auditLog[]
 
   @@index([assignedUniversityId])
   @@index([assignedUniversityId, assignedDepartmentId])
@@ -400,4 +438,75 @@ model verification {
 
   @@index([identifier])
   @@map("verifications")
+}
+
+// ============================================================
+// ANNOUNCEMENT SYSTEM (Multi-Tenant)
+// ============================================================
+
+model announcement {
+  id             String              @id @default(uuid())
+  title          String
+  content        String              @db.Text
+  scope          AnnouncementScope
+  priority       AnnouncementPriority @default(NORMAL)
+
+  // Multi-tenant scoping - supports platform-wide, university-wide, or department-specific
+  universityId   String?             @map("university_id")
+  departmentId   String?             @map("department_id")
+
+  // Metadata
+  createdById    String              @map("created_by_id")
+  isActive       Boolean             @default(true) @map("is_active")
+  publishedAt    DateTime?           @map("published_at")
+  expiresAt      DateTime?           @map("expires_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  university     university?         @relation(fields: [universityId], references: [id])
+  department     department?         @relation(fields: [departmentId], references: [id])
+  createdBy      user                @relation(fields: [createdById], references: [id])
+  readReceipts   announcementRead[]
+
+  @@index([scope, isActive, publishedAt])
+  @@index([universityId, isActive])
+  @@index([departmentId, isActive])
+  @@map("announcements")
+}
+
+model announcementRead {
+  id              String       @id @default(uuid())
+  announcementId  String       @map("announcement_id")
+  userId          String       @map("user_id")
+  readAt          DateTime     @default(now()) @map("read_at")
+
+  announcement    announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user            user         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, userId])
+  @@index([userId])
+  @@map("announcement_reads")
+}
+
+// ============================================================
+// AUDIT LOGGING (Multi-Tenant)
+// ============================================================
+
+model auditLog {
+  id           String           @id @default(uuid())
+  action       AuditAction
+  entityType   AuditEntityType  @map("entity_type")
+  entityId     String?          @map("entity_id")
+  userId       String           @map("user_id")
+  changes      Json?            // { before: {...}, after: {...} }
+  metadata     Json?            // IP address, user agent, etc.
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  user         user             @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
 }

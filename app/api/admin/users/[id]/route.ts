@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, getRequestMetadata } from "@/lib/audit-logger";
 
 const updateUserSchema = z.object({
   role: z.nativeEnum(UserRole).optional(),
@@ -32,7 +33,26 @@ export async function PATCH(
     // Check if user exists
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, role: true, email: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        assignedUniversityId: true,
+        assignedDepartmentId: true,
+        assignedUniversity: {
+          select: {
+            code: true,
+            name: true,
+          },
+        },
+        assignedDepartment: {
+          select: {
+            code: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (!targetUser) {
@@ -101,6 +121,16 @@ export async function PATCH(
           },
         },
       },
+    });
+
+    // Log audit trail
+    await createAuditLog({
+      action: "UPDATE",
+      entityType: "USER",
+      entityId: userId,
+      userId: currentUser.id,
+      changes: { before: targetUser, after: updatedUser },
+      metadata: getRequestMetadata(request),
     });
 
     return NextResponse.json({ user: updatedUser });

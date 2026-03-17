@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
 import { IconEdit, IconSearch } from "@tabler/icons-react";
 import { UserRole } from "@prisma/client";
+import { Pagination } from "@/components/ui/pagination";
 
 interface User {
   id: string;
@@ -66,17 +67,27 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
   const [newRole, setNewRole] = useState<UserRole | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
   const fetchUsers = async () => {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (roleFilter !== "all") params.set("role", roleFilter);
       if (universityFilter !== "all") params.set("university", universityFilter);
+      params.set("page", currentPage.toString());
+      params.set("pageSize", pageSize.toString());
 
       const response = await fetch(`/api/admin/users?${params}`);
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users);
+        setTotalItems(data.pagination.total);
+        setTotalPages(data.pagination.totalPages);
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -87,8 +98,22 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
   };
 
   useEffect(() => {
-    fetchUsers();
+    // Reset to first page when filters change
+    setCurrentPage(1);
   }, [search, roleFilter, universityFilter]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [search, roleFilter, universityFilter, currentPage, pageSize]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
 
   const handleEditRole = (user: User) => {
     setEditingUser(user);
@@ -250,6 +275,18 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
             )}
           </TableBody>
         </Table>
+        {!loading && users.length > 0 && (
+          <div className="border-t border-border py-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          </div>
+        )}
       </div>
 
       {/* Edit Role Dialog */}

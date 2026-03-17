@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { createAuditLog, getRequestMetadata } from "@/lib/audit-logger";
 
 const createCourseSchema = z.object({
   code: z.string().min(1).max(20),
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const university = searchParams.get("university") || "";
     const isActive = searchParams.get("isActive");
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "25");
 
     // Build where clause
     const where: any = {};
@@ -46,7 +49,10 @@ export async function GET(request: NextRequest) {
       where.isActive = isActive === "true";
     }
 
-    // Fetch courses
+    // Get total count for pagination
+    const total = await prisma.course.count({ where });
+
+    // Fetch courses with pagination
     const courses = await prisma.course.findMany({
       where,
       select: {
@@ -81,9 +87,19 @@ export async function GET(request: NextRequest) {
         { university: { code: "asc" } },
         { code: "asc" },
       ],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
-    return NextResponse.json({ courses });
+    return NextResponse.json({
+      courses,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
   } catch (error) {
     console.error("Error fetching courses:", error);
 
@@ -104,7 +120,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Ensure user is admin
-    await requireAdmin();
+    const { user: currentUser } = await requireAdmin();
 
     const body = await request.json();
     const validation = createCourseSchema.safeParse(body);
@@ -170,6 +186,16 @@ export async function POST(request: NextRequest) {
           },
         },
       },
+    });
+
+    // Log audit trail
+    await createAuditLog({
+      action: "CREATE",
+      entityType: "COURSE",
+      entityId: course.id,
+      userId: currentUser.id,
+      changes: { after: course },
+      metadata: getRequestMetadata(request),
     });
 
     return NextResponse.json({ course }, { status: 201 });

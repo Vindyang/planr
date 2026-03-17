@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const role = searchParams.get("role") as UserRole | null;
     const university = searchParams.get("university") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "25");
 
     // Build where clause
     const where: any = {};
@@ -38,7 +40,10 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Fetch users with related data
+    // Get total count for pagination
+    const total = await prisma.user.count({ where });
+
+    // Fetch users with related data and pagination
     const users = await prisma.user.findMany({
       where,
       select: {
@@ -77,9 +82,19 @@ export async function GET(request: NextRequest) {
       orderBy: {
         createdAt: "desc",
       },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
-    return NextResponse.json({ users });
+    return NextResponse.json({
+      users,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
   } catch (error) {
     console.error("Error fetching users:", error);
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { createAuditLog, getRequestMetadata } from "@/lib/audit-logger";
 
 const updateCourseSchema = z.object({
   code: z.string().min(1).max(20).optional(),
@@ -18,7 +19,7 @@ export async function PATCH(
 ) {
   try {
     // Ensure user is admin
-    await requireAdmin();
+    const { user: currentUser } = await requireAdmin();
 
     const { id: courseId } = await params;
     const body = await request.json();
@@ -34,7 +35,22 @@ export async function PATCH(
     // Check if course exists
     const existingCourse = await prisma.course.findUnique({
       where: { id: courseId },
-      select: { id: true, universityId: true, code: true },
+      include: {
+        university: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        department: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (!existingCourse) {
@@ -103,6 +119,16 @@ export async function PATCH(
       },
     });
 
+    // Log audit trail
+    await createAuditLog({
+      action: "UPDATE",
+      entityType: "COURSE",
+      entityId: courseId,
+      userId: currentUser.id,
+      changes: { before: existingCourse, after: updatedCourse },
+      metadata: getRequestMetadata(request),
+    });
+
     return NextResponse.json({ course: updatedCourse });
   } catch (error) {
     console.error("Error updating course:", error);
@@ -127,7 +153,7 @@ export async function DELETE(
 ) {
   try {
     // Ensure user is admin
-    await requireAdmin();
+    const { user: currentUser } = await requireAdmin();
 
     const { id: courseId } = await params;
 
@@ -156,6 +182,16 @@ export async function DELETE(
     await prisma.course.update({
       where: { id: courseId },
       data: { isActive: false },
+    });
+
+    // Log audit trail
+    await createAuditLog({
+      action: "DELETE",
+      entityType: "COURSE",
+      entityId: courseId,
+      userId: currentUser.id,
+      changes: { before: course },
+      metadata: getRequestMetadata(request),
     });
 
     return NextResponse.json({

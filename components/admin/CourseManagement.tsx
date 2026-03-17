@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { IconEdit, IconSearch, IconTrash, IconPlus, IconToggleLeft, IconToggleRight } from "@tabler/icons-react";
 import { Switch } from "@/components/ui/switch";
+import { Pagination } from "@/components/ui/pagination";
 
 interface Course {
   id: string;
@@ -76,6 +77,12 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
   // Form state
   const [formData, setFormData] = useState({
     code: "",
@@ -105,11 +112,15 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
       if (search) params.set("search", search);
       if (universityFilter !== "all") params.set("university", universityFilter);
       if (statusFilter !== "all") params.set("isActive", statusFilter);
+      params.set("page", currentPage.toString());
+      params.set("pageSize", pageSize.toString());
 
       const response = await fetch(`/api/admin/courses?${params}`);
       if (response.ok) {
         const data = await response.json();
         setCourses(data.courses);
+        setTotalItems(data.pagination.total);
+        setTotalPages(data.pagination.totalPages);
       }
     } catch (error) {
       console.error("Failed to fetch courses:", error);
@@ -136,8 +147,22 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
   }, []);
 
   useEffect(() => {
-    fetchCourses();
+    // Reset to first page when filters change
+    setCurrentPage(1);
   }, [search, universityFilter, statusFilter]);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [search, universityFilter, statusFilter, currentPage, pageSize]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
 
   const handleAddCourse = () => {
     setFormData({
@@ -398,6 +423,18 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
             )}
           </TableBody>
         </Table>
+        {!loading && courses.length > 0 && (
+          <div className="border-t border-border py-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Course Dialog */}
