@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logger";
+import {
+  canManageUserByRole,
+  canAssignRole,
+  getManageableRoles,
+} from "@/lib/access-control";
 
 const updateUserSchema = z.object({
   role: z.nativeEnum(UserRole).optional(),
@@ -67,24 +72,25 @@ export async function PATCH(
       );
     }
 
-    // Only SUPER_ADMIN can create/modify SUPER_ADMIN roles
-    if (
-      validation.data.role === UserRole.SUPER_ADMIN &&
-      currentUser.role !== UserRole.SUPER_ADMIN
-    ) {
+    // Check if current user has permission to manage the target user
+    if (!canManageUserByRole(currentUser.role as UserRole, targetUser.role as UserRole)) {
+      const manageableRoles = getManageableRoles(currentUser.role as UserRole);
       return NextResponse.json(
-        { error: "Only SUPER_ADMIN can assign SUPER_ADMIN role" },
+        {
+          error: `${currentUser.role} cannot manage ${targetUser.role} users`,
+          details: `You can only manage users with these roles: ${manageableRoles.join(", ")}`,
+        },
         { status: 403 }
       );
     }
 
-    // Only SUPER_ADMIN can modify SUPER_ADMIN users
-    if (
-      targetUser.role === UserRole.SUPER_ADMIN &&
-      currentUser.role !== UserRole.SUPER_ADMIN
-    ) {
+    // If changing role, check if current user has permission to assign the new role
+    if (validation.data.role && !canAssignRole(currentUser.role as UserRole, validation.data.role)) {
       return NextResponse.json(
-        { error: "Only SUPER_ADMIN can modify SUPER_ADMIN users" },
+        {
+          error: `${currentUser.role} cannot assign ${validation.data.role} role`,
+          details: "You can only assign roles that you have permission to manage",
+        },
         { status: 403 }
       );
     }
