@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
+import { hasPermission } from "@/lib/access-control";
+import { UserRole } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
     // Ensure user is admin
-    await requireAdmin();
+    const { user: currentUser } = await requireAdmin();
+
+    // Check permission to view departments
+    if (!hasPermission(currentUser.role as UserRole, "department", "view")) {
+      return NextResponse.json(
+        { error: "You do not have permission to view departments" },
+        { status: 403 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const universityId = searchParams.get("universityId");

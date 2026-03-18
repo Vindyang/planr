@@ -3,6 +3,8 @@ import { requireAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logger";
+import { hasPermission } from "@/lib/access-control";
+import { UserRole } from "@prisma/client";
 
 const updateCourseSchema = z.object({
   code: z.string().min(1).max(20).optional(),
@@ -20,6 +22,14 @@ export async function PATCH(
   try {
     // Ensure user is admin
     const { user: currentUser } = await requireAdmin();
+
+    // Check permission to edit courses
+    if (!hasPermission(currentUser.role as UserRole, "course", "edit")) {
+      return NextResponse.json(
+        { error: "You do not have permission to edit courses" },
+        { status: 403 }
+      );
+    }
 
     const { id: courseId } = await params;
     const body = await request.json();
@@ -154,6 +164,14 @@ export async function DELETE(
   try {
     // Ensure user is admin
     const { user: currentUser } = await requireAdmin();
+
+    // Check permission to delete courses
+    if (!hasPermission(currentUser.role as UserRole, "course", "delete")) {
+      return NextResponse.json(
+        { error: "You do not have permission to delete courses" },
+        { status: 403 }
+      );
+    }
 
     const { id: courseId } = await params;
 

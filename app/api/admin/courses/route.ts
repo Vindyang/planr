@@ -3,6 +3,8 @@ import { requireAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { createAuditLog, getRequestMetadata } from "@/lib/audit-logger";
+import { hasPermission } from "@/lib/access-control";
+import { UserRole } from "@prisma/client";
 
 const createCourseSchema = z.object({
   code: z.string().min(1).max(20),
@@ -17,7 +19,15 @@ const createCourseSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // Ensure user is admin
-    await requireAdmin();
+    const { user: currentUser } = await requireAdmin();
+
+    // Check permission to view courses
+    if (!hasPermission(currentUser.role as UserRole, "course", "view")) {
+      return NextResponse.json(
+        { error: "You do not have permission to view courses" },
+        { status: 403 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
@@ -121,6 +131,14 @@ export async function POST(request: NextRequest) {
   try {
     // Ensure user is admin
     const { user: currentUser } = await requireAdmin();
+
+    // Check permission to create courses
+    if (!hasPermission(currentUser.role as UserRole, "course", "create")) {
+      return NextResponse.json(
+        { error: "You do not have permission to create courses" },
+        { status: 403 }
+      );
+    }
 
     const body = await request.json();
     const validation = createCourseSchema.safeParse(body);

@@ -2,11 +2,20 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
+import { hasPermission } from "@/lib/access-control";
 
 export async function GET() {
   try {
     // Ensure user is admin
-    await requireAdmin();
+    const { user: currentUser } = await requireAdmin();
+
+    // Check permission to view admin statistics (using audit_log as proxy for admin-level data)
+    if (!hasPermission(currentUser.role as UserRole, "audit_log", "view")) {
+      return NextResponse.json(
+        { error: "You do not have permission to view admin statistics" },
+        { status: 403 }
+      );
+    }
 
     // Get user counts by role
     const usersByRole = await prisma.user.groupBy({

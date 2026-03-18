@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
+import { hasPermission } from "@/lib/access-control";
+import { UserRole } from "@prisma/client";
 
 export async function GET() {
   try {
     // Ensure user is admin
-    await requireAdmin();
+    const { user: currentUser } = await requireAdmin();
+
+    // Check permission to view universities
+    if (!hasPermission(currentUser.role as UserRole, "university", "view")) {
+      return NextResponse.json(
+        { error: "You do not have permission to view universities" },
+        { status: 403 }
+      );
+    }
 
     const universities = await prisma.university.findMany({
       select: {
