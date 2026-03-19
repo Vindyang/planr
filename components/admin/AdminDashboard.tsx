@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {
   IconSchool,
@@ -10,7 +8,7 @@ import {
   IconBook,
   IconMessage,
   IconUserCircle,
-  IconChartBar,
+  IconArrowUpRight,
 } from "@tabler/icons-react";
 
 interface AdminStats {
@@ -68,178 +66,247 @@ export function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <header className="flex flex-col gap-4 pb-8 border-b border-border mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
-                Platform Administration
-              </h1>
-              <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium mt-2">
-                Loading dashboard...
-              </p>
-            </div>
+      <div className="space-y-12 pb-12 animate-in fade-in duration-1000">
+        <header className="flex flex-col md:flex-row md:items-end justify-between border-b border-border pb-8">
+          <div className="space-y-4">
+            <h1 className="text-5xl md:text-7xl font-serif text-foreground leading-none tracking-tight">
+              Platform
+              <br />
+              <span className="italic text-muted-foreground">Administration</span>
+            </h1>
+            <p className="max-w-xl text-sm uppercase tracking-widest text-muted-foreground font-medium animate-pulse">
+              Initializing dashboard environment...
+            </p>
           </div>
         </header>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border opacity-50">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-card p-6 md:p-8 h-40 animate-pulse" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <header className="flex flex-col gap-4 pb-8 border-b border-border mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
-              Platform Administration
-            </h1>
-            <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium mt-2">
-              Overview of system-wide statistics and quick actions
-            </p>
-          </div>
+    <div className="space-y-12 pb-12 animate-in fade-in duration-700">
+      {/* Editorial Header */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between border-b border-border pb-8">
+        <div className="space-y-4">
+          <h1 className="text-5xl md:text-7xl font-serif text-foreground leading-none tracking-tight">
+            Platform
+            <br />
+            <span className="italic text-muted-foreground">Administration</span>
+          </h1>
+          <p className="max-w-xl text-sm uppercase tracking-widest text-foreground font-medium">
+            System overview, user management, and platform analytics
+          </p>
         </div>
       </header>
 
-      {/* Statistics Grid */}
       {stats && (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-card border border-border shadow-none rounded-none p-4">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Total Users</CardTitle>
-              <IconUsers className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="text-2xl font-serif italic text-foreground">{stats.users.total}</div>
-              <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
-                {stats.users.students} students, {stats.users.admins + stats.users.coordinators + stats.users.superAdmins} staff
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border border-border shadow-none rounded-none p-4">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Total Courses</CardTitle>
-              <IconBook className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="text-2xl font-serif italic text-foreground">{stats.courses.total}</div>
-              <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
-                Across {Object.keys(stats.courses.byUniversity).length} universities
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border border-border shadow-none rounded-none p-4">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Active Students</CardTitle>
-              <IconUserCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="text-2xl font-serif italic text-foreground">{stats.students}</div>
-              <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
-                With student profiles
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border border-border shadow-none rounded-none p-4">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
-              <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Total Reviews</CardTitle>
-              <IconMessage className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="text-2xl font-serif italic text-foreground">{stats.reviews.total}</div>
-              <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
-                {stats.reviews.courseReviews} course, {stats.reviews.professorReviews} prof
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* University Selection */}
-      <div className="pt-2">
-        <h2 className="mb-4 text-xs font-medium uppercase tracking-[0.15em] text-muted-foreground">Manage Universities</h2>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {universities.map((uni) => (
-            <Link key={uni.code} href={`/admin/${uni.code.toLowerCase()}`}>
-              <Card className="bg-card border border-border shadow-none rounded-none p-6 hover:bg-accent transition-colors cursor-pointer outline-none">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
-                  <CardTitle className="text-xs uppercase tracking-wider font-medium text-foreground">{uni.code}</CardTitle>
-                  <IconSchool className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="text-base font-serif italic text-foreground leading-tight">{uni.name}</div>
-                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-2">
-                    {stats?.courses.byUniversity[uni.code] || 0} courses
+        <>
+          {/* Key Metrics - Brutalist Grid (using gap-px with bg-border background) */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-foreground">
+                Global Statistics
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border border border-border">
+              {/* Stat 1 */}
+              <div className="bg-card p-6 md:p-8 flex flex-col justify-between h-full group transition-colors hover:bg-secondary/10">
+                <div className="flex justify-between items-start mb-12">
+                  <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors font-medium">
+                    Total Users
+                  </span>
+                  <IconUsers className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+                <div>
+                  <span className="text-4xl md:text-5xl font-serif italic text-foreground block">
+                    {stats.users.total}
+                  </span>
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-3 leading-relaxed">
+                    {stats.users.students} Students
+                    <br />
+                    {stats.users.admins +
+                      stats.users.coordinators +
+                      stats.users.superAdmins}{" "}
+                    Staff
                   </p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      </div>
+                </div>
+              </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
-        {/* Recent Registrations */}
-        {stats && stats.recentRegistrations.length > 0 && (
-          <Card className="bg-card border border-border shadow-none rounded-none p-6 h-fit">
-            <CardHeader className="p-0 mb-6 border-b border-border pb-4">
-              <CardTitle className="text-2xl font-serif italic text-foreground">Recent Registrations</CardTitle>
-              <CardDescription className="text-xs uppercase tracking-wider font-medium text-muted-foreground mt-2">Last 7 days</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="space-y-4 pt-2">
-                {stats.recentRegistrations.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0">
-                    <div>
-                      <p className="text-sm font-serif text-foreground">{user.name || "Unnamed User"}</p>
-                      <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">{user.email}</p>
-                    </div>
-                    <div className="text-right flex flex-col items-end">
-                      <span className="inline-block px-2 py-0.5 text-[0.65rem] uppercase tracking-wider font-medium border border-border bg-secondary text-secondary-foreground mb-1">
-                        {user.role.replace("_", " ")}
+              {/* Stat 2 */}
+              <div className="bg-card p-6 md:p-8 flex flex-col justify-between h-full group transition-colors hover:bg-secondary/10">
+                <div className="flex justify-between items-start mb-12">
+                  <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors font-medium">
+                    Total Courses
+                  </span>
+                  <IconBook className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+                <div>
+                  <span className="text-4xl md:text-5xl font-serif italic text-foreground block">
+                    {stats.courses.total}
+                  </span>
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-3 leading-relaxed">
+                    Across {Object.keys(stats.courses.byUniversity).length}{" "}
+                    Universities
+                  </p>
+                </div>
+              </div>
+
+              {/* Stat 3 */}
+              <div className="bg-card p-6 md:p-8 flex flex-col justify-between h-full group transition-colors hover:bg-secondary/10">
+                <div className="flex justify-between items-start mb-12">
+                  <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors font-medium">
+                    Active Students
+                  </span>
+                  <IconUserCircle className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+                <div>
+                  <span className="text-4xl md:text-5xl font-serif italic text-foreground block">
+                    {stats.students}
+                  </span>
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-3 leading-relaxed">
+                    With Completed
+                    <br />
+                    Profiles
+                  </p>
+                </div>
+              </div>
+
+              {/* Stat 4 */}
+              <div className="bg-card p-6 md:p-8 flex flex-col justify-between h-full group transition-colors hover:bg-secondary/10">
+                <div className="flex justify-between items-start mb-12">
+                  <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors font-medium">
+                    Total Reviews
+                  </span>
+                  <IconMessage className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </div>
+                <div>
+                  <span className="text-4xl md:text-5xl font-serif italic text-foreground block">
+                    {stats.reviews.total}
+                  </span>
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-3 leading-relaxed">
+                    {stats.reviews.courseReviews} Course
+                    <br />
+                    {stats.reviews.professorReviews} Professor
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Combined Operations Grid */}
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-border border border-border">
+            {/* Universities Directory */}
+            <div className="lg:col-span-2 bg-card flex flex-col">
+              <div className="p-6 md:p-8 border-b border-border flex justify-between items-center bg-card">
+                <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-foreground">
+                  Managed Institutions
+                </h2>
+                <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                  {universities.length} Active
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-border flex-grow">
+                {universities.map((uni) => (
+                  <Link
+                    key={uni.code}
+                    href={`/admin/${uni.code.toLowerCase()}`}
+                    className="bg-card p-6 md:p-8 hover:bg-secondary/20 transition-all group block h-full flex flex-col"
+                  >
+                    <div className="flex items-center justify-between mb-8">
+                      <span className="text-[0.65rem] uppercase tracking-widest text-muted-foreground group-hover:text-foreground font-medium transition-colors">
+                        {uni.code}
                       </span>
-                      <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
-                        {new Date(user.createdAt).toLocaleDateString()}
+                      <IconSchool className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </div>
+                    <div className="mt-auto">
+                      <h3 className="text-2xl font-serif text-foreground leading-tight mb-3">
+                        {uni.name}
+                      </h3>
+                      <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+                        {stats?.courses.byUniversity[uni.code] || 0} Courses
+                        Available
                       </p>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
 
-        {/* Quick Actions */}
-        <Card className="bg-card border border-border shadow-none rounded-none p-6 h-fit">
-          <CardHeader className="p-0 mb-6 border-b border-border pb-4">
-            <CardTitle className="text-2xl font-serif italic text-foreground">Quick Actions</CardTitle>
-            <CardDescription className="text-xs uppercase tracking-wider font-medium text-muted-foreground mt-2">Platform-wide administrative tasks</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0 flex flex-wrap gap-4 pt-2">
-            <Link href="/admin/users">
-              <Button variant="outline" className="rounded-none border-border font-serif italic text-sm px-6 h-10 w-full sm:w-auto hover:bg-accent">
-                <IconUsers className="mr-2 h-4 w-4" />
-                Manage Users
-              </Button>
-            </Link>
-            <Link href="/admin/courses">
-              <Button variant="outline" className="rounded-none border-border font-serif italic text-sm px-6 h-10 w-full sm:w-auto hover:bg-accent">
-                <IconBook className="mr-2 h-4 w-4" />
-                Manage Courses
-              </Button>
-            </Link>
-            <Link href="/admin/profile">
-              <Button variant="outline" className="rounded-none border-border font-serif italic text-sm px-6 h-10 w-full sm:w-auto hover:bg-accent">
-                <IconUserCircle className="mr-2 h-4 w-4" />
-                My Profile
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+            {/* Quick Actions Portal */}
+            <div className="bg-card flex flex-col border-t md:border-t-0 border-border md:border-l">
+              <div className="p-6 md:p-8 border-b border-border bg-card">
+                <h2 className="text-sm font-medium uppercase tracking-[0.2em] text-foreground">
+                  Action Portal
+                </h2>
+              </div>
+              <div className="flex flex-col divide-y divide-border h-full bg-card">
+                <Link
+                  href="/admin/users"
+                  className="p-6 md:p-8 flex items-center justify-between hover:bg-secondary/20 transition-all group flex-grow"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-xl font-serif text-foreground group-hover:italic transition-all">
+                      Manage Users
+                    </span>
+                    <span className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-2">
+                      Access control & directory
+                    </span>
+                  </div>
+                  <IconArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
+                <Link
+                  href="/admin/courses"
+                  className="p-6 md:p-8 flex items-center justify-between hover:bg-secondary/20 transition-all group flex-grow"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-xl font-serif text-foreground group-hover:italic transition-all">
+                      Course Catalog
+                    </span>
+                    <span className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-2">
+                      Curriculum & requirements
+                    </span>
+                  </div>
+                  <IconArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
+                <Link
+                  href="/admin/activity"
+                  className="p-6 md:p-8 flex items-center justify-between hover:bg-secondary/20 transition-all group flex-grow"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-xl font-serif text-foreground group-hover:italic transition-all">
+                      System Log
+                    </span>
+                    <span className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-2">
+                      Recent registrations and events
+                    </span>
+                  </div>
+                  <IconArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
+                <Link
+                  href="/admin/profile"
+                  className="p-6 md:p-8 flex items-center justify-between hover:bg-secondary/20 transition-all group flex-grow"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-xl font-serif text-foreground group-hover:italic transition-all">
+                      My Profile
+                    </span>
+                    <span className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-2">
+                      Personal settings
+                    </span>
+                  </div>
+                  <IconArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                </Link>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 }

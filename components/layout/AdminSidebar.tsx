@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { IconDashboard, IconUsers, IconBook, IconUserCircle, IconLogout } from "@tabler/icons-react"
+import { IconDashboard, IconUsers, IconBook, IconUserCircle, IconLogout, IconMessage } from "@tabler/icons-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "@/lib/auth-client"
@@ -24,7 +24,8 @@ const items = [
         { title: "Dashboard", url: "/admin", icon: IconDashboard, number: "A01" },
         { title: "User Management", url: "/admin/users", icon: IconUsers, number: "A02" },
         { title: "Course Catalog", url: "/admin/courses", icon: IconBook, number: "A03" },
-        { title: "Admin Profile", url: "/admin/profile", icon: IconUserCircle, number: "A04" },
+        { title: "System Log", url: "/admin/activity", icon: IconMessage, number: "A04" },
+        { title: "Admin Profile", url: "/admin/profile", icon: IconUserCircle, number: "A05" },
     ]
   },
 ]
