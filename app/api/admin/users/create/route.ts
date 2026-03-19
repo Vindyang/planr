@@ -12,6 +12,12 @@ const createAdminSchema = z.object({
   role: z.enum(["SUPER_ADMIN", "ADMIN", "COORDINATOR", "STUDENT"]),
   assignedUniversityId: z.string().uuid().optional(),
   assignedDepartmentId: z.string().uuid().optional(),
+  // Student-specific fields
+  studentId: z.string().optional(),
+  majorId: z.string().uuid().optional(),
+  year: z.number().int().min(1).max(6).optional(),
+  enrollmentYear: z.number().int().min(2000).max(2100).optional(),
+  expectedGraduationYear: z.number().int().min(2000).max(2100).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,7 +35,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, name, role, assignedUniversityId, assignedDepartmentId } = validation.data;
+    let {
+      email,
+      name,
+      role,
+      assignedUniversityId,
+      assignedDepartmentId,
+      studentId,
+      majorId,
+      year,
+      enrollmentYear,
+      expectedGraduationYear,
+    } = validation.data;
 
     // Check if current user has permission to assign this role
     if (!canAssignRole(currentUser.role as UserRole, role as UserRole)) {
@@ -41,6 +58,40 @@ export async function POST(request: NextRequest) {
         },
         { status: 403 }
       );
+    }
+
+    // If COORDINATOR is creating a STUDENT, automatically use coordinator's university
+    if (currentUser.role === "COORDINATOR" && role === "STUDENT") {
+      if (!currentUser.assignedUniversityId) {
+        return NextResponse.json(
+          { error: "Coordinator must be assigned to a university to create students" },
+          { status: 400 }
+        );
+      }
+      // Override any provided university with coordinator's university
+      assignedUniversityId = currentUser.assignedUniversityId;
+    }
+
+    // Validate student-specific requirements
+    if (role === "STUDENT") {
+      if (!assignedUniversityId) {
+        return NextResponse.json(
+          { error: "University is required when creating a student" },
+          { status: 400 }
+        );
+      }
+      if (!majorId) {
+        return NextResponse.json(
+          { error: "Major is required when creating a student" },
+          { status: 400 }
+        );
+      }
+      if (!year || !enrollmentYear || !expectedGraduationYear) {
+        return NextResponse.json(
+          { error: "Year, enrollment year, and expected graduation year are required for students" },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if user already exists
@@ -84,30 +135,71 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the admin/coordinator user
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        name,
-        role,
-        assignedUniversityId: assignedUniversityId || null,
-        assignedDepartmentId: assignedDepartmentId || null,
-      },
-      include: {
-        assignedUniversity: {
-          select: {
-            code: true,
-            name: true,
+    // Create the user with appropriate data based on role
+    let newUser;
+    if (role === "STUDENT") {
+      // Create user with student profile in a transaction
+      newUser = await prisma.user.create({
+        data: {
+          email,
+          name,
+          role,
+          student: {
+            create: {
+              studentId: studentId || undefined,
+              universityId: assignedUniversityId!,
+              majorId: majorId!,
+              year: year!,
+              enrollmentYear: enrollmentYear!,
+              expectedGraduationYear: expectedGraduationYear!,
+            },
           },
         },
-        assignedDepartment: {
-          select: {
-            code: true,
-            name: true,
+        include: {
+          student: {
+            include: {
+              university: {
+                select: {
+                  code: true,
+                  name: true,
+                },
+              },
+              major: {
+                select: {
+                  code: true,
+                  name: true,
+                },
+              },
+            },
           },
         },
-      },
-    });
+      });
+    } else {
+      // Create admin/coordinator user
+      newUser = await prisma.user.create({
+        data: {
+          email,
+          name,
+          role,
+          assignedUniversityId: assignedUniversityId || null,
+          assignedDepartmentId: assignedDepartmentId || null,
+        },
+        include: {
+          assignedUniversity: {
+            select: {
+              code: true,
+              name: true,
+            },
+          },
+          assignedDepartment: {
+            select: {
+              code: true,
+              name: true,
+            },
+          },
+        },
+      });
+    }
 
     // Log audit trail
     await createAuditLog({

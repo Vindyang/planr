@@ -5,8 +5,8 @@ import { UserRole } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
-    // Ensure user is admin
-    await requireAdmin();
+    // Ensure user is admin and get current user info
+    const { user: currentUser } = await requireAdmin();
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
@@ -31,12 +31,39 @@ export async function GET(request: NextRequest) {
       where.role = role;
     }
 
-    // Filter by university (for students)
-    if (university) {
+    // COORDINATOR-specific filtering: only show students in their department
+    if (currentUser.role === "COORDINATOR") {
+      if (!currentUser.assignedDepartmentId) {
+        // If coordinator has no assigned department, return empty list
+        return NextResponse.json({
+          users: [],
+          pagination: {
+            page,
+            pageSize,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
+
+      // Only show students whose major matches the coordinator's department
+      where.role = "STUDENT";
+      where.student = {
+        majorId: currentUser.assignedDepartmentId,
+      };
+    }
+
+    // Filter by university (for students) - only if not already set by coordinator filter
+    if (university && !where.student) {
       where.student = {
         university: {
           code: university,
         },
+      };
+    } else if (university && where.student && !where.student.university) {
+      // Merge with existing student filter
+      where.student.university = {
+        code: university,
       };
     }
 
@@ -70,7 +97,21 @@ export async function GET(request: NextRequest) {
         student: {
           select: {
             id: true,
+            studentId: true,
+            majorId: true,
+            secondMajorId: true,
+            minorId: true,
+            universityId: true,
+            year: true,
+            enrollmentYear: true,
+            expectedGraduationYear: true,
             university: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+            major: {
               select: {
                 code: true,
                 name: true,

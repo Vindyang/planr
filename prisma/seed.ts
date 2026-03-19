@@ -13,6 +13,7 @@ const prisma = new PrismaClient({ adapter })
 async function clearAllData() {
   console.log("🧹 Clearing existing data...")
 
+  await prisma.auditLog.deleteMany()
   await prisma.professorReview.deleteMany()
   await prisma.courseReview.deleteMany()
   await prisma.courseInstructor.deleteMany()
@@ -69,6 +70,46 @@ async function createUniversitiesAndDepartments() {
     },
   })
 
+  const sweDept = await prisma.department.create({
+    data: {
+      universityId: smu.id,
+      code: "SWE",
+      name: "Software Engineering",
+      description: "Software Engineering Program",
+      isActive: true,
+    },
+  })
+
+  const cyberDept = await prisma.department.create({
+    data: {
+      universityId: smu.id,
+      code: "CYBER",
+      name: "Cybersecurity",
+      description: "Cybersecurity Program",
+      isActive: true,
+    },
+  })
+
+  const dsDept = await prisma.department.create({
+    data: {
+      universityId: smu.id,
+      code: "DS",
+      name: "Data Science & Analytics",
+      description: "Data Science and Analytics Program",
+      isActive: true,
+    },
+  })
+
+  const clDept = await prisma.department.create({
+    data: {
+      universityId: smu.id,
+      code: "CL",
+      name: "Computing & Law",
+      description: "Computing and Law Double Degree Program",
+      isActive: true,
+    },
+  })
+
   const businessDept = await prisma.department.create({
     data: {
       universityId: smu.id,
@@ -79,7 +120,7 @@ async function createUniversitiesAndDepartments() {
     },
   })
 
-  console.log(`✅ Created SMU with 3 departments`)
+  console.log(`✅ Created SMU with 7 departments (5 SCIS majors + 1 Business)`)
 
   // Create other universities (for multi-tenant testing)
   const nus = await prisma.university.create({
@@ -100,7 +141,7 @@ async function createUniversitiesAndDepartments() {
 
   console.log(`✅ Created 5 universities total`)
 
-  return { smu, isDept, csDept, businessDept, nus, ntu, sutd, suss }
+  return { smu, isDept, csDept, sweDept, cyberDept, dsDept, clDept, businessDept, nus, ntu, sutd, suss }
 }
 
 // ============================================================

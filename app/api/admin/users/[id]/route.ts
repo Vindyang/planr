@@ -15,6 +15,14 @@ const updateUserSchema = z.object({
   role: z.nativeEnum(UserRole).optional(),
   assignedUniversityId: z.string().uuid().nullable().optional(),
   assignedDepartmentId: z.string().uuid().nullable().optional(),
+  // Student-specific fields
+  studentId: z.string().nullable().optional(),
+  majorId: z.string().uuid().optional(),
+  secondMajorId: z.string().uuid().nullable().optional(),
+  minorId: z.string().uuid().nullable().optional(),
+  year: z.number().int().min(1).max(6).optional(),
+  enrollmentYear: z.number().int().min(2000).max(2100).optional(),
+  expectedGraduationYear: z.number().int().min(2000).max(2100).optional(),
 });
 
 export async function PATCH(
@@ -96,6 +104,24 @@ export async function PATCH(
       );
     }
 
+    // Check if we need to update student-specific fields
+    const hasStudentUpdates =
+      validation.data.studentId !== undefined ||
+      validation.data.majorId !== undefined ||
+      validation.data.secondMajorId !== undefined ||
+      validation.data.minorId !== undefined ||
+      validation.data.year !== undefined ||
+      validation.data.enrollmentYear !== undefined ||
+      validation.data.expectedGraduationYear !== undefined;
+
+    // If updating student fields, check if user is a student
+    if (hasStudentUpdates && targetUser.role !== "STUDENT") {
+      return NextResponse.json(
+        { error: "Cannot update student fields for non-student users" },
+        { status: 400 }
+      );
+    }
+
     // Update user
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -127,8 +153,49 @@ export async function PATCH(
             name: true,
           },
         },
+        student: {
+          select: {
+            id: true,
+            studentId: true,
+            majorId: true,
+            secondMajorId: true,
+            minorId: true,
+            universityId: true,
+            year: true,
+            enrollmentYear: true,
+            expectedGraduationYear: true,
+            university: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+            major: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
+
+    // Update student-specific fields if provided
+    if (hasStudentUpdates && updatedUser.student) {
+      await prisma.student.update({
+        where: { userId: userId },
+        data: {
+          ...(validation.data.studentId !== undefined && { studentId: validation.data.studentId }),
+          ...(validation.data.majorId && { majorId: validation.data.majorId }),
+          ...(validation.data.secondMajorId !== undefined && { secondMajorId: validation.data.secondMajorId }),
+          ...(validation.data.minorId !== undefined && { minorId: validation.data.minorId }),
+          ...(validation.data.year && { year: validation.data.year }),
+          ...(validation.data.enrollmentYear && { enrollmentYear: validation.data.enrollmentYear }),
+          ...(validation.data.expectedGraduationYear && { expectedGraduationYear: validation.data.expectedGraduationYear }),
+        },
+      });
+    }
 
     // Log audit trail
     await createAuditLog({

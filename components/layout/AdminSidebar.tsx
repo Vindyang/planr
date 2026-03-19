@@ -16,6 +16,8 @@ import { IconDashboard, IconUsers, IconBook, IconUserCircle, IconLogout, IconMes
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "@/lib/auth-client"
+import { canViewAuditLogs } from "@/lib/access-control"
+import { UserRole } from "@prisma/client"
 
 const items = [
   {
@@ -33,11 +35,28 @@ const items = [
 export function AdminSidebar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const userRole = ((session?.user as any)?.role as UserRole) || null
 
   const handleLogout = async () => {
     await signOut()
     window.location.href = "/"
   }
+
+  // Filter menu items based on user permissions
+  const getFilteredItems = () => {
+    return items.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        // Hide System Log for users who cannot view audit logs (e.g., COORDINATOR)
+        if (item.url === "/admin/activity") {
+          return userRole && canViewAuditLogs(userRole)
+        }
+        return true
+      }),
+    }))
+  }
+
+  const filteredItems = getFilteredItems()
 
   return (
     <Sidebar collapsible="icon" className="border-r border-[#DAD6CF] bg-[#F4F1ED]">
@@ -48,7 +67,7 @@ export function AdminSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent className="gap-0">
-        {items.map((group) => (
+        {filteredItems.map((group) => (
             <SidebarGroup key={group.title} className="p-0">
                 <SidebarGroupContent>
                     <SidebarMenu className="gap-0">
@@ -56,9 +75,9 @@ export function AdminSidebar() {
                             const isActive = pathname === item.url || pathname.startsWith(item.url + "/");
                             return (
                                 <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton 
-                                        asChild 
-                                        isActive={isActive} 
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={isActive}
                                         tooltip={item.title}
                                         className={`
                                             h-auto py-5 px-6 border-b border-[#DAD6CF] rounded-none

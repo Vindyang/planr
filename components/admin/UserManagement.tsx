@@ -42,7 +42,7 @@ import { toast } from "@/components/ui/toast";
 import { IconEdit, IconSearch, IconPlus, IconTrash } from "@tabler/icons-react";
 import { UserRole } from "@prisma/client";
 import { Pagination } from "@/components/ui/pagination";
-import { getAssignableRoles } from "@/lib/access-control";
+import { getAssignableRoles, canManageUserByRole, canDeleteUser } from "@/lib/access-control";
 import { useSession } from "@/lib/auth-client";
 
 interface User {
@@ -56,7 +56,19 @@ interface User {
   assignedDepartmentId: string | null;
   assignedUniversity: { code: string; name: string } | null;
   assignedDepartment: { code: string; name: string } | null;
-  student: { id: string; university: { code: string; name: string } } | null;
+  student: {
+    id: string;
+    studentId: string | null;
+    universityId: string;
+    majorId: string;
+    secondMajorId: string | null;
+    minorId: string | null;
+    year: number;
+    enrollmentYear: number;
+    expectedGraduationYear: number;
+    university: { code: string; name: string };
+    major: { code: string; name: string } | null;
+  } | null;
 }
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -81,6 +93,15 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
   const [universityFilter, setUniversityFilter] = useState<string>(defaultUniversity || "all");
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newRole, setNewRole] = useState<UserRole | null>(null);
+  const [editAssignedUniversityId, setEditAssignedUniversityId] = useState<string>("");
+  const [editAssignedDepartmentId, setEditAssignedDepartmentId] = useState<string>("");
+  const [editStudentData, setEditStudentData] = useState({
+    majorId: "",
+    year: 1,
+    enrollmentYear: new Date().getFullYear(),
+    expectedGraduationYear: new Date().getFullYear() + 4,
+  });
+  const [editDepartments, setEditDepartments] = useState<Array<{ id: string; code: string; name: string }>>([]);
   const [saving, setSaving] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
@@ -92,17 +113,25 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
 
   // Get current user role and assignable roles from session
   const currentUserRole = ((session?.user as any)?.role as UserRole) || null;
+  const currentUserUniversityId = ((session?.user as any)?.assignedUniversityId as string) || null;
   const assignableRoles = currentUserRole ? getAssignableRoles(currentUserRole) : [];
 
   // Create user dialog state
   const [isCreating, setIsCreating] = useState(false);
   const [universities, setUniversities] = useState<Array<{ id: string; code: string; name: string }>>([]);
+  const [departments, setDepartments] = useState<Array<{ id: string; code: string; name: string }>>([]);
   const [newUser, setNewUser] = useState({
     email: "",
     name: "",
     role: "" as UserRole | "",
     assignedUniversityId: "",
     assignedDepartmentId: "",
+    // Student-specific fields
+    studentId: "",
+    majorId: "",
+    year: new Date().getFullYear() - 2000 + 1, // Default to year 1
+    enrollmentYear: new Date().getFullYear(),
+    expectedGraduationYear: new Date().getFullYear() + 4,
   });
 
   const fetchUniversities = async () => {
@@ -114,6 +143,19 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
       }
     } catch (error) {
       console.error("Failed to fetch universities:", error);
+    }
+  };
+
+  const fetchDepartments = async (universityId: string) => {
+    try {
+      const response = await fetch(`/api/admin/universities/${universityId}/departments`);
+      if (response.ok) {
+        const data = await response.json();
+        setDepartments(data.departments || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch departments:", error);
+      setDepartments([]);
     }
   };
 
@@ -155,6 +197,20 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
     fetchUsers();
   }, [search, roleFilter, universityFilter, currentPage, pageSize]);
 
+  // Auto-set university for coordinators creating students
+  useEffect(() => {
+    if (currentUserRole === "COORDINATOR" && newUser.role === "STUDENT" && currentUserUniversityId) {
+      setNewUser((prev) => ({ ...prev, assignedUniversityId: currentUserUniversityId }));
+    }
+  }, [currentUserRole, newUser.role, currentUserUniversityId]);
+
+  // Fetch departments when university is selected for student creation
+  useEffect(() => {
+    if (newUser.role === "STUDENT" && newUser.assignedUniversityId) {
+      fetchDepartments(newUser.assignedUniversityId);
+    }
+  }, [newUser.role, newUser.assignedUniversityId]);
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -164,9 +220,44 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
     setCurrentPage(1); // Reset to first page when changing page size
   };
 
-  const handleEditRole = (user: User) => {
+  const handleEditRole = async (user: User) => {
     setEditingUser(user);
     setNewRole(user.role);
+    setEditAssignedUniversityId(user.assignedUniversityId || "");
+    setEditAssignedDepartmentId(user.assignedDepartmentId || "");
+
+    // If editing a student, populate student data
+    if (user.role === "STUDENT" && user.student) {
+      console.log("Editing student:", user.student);
+      setEditStudentData({
+        majorId: user.student.majorId || "",
+        year: user.student.year || 1,
+        enrollmentYear: user.student.enrollmentYear || new Date().getFullYear(),
+        expectedGraduationYear: user.student.expectedGraduationYear || new Date().getFullYear() + 4,
+      });
+
+      // Fetch departments for the student's university
+      if (user.student.universityId) {
+        console.log("Fetching departments for university:", user.student.universityId);
+        try {
+          const url = `/api/admin/universities/${user.student.universityId}/departments`;
+          console.log("Fetching from:", url);
+          const response = await fetch(url);
+          console.log("Response status:", response.status);
+          if (response.ok) {
+            const data = await response.json();
+            console.log("Departments data:", data);
+            setEditDepartments(data.departments || []);
+          } else {
+            console.error("Failed to fetch departments, status:", response.status);
+          }
+        } catch (error) {
+          console.error("Failed to fetch departments for editing:", error);
+        }
+      } else {
+        console.warn("No universityId found for student");
+      }
+    }
   };
 
   const handleSaveRole = async () => {
@@ -174,10 +265,26 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
 
     try {
       setSaving(true);
+      const payload: any = { role: newRole };
+
+      // If editing a COORDINATOR and user is ADMIN, allow updating university/department
+      if ((editingUser.role === "COORDINATOR" || newRole === "COORDINATOR") && currentUserRole === "ADMIN") {
+        payload.assignedUniversityId = editAssignedUniversityId || null;
+        payload.assignedDepartmentId = editAssignedDepartmentId || null;
+      }
+
+      // If editing a STUDENT, include student-specific data
+      if (editingUser.role === "STUDENT") {
+        payload.majorId = editStudentData.majorId;
+        payload.year = editStudentData.year;
+        payload.enrollmentYear = editStudentData.enrollmentYear;
+        payload.expectedGraduationYear = editStudentData.expectedGraduationYear;
+      }
+
       const response = await fetch(`/api/admin/users/${editingUser.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -185,12 +292,14 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
         throw new Error(error.error);
       }
 
-      toast.success("User role updated successfully");
+      toast.success("User updated successfully");
       setEditingUser(null);
       setNewRole(null);
+      setEditAssignedUniversityId("");
+      setEditAssignedDepartmentId("");
       fetchUsers();
     } catch (error) {
-      toast.error("Failed to update user role", {
+      toast.error("Failed to update user", {
         description: (error as Error).message,
       });
     } finally {
@@ -204,18 +313,41 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
       return;
     }
 
+    // Validate student-specific requirements
+    if (newUser.role === "STUDENT") {
+      if (!newUser.majorId) {
+        toast.error("Major is required for students");
+        return;
+      }
+      if (!newUser.year || !newUser.enrollmentYear || !newUser.expectedGraduationYear) {
+        toast.error("Year, enrollment year, and expected graduation year are required for students");
+        return;
+      }
+    }
+
     try {
       setSaving(true);
+      const payload: any = {
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+        assignedUniversityId: newUser.assignedUniversityId || undefined,
+        assignedDepartmentId: newUser.assignedDepartmentId || undefined,
+      };
+
+      // Add student-specific fields if creating a student
+      if (newUser.role === "STUDENT") {
+        payload.studentId = newUser.studentId || undefined;
+        payload.majorId = newUser.majorId;
+        payload.year = newUser.year;
+        payload.enrollmentYear = newUser.enrollmentYear;
+        payload.expectedGraduationYear = newUser.expectedGraduationYear;
+      }
+
       const response = await fetch("/api/admin/users/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: newUser.email,
-          name: newUser.name,
-          role: newUser.role,
-          assignedUniversityId: newUser.assignedUniversityId || undefined,
-          assignedDepartmentId: newUser.assignedDepartmentId || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -231,6 +363,11 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
         role: "",
         assignedUniversityId: "",
         assignedDepartmentId: "",
+        studentId: "",
+        majorId: "",
+        year: new Date().getFullYear() - 2000 + 1,
+        enrollmentYear: new Date().getFullYear(),
+        expectedGraduationYear: new Date().getFullYear() + 4,
       });
       fetchUsers();
     } catch (error) {
@@ -342,19 +479,21 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
               <TableHead>Role</TableHead>
               <TableHead>University/Assignment</TableHead>
               <TableHead>Registered</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {currentUserRole !== "COORDINATOR" && (
+                <TableHead className="text-right">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8">
+                <TableCell colSpan={currentUserRole !== "COORDINATOR" ? 6 : 5} className="text-center py-8">
                   Loading users...
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={currentUserRole !== "COORDINATOR" ? 6 : 5} className="text-center py-8 text-muted-foreground">
                   No users found
                 </TableCell>
               </TableRow>
@@ -393,27 +532,46 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
                   <TableCell>
                     {new Date(user.createdAt).toLocaleDateString()}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditRole(user)}
-                        title="Edit User Role"
-                      >
-                        <IconEdit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleDeleteUser(user)}
-                        title="Delete User"
-                      >
-                        <IconTrash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {currentUserRole !== "COORDINATOR" && (
+                    <TableCell className="text-right">
+                      {(() => {
+                        // Check if current user can manage this user
+                        const canEdit = currentUserRole && canManageUserByRole(currentUserRole, user.role);
+                        const canDelete = currentUserRole && canDeleteUser(currentUserRole, user.role);
+
+                        // If no actions available, show nothing
+                        if (!canEdit && !canDelete) {
+                          return <span className="text-xs text-muted-foreground">No actions</span>;
+                        }
+
+                        return (
+                          <div className="flex justify-end items-center gap-1">
+                            {canEdit && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditRole(user)}
+                                title="Edit User Role"
+                              >
+                                <IconEdit className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {canDelete && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleDeleteUser(user)}
+                                title="Delete User"
+                              >
+                                <IconTrash className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
@@ -471,26 +629,139 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
               Change the role for {editingUser?.name || editingUser?.email}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="edit-role" className="text-sm font-medium mb-2 block">
-              Select New Role
-            </Label>
-            <Select
-              value={newRole || undefined}
-              onValueChange={(value) => setNewRole(value as UserRole)}
-            >
-              <SelectTrigger id="edit-role">
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                {/* IMPORTANT: Use assignableRoles for permission-based filtering */}
-                {assignableRoles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role.replace("_", " ")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-role" className="text-sm font-medium">
+                Select New Role
+              </Label>
+              <Select
+                value={newRole || undefined}
+                onValueChange={(value) => setNewRole(value as UserRole)}
+              >
+                <SelectTrigger id="edit-role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* IMPORTANT: Use assignableRoles for permission-based filtering */}
+                  {assignableRoles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role.replace("_", " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Show university/department editing for ADMIN editing COORDINATOR */}
+            {currentUserRole === "ADMIN" && (editingUser?.role === "COORDINATOR" || newRole === "COORDINATOR") && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-university">Assigned University (Optional)</Label>
+                  <Select
+                    value={editAssignedUniversityId || "none"}
+                    onValueChange={(value) => {
+                      setEditAssignedUniversityId(value === "none" ? "" : value);
+                      if (value === "none") {
+                        setEditAssignedDepartmentId("");
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="edit-university">
+                      <SelectValue placeholder="Select university (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {universities.map((uni) => (
+                        <SelectItem key={uni.id} value={uni.id}>
+                          {uni.code} - {uni.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editAssignedUniversityId && (
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-department">Assigned Department (Optional)</Label>
+                    <Input
+                      id="edit-department"
+                      type="text"
+                      placeholder="Department ID"
+                      value={editAssignedDepartmentId}
+                      onChange={(e) => setEditAssignedDepartmentId(e.target.value)}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+            {/* Show student editing fields for ADMIN, SUPER_ADMIN, and COORDINATOR editing STUDENT */}
+            {editingUser?.role === "STUDENT" && editingUser.student && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-major">Major *</Label>
+                  <Select
+                    value={editStudentData.majorId || undefined}
+                    onValueChange={(value) => setEditStudentData({ ...editStudentData, majorId: value })}
+                  >
+                    <SelectTrigger id="edit-major">
+                      <SelectValue placeholder="Select major" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editDepartments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.code} - {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {editingUser.student.major && (
+                    <p className="text-xs text-muted-foreground">
+                      Current: {editingUser.student.major.code} - {editingUser.student.major.name}
+                    </p>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-year">Year *</Label>
+                    <Select
+                      value={editStudentData.year.toString()}
+                      onValueChange={(value) => setEditStudentData({ ...editStudentData, year: parseInt(value) })}
+                    >
+                      <SelectTrigger id="edit-year">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6].map((y) => (
+                          <SelectItem key={y} value={y.toString()}>
+                            Year {y}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-enrollment-year">Enrolled *</Label>
+                    <Input
+                      id="edit-enrollment-year"
+                      type="number"
+                      min="2000"
+                      max="2100"
+                      value={editStudentData.enrollmentYear}
+                      onChange={(e) => setEditStudentData({ ...editStudentData, enrollmentYear: parseInt(e.target.value) })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-graduation-year">Graduates *</Label>
+                    <Input
+                      id="edit-graduation-year"
+                      type="number"
+                      min="2000"
+                      max="2100"
+                      value={editStudentData.expectedGraduationYear}
+                      onChange={(e) => setEditStudentData({ ...editStudentData, expectedGraduationYear: parseInt(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -591,6 +862,108 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
                 )}
               </>
             )}
+            {newUser.role === "STUDENT" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="student-university">University *</Label>
+                  <Select
+                    value={newUser.assignedUniversityId || undefined}
+                    onValueChange={(value) => setNewUser({ ...newUser, assignedUniversityId: value, majorId: "" })}
+                    disabled={currentUserRole === "COORDINATOR"}
+                  >
+                    <SelectTrigger id="student-university">
+                      <SelectValue placeholder="Select university" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {universities.map((uni) => (
+                        <SelectItem key={uni.id} value={uni.id}>
+                          {uni.code} - {uni.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {currentUserRole === "COORDINATOR" && (
+                    <p className="text-xs text-muted-foreground">
+                      University is automatically set to your assigned university
+                    </p>
+                  )}
+                </div>
+                {newUser.assignedUniversityId && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="major">Major *</Label>
+                      <Select
+                        value={newUser.majorId || undefined}
+                        onValueChange={(value) => setNewUser({ ...newUser, majorId: value })}
+                      >
+                        <SelectTrigger id="major">
+                          <SelectValue placeholder="Select major" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {departments.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.id}>
+                              {dept.code} - {dept.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="student-id">Student ID (Optional)</Label>
+                      <Input
+                        id="student-id"
+                        type="text"
+                        placeholder="e.g., 01234567"
+                        value={newUser.studentId}
+                        onChange={(e) => setNewUser({ ...newUser, studentId: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="year">Year *</Label>
+                        <Select
+                          value={newUser.year.toString()}
+                          onValueChange={(value) => setNewUser({ ...newUser, year: parseInt(value) })}
+                        >
+                          <SelectTrigger id="year">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1, 2, 3, 4, 5, 6].map((y) => (
+                              <SelectItem key={y} value={y.toString()}>
+                                Year {y}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="enrollment-year">Enrolled *</Label>
+                        <Input
+                          id="enrollment-year"
+                          type="number"
+                          min="2000"
+                          max="2100"
+                          value={newUser.enrollmentYear}
+                          onChange={(e) => setNewUser({ ...newUser, enrollmentYear: parseInt(e.target.value) })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="graduation-year">Graduates *</Label>
+                        <Input
+                          id="graduation-year"
+                          type="number"
+                          min="2000"
+                          max="2100"
+                          value={newUser.expectedGraduationYear}
+                          onChange={(e) => setNewUser({ ...newUser, expectedGraduationYear: parseInt(e.target.value) })}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -603,6 +976,11 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
                   role: "",
                   assignedUniversityId: "",
                   assignedDepartmentId: "",
+                  studentId: "",
+                  majorId: "",
+                  year: new Date().getFullYear() - 2000 + 1,
+                  enrollmentYear: new Date().getFullYear(),
+                  expectedGraduationYear: new Date().getFullYear() + 4,
                 });
               }}
               disabled={saving}

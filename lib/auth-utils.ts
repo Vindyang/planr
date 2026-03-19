@@ -18,7 +18,14 @@ export async function requireRole(allowedRoles: UserRole[]) {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { role: true, id: true, email: true, name: true },
+    select: { 
+      role: true, 
+      id: true, 
+      email: true, 
+      name: true,
+      assignedUniversityId: true,
+      assignedDepartmentId: true,
+    },
   });
 
   if (!user) {

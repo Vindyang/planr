@@ -142,7 +142,7 @@ export function hasPermission<R extends Resource>(
  * Check if a user can manage (create/edit/delete) another user based on target role
  *
  * Rules:
- * - SUPER_ADMIN can manage anyone (including other SUPER_ADMINs and ADMINs)
+ * - SUPER_ADMIN can manage ADMIN, COORDINATOR, and STUDENT (but NOT other SUPER_ADMINs)
  * - ADMIN can manage COORDINATOR and STUDENT (but NOT other ADMINs or SUPER_ADMINs)
  * - COORDINATOR can manage STUDENT only
  * - STUDENT cannot manage anyone
@@ -151,12 +151,15 @@ export function canManageUserByRole(
   actorRole: UserRole,
   targetRole: UserRole
 ): boolean {
-  // SUPER_ADMIN can manage anyone
+  // SUPER_ADMIN can manage ADMIN, COORDINATOR, and STUDENT (but not other SUPER_ADMINs)
   if (actorRole === "SUPER_ADMIN") {
-    // Check if SUPER_ADMIN has permission to manage the target role
-    if (targetRole === "SUPER_ADMIN" || targetRole === "ADMIN") {
-      return hasPermission(actorRole, "super_admin", "edit") ||
-             hasPermission(actorRole, "admin", "edit");
+    // SUPER_ADMIN cannot edit other SUPER_ADMINs
+    if (targetRole === "SUPER_ADMIN") {
+      return false;
+    }
+    // Check if SUPER_ADMIN has permission to manage ADMINs
+    if (targetRole === "ADMIN") {
+      return hasPermission(actorRole, "admin", "edit");
     }
     return hasPermission(actorRole, "user", "edit");
   }
@@ -185,7 +188,7 @@ export function canManageUserByRole(
  * Check if a user can assign a specific role to another user
  *
  * Rules:
- * - SUPER_ADMIN can assign any role (including SUPER_ADMIN and ADMIN)
+ * - SUPER_ADMIN can assign ADMIN, COORDINATOR, and STUDENT (but NOT SUPER_ADMIN)
  * - ADMIN can assign COORDINATOR and STUDENT (but NOT ADMIN or SUPER_ADMIN)
  * - COORDINATOR can assign STUDENT only
  * - STUDENT cannot assign any role
@@ -194,20 +197,22 @@ export function canAssignRole(
   actorRole: UserRole,
   roleToAssign: UserRole
 ): boolean {
-  // SUPER_ADMIN can assign any role
+  // No one can assign SUPER_ADMIN role (not even other SUPER_ADMINs)
+  if (roleToAssign === "SUPER_ADMIN") {
+    return false;
+  }
+
+  // SUPER_ADMIN can assign ADMIN, COORDINATOR, and STUDENT
   if (actorRole === "SUPER_ADMIN") {
-    if (roleToAssign === "SUPER_ADMIN") {
-      return hasPermission(actorRole, "super_admin", "create");
-    }
     if (roleToAssign === "ADMIN") {
       return hasPermission(actorRole, "admin", "create");
     }
     return hasPermission(actorRole, "user", "create");
   }
 
-  // ADMIN can assign COORDINATOR and STUDENT (but not ADMIN or SUPER_ADMIN)
+  // ADMIN can assign COORDINATOR and STUDENT (but not ADMIN)
   if (actorRole === "ADMIN") {
-    if (roleToAssign === "SUPER_ADMIN" || roleToAssign === "ADMIN") {
+    if (roleToAssign === "ADMIN") {
       return false;
     }
     return hasPermission(actorRole, "user", "create");
@@ -258,9 +263,8 @@ export function canDeleteUser(actorRole: UserRole, targetRole: UserRole): boolea
   }
 
   // Check if actor has delete permission
-  if (actorRole === "SUPER_ADMIN" && (targetRole === "SUPER_ADMIN" || targetRole === "ADMIN")) {
-    return hasPermission(actorRole, "super_admin", "delete") ||
-           hasPermission(actorRole, "admin", "delete");
+  if (actorRole === "SUPER_ADMIN" && targetRole === "ADMIN") {
+    return hasPermission(actorRole, "admin", "delete");
   }
 
   return hasPermission(actorRole, "user", "delete");
