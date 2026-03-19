@@ -8,6 +8,7 @@ import {
   canManageUserByRole,
   canAssignRole,
   getManageableRoles,
+  canDeleteUser,
 } from "@/lib/access-control";
 
 const updateUserSchema = z.object({
@@ -154,5 +155,54 @@ export async function PATCH(
       { error: "Failed to update user" },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { user: currentUser } = await requireAdmin();
+    const { id: userId } = await params;
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true, email: true },
+    });
+
+    if (!targetUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (targetUser.id === currentUser.id) {
+      return NextResponse.json({ error: "Cannot delete yourself" }, { status: 403 });
+    }
+
+    if (!canDeleteUser(currentUser.role as UserRole, targetUser.role as UserRole)) {
+      return NextResponse.json(
+        { error: `${currentUser.role} cannot delete ${targetUser.role} users` },
+        { status: 403 }
+      );
+    }
+
+    await prisma.user.delete({ where: { id: userId } });
+
+    await createAuditLog({
+      action: "DELETE",
+      entityType: "USER",
+      entityId: userId,
+      userId: currentUser.id,
+      changes: { before: targetUser },
+      metadata: getRequestMetadata(request),
+    });
+
+    return NextResponse.json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    if (error instanceof Error && error.message === "Forbidden") {
+      return NextResponse.json({ error: "Admin access required" }, { status: 403 });
+    }
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
 }

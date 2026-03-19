@@ -335,7 +335,7 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
       </div>
 
       {/* Course Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+      <div className="rounded-none border border-border bg-card overflow-hidden shadow-none">
         <Table>
           <TableHeader>
             <TableRow>

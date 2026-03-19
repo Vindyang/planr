@@ -26,10 +26,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
-import { IconEdit, IconSearch, IconPlus } from "@tabler/icons-react";
+import { IconEdit, IconSearch, IconPlus, IconTrash } from "@tabler/icons-react";
 import { UserRole } from "@prisma/client";
 import { Pagination } from "@/components/ui/pagination";
 import { getAssignableRoles } from "@/lib/access-control";
@@ -72,6 +82,7 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newRole, setNewRole] = useState<UserRole | null>(null);
   const [saving, setSaving] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,7 +91,7 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
   const [totalPages, setTotalPages] = useState(0);
 
   // Get current user role and assignable roles from session
-  const currentUserRole = (session?.user?.role as UserRole) || null;
+  const currentUserRole = ((session?.user as any)?.role as UserRole) || null;
   const assignableRoles = currentUserRole ? getAssignableRoles(currentUserRole) : [];
 
   // Create user dialog state
@@ -231,6 +242,35 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
     }
   };
 
+  const handleDeleteUser = (user: User) => {
+    setUserToDelete(user);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      setSaving(true);
+      const response = await fetch(`/api/admin/users/${userToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete user");
+      }
+
+      toast.success("User deleted successfully");
+      fetchUsers();
+    } catch (error) {
+      toast.error("Failed to delete user", {
+        description: (error as Error).message,
+      });
+    } finally {
+      setSaving(false);
+      setUserToDelete(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 pb-8 border-b border-border mb-8">
@@ -293,7 +333,7 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
       </div>
 
       {/* User Table */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+      <div className="rounded-none border border-border bg-card overflow-hidden shadow-none">
         <Table>
           <TableHeader>
             <TableRow>
@@ -354,13 +394,25 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
                     {new Date(user.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditRole(user)}
-                    >
-                      <IconEdit className="h-4 w-4" />
-                    </Button>
+                    <div className="flex justify-end items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditRole(user)}
+                        title="Edit User Role"
+                      >
+                        <IconEdit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDeleteUser(user)}
+                        title="Delete User"
+                      >
+                        <IconTrash className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -380,6 +432,35 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
           </div>
         )}
       </div>
+
+      {/* Delete User Alert Dialog */}
+      <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && !saving && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user account for{" "}
+              <span className="font-semibold text-foreground">
+                {userToDelete?.name || userToDelete?.email}
+              </span>{" "}
+              and remove their data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDeleteUser();
+              }}
+              disabled={saving}
+            >
+              {saving ? "Deleting..." : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Edit Role Dialog */}
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>

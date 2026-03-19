@@ -102,153 +102,160 @@ export default async function UniversityDashboardPage({
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{universityUpper} Administration</h1>
-          <p className="text-muted-foreground">
-            {universityNames[universityUpper] || universityUpper}
-          </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <header className="flex flex-col gap-4 pb-8 border-b border-border mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
+              {universityUpper} Administration
+            </h1>
+            <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium mt-2">
+              {universityNames[universityUpper] || universityUpper}
+            </p>
+          </div>
         </div>
-      </div>
+      </header>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Students</CardTitle>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-card border border-border shadow-none rounded-none p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
+            <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Students</CardTitle>
             <IconUsers className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.students}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="p-0">
+            <div className="text-2xl font-serif italic text-foreground">{stats.students}</div>
+            <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
               Enrolled students
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
+        <Card className="bg-card border border-border shadow-none rounded-none p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
+            <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Active Courses</CardTitle>
             <IconBook className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.courses}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="p-0">
+            <div className="text-2xl font-serif italic text-foreground">{stats.courses}</div>
+            <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
               Course catalog
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Professors</CardTitle>
+        <Card className="bg-card border border-border shadow-none rounded-none p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
+            <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Professors</CardTitle>
             <IconBuildingBank className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.professors}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="p-0">
+            <div className="text-2xl font-serif italic text-foreground">{stats.professors}</div>
+            <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
               Faculty members
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Departments</CardTitle>
+        <Card className="bg-card border border-border shadow-none rounded-none p-4">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
+            <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Departments</CardTitle>
             <IconChartBar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.departments.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <CardContent className="p-0">
+            <div className="text-2xl font-serif italic text-foreground">{stats.departments.length}</div>
+            <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
               Academic units
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Manage {universityUpper} resources</CardDescription>
-        </CardHeader>
-        <CardContent className="flex gap-2">
-          <Link href={`/admin/${university}/courses`}>
-            <Button>
-              <IconBook className="mr-2 h-4 w-4" />
-              Manage Courses
-            </Button>
-          </Link>
-          <Link href={`/admin/${university}/users`}>
-            <Button variant="outline">
-              <IconUsers className="mr-2 h-4 w-4" />
-              Manage Users
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 gap-8 pt-4">
+        {/* Quick Actions */}
+        <Card className="bg-card border border-border shadow-none rounded-none p-6 h-fit">
+          <CardHeader className="p-0 mb-6 border-b border-border pb-4">
+            <CardTitle className="text-2xl font-serif italic text-foreground">Quick Actions</CardTitle>
+            <CardDescription className="text-xs uppercase tracking-wider font-medium text-muted-foreground mt-2">Manage {universityUpper} resources</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 flex flex-wrap gap-4 pt-2">
+            <Link href={`/admin/${university}/courses`}>
+              <Button variant="outline" className="rounded-none border-border font-serif italic text-sm px-6 h-10 w-full sm:w-auto hover:bg-accent">
+                <IconBook className="mr-2 h-4 w-4" />
+                Manage Courses
+              </Button>
+            </Link>
+            <Link href={`/admin/${university}/users`}>
+              <Button variant="outline" className="rounded-none border-border font-serif italic text-sm px-6 h-10 w-full sm:w-auto hover:bg-accent">
+                <IconUsers className="mr-2 h-4 w-4" />
+                Manage Users
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
 
-      {/* Departments List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Departments</CardTitle>
-          <CardDescription>Academic departments at {universityUpper}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {stats.departments.map((dept) => (
-              <Link
-                key={dept.id}
-                href={`/admin/${university}/${encodeURIComponent(dept.name)}`}
-              >
-                <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80">
-                  {dept.name}
-                </Badge>
-              </Link>
-            ))}
-            {stats.departments.length === 0 && (
-              <p className="text-sm text-muted-foreground">No departments found</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        {/* Departments List */}
+        <Card className="bg-card border border-border shadow-none rounded-none p-6 h-fit">
+          <CardHeader className="p-0 mb-6 border-b border-border pb-4">
+            <CardTitle className="text-2xl font-serif italic text-foreground">Departments</CardTitle>
+            <CardDescription className="text-xs uppercase tracking-wider font-medium text-muted-foreground mt-2">Academic departments at {universityUpper}</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="flex flex-wrap gap-2 pt-2">
+              {stats.departments.map((dept) => (
+                <Link
+                  key={dept.id}
+                  href={`/admin/${university}/${encodeURIComponent(dept.name)}`}
+                >
+                  <Badge variant="outline" className="rounded-none border-border bg-secondary text-secondary-foreground font-medium text-[0.65rem] uppercase tracking-wider px-3 py-1 cursor-pointer hover:bg-muted">
+                    {dept.name}
+                  </Badge>
+                </Link>
+              ))}
+              {stats.departments.length === 0 && (
+                <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">No departments found</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Recent Reviews */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Course Reviews</CardTitle>
-          <CardDescription>Latest student feedback</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {stats.recentReviews.length > 0 ? (
-            <div className="space-y-3">
-              {stats.recentReviews.map((review) => (
-                <div key={review.id} className="border-b pb-3 last:border-0">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">
-                        {review.course.code} - {review.course.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {review.isAnonymous ? "Anonymous" : review.student.user.name} •{" "}
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={review.rating >= 4 ? "default" : "secondary"}>
-                        {review.rating}/5
-                      </Badge>
+        {/* Recent Reviews */}
+        <Card className="bg-card border border-border shadow-none rounded-none p-6 h-fit">
+          <CardHeader className="p-0 mb-6 border-b border-border pb-4">
+            <CardTitle className="text-2xl font-serif italic text-foreground">Recent Course Reviews</CardTitle>
+            <CardDescription className="text-xs uppercase tracking-wider font-medium text-muted-foreground mt-2">Latest student feedback</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {stats.recentReviews.length > 0 ? (
+              <div className="space-y-4 pt-2">
+                {stats.recentReviews.map((review) => (
+                  <div key={review.id} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-serif text-foreground">
+                          {review.course.code} - {review.course.title}
+                        </p>
+                        <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
+                          {review.isAnonymous ? "Anonymous" : review.student.user.name} •{" "}
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-2 py-0.5 text-[0.65rem] uppercase tracking-wider font-medium border border-border bg-foreground text-background">
+                          {review.rating}/5
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No recent reviews</p>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground pt-2">No recent reviews</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

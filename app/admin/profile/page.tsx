@@ -15,40 +15,44 @@ export default async function AdminProfilePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Profile</h1>
-          <p className="text-muted-foreground">
-            View your admin account details and settings
-          </p>
+    <div className="space-y-6">
+      <header className="flex flex-col gap-4 pb-8 border-b border-border mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
+              Admin Profile
+            </h1>
+            <p className="text-sm text-muted-foreground uppercase tracking-wider font-medium mt-2">
+              View your admin account details and settings
+            </p>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your basic account details</CardDescription>
+      <div className="grid gap-8 md:grid-cols-2">
+        <Card className="bg-card border border-border shadow-none rounded-none p-6 h-fit">
+          <CardHeader className="p-0 mb-6 border-b border-border pb-4">
+            <CardTitle className="text-2xl font-serif italic text-foreground">Account Information</CardTitle>
+            <CardDescription className="text-xs uppercase tracking-wider font-medium text-muted-foreground mt-2">Your basic account details</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-0 space-y-6 pt-2">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Name</p>
-              <p className="text-lg">{user.name || "Not set"}</p>
+              <p className="text-[0.65rem] uppercase tracking-wider font-medium text-muted-foreground mb-1">Name</p>
+              <p className="text-lg font-serif italic">{user.name || "Not set"}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Email</p>
-              <p className="text-lg">{user.email}</p>
+              <p className="text-[0.65rem] uppercase tracking-wider font-medium text-muted-foreground mb-1">Email</p>
+              <p className="text-lg font-serif italic">{user.email}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Role</p>
-              <Badge variant="outline" className="text-sm">
+              <p className="text-[0.65rem] uppercase tracking-wider font-medium text-muted-foreground mb-2">Role</p>
+              <span className="inline-block px-2 py-0.5 text-[0.65rem] uppercase tracking-wider font-medium border border-border bg-secondary text-secondary-foreground">
                 {user.role}
-              </Badge>
+              </span>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Member Since</p>
-              <p className="text-lg">
+              <p className="text-[0.65rem] uppercase tracking-wider font-medium text-muted-foreground mb-1">Member Since</p>
+              <p className="text-lg font-serif italic">
                 {new Date(user.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
@@ -59,61 +63,61 @@ export default async function AdminProfilePage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Admin Permissions</CardTitle>
-            <CardDescription>Your administrative capabilities</CardDescription>
+        <Card className="bg-card border border-border shadow-none rounded-none p-6 h-fit">
+          <CardHeader className="p-0 mb-6 border-b border-border pb-4">
+            <CardTitle className="text-2xl font-serif italic text-foreground">Admin Permissions</CardTitle>
+            <CardDescription className="text-xs uppercase tracking-wider font-medium text-muted-foreground mt-2">Your administrative capabilities</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="p-0 space-y-4 pt-2">
             {user.role === "SUPER_ADMIN" && (
               <>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">Full system access</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-foreground" />
+                  <p className="text-sm font-serif italic">Full system access</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">Create new admins</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-foreground" />
+                  <p className="text-sm font-serif italic">Create new admins</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">Manage all users</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-foreground" />
+                  <p className="text-sm font-serif italic">Manage all users</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">Manage courses</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-foreground" />
+                  <p className="text-sm font-serif italic">Manage courses</p>
                 </div>
               </>
             )}
             {user.role === "ADMIN" && (
               <>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">Manage users</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-foreground" />
+                  <p className="text-sm font-serif italic">Manage users</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">Manage courses</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-foreground" />
+                  <p className="text-sm font-serif italic">Manage courses</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                  <p className="text-sm text-muted-foreground">Limited admin creation</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-muted-foreground" />
+                  <p className="text-sm font-serif italic text-muted-foreground">Limited admin creation</p>
                 </div>
               </>
             )}
             {user.role === "COORDINATOR" && (
               <>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">View users</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-foreground" />
+                  <p className="text-sm font-serif italic">View users</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <p className="text-sm">View courses</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-foreground" />
+                  <p className="text-sm font-serif italic">View courses</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                  <p className="text-sm text-muted-foreground">Limited modification rights</p>
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 bg-muted-foreground" />
+                  <p className="text-sm font-serif italic text-muted-foreground">Limited modification rights</p>
                 </div>
               </>
             )}
