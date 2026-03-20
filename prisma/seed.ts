@@ -147,7 +147,7 @@ async function createUniversitiesAndDepartments() {
 // ============================================================
 // 3. Create Sample Courses
 // ============================================================
-async function createSampleCourses(universityId: string, isDeptId: string, csDeptId: string) {
+async function createSampleCourses(universityId: string, isDeptId: string, csDeptId: string, businessDeptId: string) {
   console.log("📚 Creating sample courses...")
 
   const courses = await prisma.course.createMany({
@@ -186,6 +186,28 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         tags: ["Elective", "Year 3"],
         isActive: true,
       },
+      {
+        code: "IS216",
+        universityId,
+        departmentId: isDeptId,
+        title: "Web Application Development I",
+        description: "Introduction to web development with HTML, CSS, and JavaScript.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Core", "Year 2"],
+        isActive: true,
+      },
+      {
+        code: "IS112",
+        universityId,
+        departmentId: isDeptId,
+        title: "Data Management",
+        description: "Introduction to data management and analytics.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Core", "Year 1"],
+        isActive: true,
+      },
       // CS Department courses
       {
         code: "CS101",
@@ -193,6 +215,17 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         departmentId: csDeptId,
         title: "Introduction to Programming",
         description: "Fundamental programming concepts using Python.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Core", "Year 1"],
+        isActive: true,
+      },
+      {
+        code: "CS102",
+        universityId,
+        departmentId: csDeptId,
+        title: "Programming Fundamentals",
+        description: "Advanced programming concepts and problem-solving.",
         units: 4,
         termsOffered: ["Fall", "Spring"],
         tags: ["Core", "Year 1"],
@@ -207,6 +240,283 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         units: 4,
         termsOffered: ["Fall", "Spring"],
         tags: ["Core", "Year 2"],
+        isActive: true,
+      },
+      {
+        code: "CS202",
+        universityId,
+        departmentId: csDeptId,
+        title: "Software Engineering",
+        description: "Software development methodologies and practices.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Core", "Year 2"],
+        isActive: true,
+      },
+      {
+        code: "CS203",
+        universityId,
+        departmentId: csDeptId,
+        title: "Computer Networks",
+        description: "Networking protocols and distributed systems.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Core", "Year 2"],
+        isActive: true,
+      },
+      {
+        code: "CS301",
+        universityId,
+        departmentId: csDeptId,
+        title: "Operating Systems",
+        description: "OS design, process management, and memory systems.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Core", "Year 3"],
+        isActive: true,
+      },
+      {
+        code: "CS302",
+        universityId,
+        departmentId: csDeptId,
+        title: "Database Management Systems",
+        description: "Advanced database concepts and implementation.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Core", "Year 3"],
+        isActive: true,
+      },
+      {
+        code: "CS303",
+        universityId,
+        departmentId: csDeptId,
+        title: "Artificial Intelligence",
+        description: "Introduction to AI and machine learning concepts.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Elective", "Year 3"],
+        isActive: true,
+      },
+      {
+        code: "CS304",
+        universityId,
+        departmentId: csDeptId,
+        title: "Computer Graphics",
+        description: "3D graphics, rendering, and visualization.",
+        units: 4,
+        termsOffered: ["Fall"],
+        tags: ["Elective", "Year 3"],
+        isActive: true,
+      },
+      {
+        code: "CS305",
+        universityId,
+        departmentId: csDeptId,
+        title: "Cybersecurity",
+        description: "Security principles and threat mitigation.",
+        units: 4,
+        termsOffered: ["Spring"],
+        tags: ["Elective", "Year 3"],
+        isActive: true,
+      },
+      {
+        code: "CS401",
+        universityId,
+        departmentId: csDeptId,
+        title: "Advanced Algorithms",
+        description: "Advanced algorithmic techniques and complexity theory.",
+        units: 4,
+        termsOffered: ["Fall"],
+        tags: ["Elective", "Year 4"],
+        isActive: true,
+      },
+      {
+        code: "CS402",
+        universityId,
+        departmentId: csDeptId,
+        title: "Distributed Systems",
+        description: "Design and implementation of distributed computing systems.",
+        units: 4,
+        termsOffered: ["Spring"],
+        tags: ["Elective", "Year 4"],
+        isActive: true,
+      },
+      {
+        code: "CS403",
+        universityId,
+        departmentId: csDeptId,
+        title: "Machine Learning",
+        description: "Deep learning and neural networks.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Elective", "Year 4"],
+        isActive: true,
+      },
+      {
+        code: "CS404",
+        universityId,
+        departmentId: csDeptId,
+        title: "Cloud Computing",
+        description: "Cloud architecture and deployment strategies.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["Elective", "Year 4"],
+        isActive: true,
+      },
+      // Business courses
+      {
+        code: "BUS101",
+        universityId,
+        departmentId: businessDeptId,
+        title: "Introduction to Business",
+        description: "Fundamentals of business management.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education"],
+        isActive: true,
+      },
+      {
+        code: "BUS201",
+        universityId,
+        departmentId: businessDeptId,
+        title: "Marketing Principles",
+        description: "Marketing strategies and consumer behavior.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education"],
+        isActive: true,
+      },
+      {
+        code: "BUS202",
+        universityId,
+        departmentId: businessDeptId,
+        title: "Financial Accounting",
+        description: "Accounting principles and financial reporting.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education"],
+        isActive: true,
+      },
+      {
+        code: "BUS203",
+        universityId,
+        departmentId: businessDeptId,
+        title: "Business Statistics",
+        description: "Statistical methods for business analysis.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education"],
+        isActive: true,
+      },
+      // General Education courses
+      {
+        code: "MATH101",
+        universityId,
+        departmentId: null,
+        title: "Calculus I",
+        description: "Introduction to differential calculus.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Math"],
+        isActive: true,
+      },
+      {
+        code: "MATH102",
+        universityId,
+        departmentId: null,
+        title: "Calculus II",
+        description: "Introduction to integral calculus.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Math"],
+        isActive: true,
+      },
+      {
+        code: "MATH201",
+        universityId,
+        departmentId: null,
+        title: "Linear Algebra",
+        description: "Matrices, vectors, and linear transformations.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Math"],
+        isActive: true,
+      },
+      {
+        code: "MATH202",
+        universityId,
+        departmentId: null,
+        title: "Discrete Mathematics",
+        description: "Logic, sets, and discrete structures.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Math"],
+        isActive: true,
+      },
+      {
+        code: "ENG101",
+        universityId,
+        departmentId: null,
+        title: "English Composition",
+        description: "Academic writing and communication.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Writing"],
+        isActive: true,
+      },
+      {
+        code: "ENG102",
+        universityId,
+        departmentId: null,
+        title: "Technical Writing",
+        description: "Professional and technical communication.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Writing"],
+        isActive: true,
+      },
+      {
+        code: "ECON101",
+        universityId,
+        departmentId: null,
+        title: "Microeconomics",
+        description: "Economic principles and market systems.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Economics"],
+        isActive: true,
+      },
+      {
+        code: "ECON102",
+        universityId,
+        departmentId: null,
+        title: "Macroeconomics",
+        description: "National economic systems and policy.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Economics"],
+        isActive: true,
+      },
+      {
+        code: "PHYS101",
+        universityId,
+        departmentId: null,
+        title: "Physics I",
+        description: "Mechanics and thermodynamics.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Science"],
+        isActive: true,
+      },
+      {
+        code: "PHIL101",
+        universityId,
+        departmentId: null,
+        title: "Introduction to Philosophy",
+        description: "Major philosophical questions and traditions.",
+        units: 4,
+        termsOffered: ["Fall", "Spring"],
+        tags: ["General Education", "Humanities"],
         isActive: true,
       },
     ],
@@ -373,63 +683,289 @@ async function createTestStudents(universityId: string, isDeptId: string, course
   console.log("👨‍🎓 Creating test students...")
 
   const passwordHash = await hashPassword("student123")
+  const students = []
 
-  // Student 1
-  const user1 = await prisma.user.create({
+  // Helper function to get course by code
+  const getCourseByCode = (code: string) => courses.find(c => c.code === code)
+
+  // 1. Freshman - Year 1, GPA 0.0, 0 completed courses
+  const freshman = await prisma.user.create({
     data: {
-      email: "student1@smu.edu.sg",
-      name: "Alice Chen",
+      email: "freshman@smu.edu.sg",
+      name: "Fresh Freshman",
       emailVerified: true,
       role: "STUDENT",
       accounts: {
         create: {
-          id: "account-student1",
-          accountId: "student1@smu.edu.sg",
+          id: "account-freshman",
+          accountId: "freshman@smu.edu.sg",
           providerId: "credential",
           password: passwordHash,
         },
       },
       student: {
         create: {
-          studentId: "01234567",
+          studentId: "01000001",
+          universityId,
+          majorId: isDeptId,
+          year: 1,
+          enrollmentYear: 2024,
+          expectedGraduationYear: 2028,
+          gpa: 0.0,
+        },
+      },
+    },
+  })
+  const freshmanStudent = await prisma.student.findUnique({ where: { userId: freshman.id } })
+  if (freshmanStudent) students.push(freshmanStudent)
+  console.log(`  ✅ Created freshman@smu.edu.sg - Year 1, GPA 0.0, 0 courses`)
+
+  // 2. Sophomore - Year 2, GPA 3.5, 8 completed courses
+  const sophomore = await prisma.user.create({
+    data: {
+      email: "sophomore@smu.edu.sg",
+      name: "Sophie Sophomore",
+      emailVerified: true,
+      role: "STUDENT",
+      accounts: {
+        create: {
+          id: "account-sophomore",
+          accountId: "sophomore@smu.edu.sg",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          studentId: "01000002",
           universityId,
           majorId: isDeptId,
           year: 2,
           enrollmentYear: 2023,
           expectedGraduationYear: 2027,
+          gpa: 3.5,
+        },
+      },
+    },
+  })
+  const sophomoreStudent = await prisma.student.findUnique({ where: { userId: sophomore.id } })
+  if (sophomoreStudent) {
+    // Add 8 completed courses
+    await prisma.completedCourse.createMany({
+      data: [
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A-", term: "Fall 2023" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "B+", term: "Fall 2023" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Fall 2023" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B", term: "Fall 2023" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A-", term: "Spring 2024" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "B+", term: "Spring 2024" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Spring 2024" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "B+", term: "Spring 2024" },
+      ],
+    })
+    students.push(sophomoreStudent)
+  }
+  console.log(`  ✅ Created sophomore@smu.edu.sg - Year 2, GPA 3.5, 8 courses`)
+
+  // 3. Junior - Year 3, GPA 3.7, 20 completed courses
+  const junior = await prisma.user.create({
+    data: {
+      email: "junior@smu.edu.sg",
+      name: "Junior Jackson",
+      emailVerified: true,
+      role: "STUDENT",
+      accounts: {
+        create: {
+          id: "account-junior",
+          accountId: "junior@smu.edu.sg",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          studentId: "01000003",
+          universityId,
+          majorId: isDeptId,
+          year: 3,
+          enrollmentYear: 2022,
+          expectedGraduationYear: 2026,
+          gpa: 3.7,
+        },
+      },
+    },
+  })
+  const juniorStudent = await prisma.student.findUnique({ where: { userId: junior.id } })
+  if (juniorStudent) {
+    // Add 20 completed courses
+    await prisma.completedCourse.createMany({
+      data: [
+        // Year 1 - Fall
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A", term: "Fall 2022" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "A-", term: "Fall 2022" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Fall 2022" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B+", term: "Fall 2022" },
+        // Year 1 - Spring
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A", term: "Spring 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "A-", term: "Spring 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Spring 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "A-", term: "Spring 2023" },
+        // Year 2 - Fall
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "A-", term: "Fall 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS201")!.id, grade: "A", term: "Fall 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "A-", term: "Fall 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "B+", term: "Fall 2023" },
+        // Year 2 - Spring
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS216")!.id, grade: "A", term: "Spring 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS202")!.id, grade: "A-", term: "Spring 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH202")!.id, grade: "A", term: "Spring 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("ENG102")!.id, grade: "B+", term: "Spring 2024" },
+        // Year 3 - Fall
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS315")!.id, grade: "A", term: "Fall 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS301")!.id, grade: "A-", term: "Fall 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS303")!.id, grade: "A", term: "Fall 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("BUS201")!.id, grade: "B+", term: "Fall 2024" },
+      ],
+    })
+    students.push(juniorStudent)
+  }
+  console.log(`  ✅ Created junior@smu.edu.sg - Year 3, GPA 3.7, 20 courses`)
+
+  // 4. Senior - Year 4, GPA 3.8, 32 completed courses
+  const senior = await prisma.user.create({
+    data: {
+      email: "senior@smu.edu.sg",
+      name: "Senior Sarah",
+      emailVerified: true,
+      role: "STUDENT",
+      accounts: {
+        create: {
+          id: "account-senior",
+          accountId: "senior@smu.edu.sg",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          studentId: "01000004",
+          universityId,
+          majorId: isDeptId,
+          year: 4,
+          enrollmentYear: 2021,
+          expectedGraduationYear: 2025,
           gpa: 3.8,
         },
       },
     },
   })
-
-  // Add completed courses for the student
-  const student = await prisma.student.findUnique({
-    where: { userId: user1.id },
-  })
-
-  if (student) {
-    // Student completed IS101 and CS101
+  const seniorStudent = await prisma.student.findUnique({ where: { userId: senior.id } })
+  if (seniorStudent) {
+    // Add 32 completed courses
     await prisma.completedCourse.createMany({
       data: [
-        {
-          studentId: student.id,
-          courseId: courses[0].id, // IS101
-          grade: "A",
-          term: "Fall 2023",
-        },
-        {
-          studentId: student.id,
-          courseId: courses[3].id, // CS101
-          grade: "A-",
-          term: "Fall 2023",
-        },
+        // Year 1 - Fall
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A", term: "Fall 2021" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "A", term: "Fall 2021" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Fall 2021" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "A-", term: "Fall 2021" },
+        // Year 1 - Spring
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A", term: "Spring 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "A", term: "Spring 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Spring 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "A-", term: "Spring 2022" },
+        // Year 2 - Fall
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "A", term: "Fall 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS201")!.id, grade: "A", term: "Fall 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "A-", term: "Fall 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "A", term: "Fall 2022" },
+        // Year 2 - Spring
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS216")!.id, grade: "A", term: "Spring 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS202")!.id, grade: "A", term: "Spring 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS203")!.id, grade: "A-", term: "Spring 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH202")!.id, grade: "A", term: "Spring 2023" },
+        // Year 3 - Fall
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS315")!.id, grade: "A", term: "Fall 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS301")!.id, grade: "A", term: "Fall 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS302")!.id, grade: "A-", term: "Fall 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS303")!.id, grade: "A", term: "Fall 2023" },
+        // Year 3 - Spring
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS304")!.id, grade: "A-", term: "Spring 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS305")!.id, grade: "A", term: "Spring 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS201")!.id, grade: "A", term: "Spring 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("ENG102")!.id, grade: "A-", term: "Spring 2024" },
+        // Year 4 - Fall
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS401")!.id, grade: "A", term: "Fall 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS403")!.id, grade: "A", term: "Fall 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS404")!.id, grade: "A-", term: "Fall 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS202")!.id, grade: "A", term: "Fall 2024" },
+        // Year 4 - Spring (current)
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS402")!.id, grade: "A", term: "Spring 2025" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS203")!.id, grade: "A-", term: "Spring 2025" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("ECON102")!.id, grade: "A", term: "Spring 2025" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("PHYS101")!.id, grade: "A-", term: "Spring 2025" },
       ],
     })
+    students.push(seniorStudent)
   }
+  console.log(`  ✅ Created senior@smu.edu.sg - Year 4, GPA 3.8, 32 courses`)
 
-  console.log(`✅ Created test student: ${user1.email}`)
-  return student
+  // 5. Struggling - Year 3, GPA 2.3, 12 courses, D in CS102
+  const struggling = await prisma.user.create({
+    data: {
+      email: "struggling@smu.edu.sg",
+      name: "Struggling Student",
+      emailVerified: true,
+      role: "STUDENT",
+      accounts: {
+        create: {
+          id: "account-struggling",
+          accountId: "struggling@smu.edu.sg",
+          providerId: "credential",
+          password: passwordHash,
+        },
+      },
+      student: {
+        create: {
+          studentId: "01000005",
+          universityId,
+          majorId: isDeptId,
+          year: 3,
+          enrollmentYear: 2022,
+          expectedGraduationYear: 2026,
+          gpa: 2.3,
+        },
+      },
+    },
+  })
+  const strugglingStudent = await prisma.student.findUnique({ where: { userId: struggling.id } })
+  if (strugglingStudent) {
+    // Add 12 completed courses with lower grades, including D in CS102
+    await prisma.completedCourse.createMany({
+      data: [
+        // Year 1 - Fall
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "C+", term: "Fall 2022" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "C", term: "Fall 2022" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "C-", term: "Fall 2022" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B-", term: "Fall 2022" },
+        // Year 1 - Spring
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "C", term: "Spring 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "D", term: "Spring 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "C", term: "Spring 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "C+", term: "Spring 2023" },
+        // Year 2 - Fall
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "C-", term: "Fall 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "C", term: "Fall 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "B", term: "Fall 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("PHIL101")!.id, grade: "B+", term: "Fall 2023" },
+      ],
+    })
+    students.push(strugglingStudent)
+  }
+  console.log(`  ✅ Created struggling@smu.edu.sg - Year 3, GPA 2.3, 12 courses (D in CS102)`)
+
+  console.log(`✅ Created ${students.length} test students total`)
+  return students
 }
 
 // ============================================================
@@ -575,9 +1111,9 @@ async function main() {
 
   await clearAllData()
 
-  const { smu, isDept, csDept } = await createUniversitiesAndDepartments()
+  const { smu, isDept, csDept, businessDept } = await createUniversitiesAndDepartments()
 
-  const courses = await createSampleCourses(smu.id, isDept.id, csDept.id)
+  const courses = await createSampleCourses(smu.id, isDept.id, csDept.id, businessDept.id)
 
   const professors = await createProfessors(smu.id, isDept.id, csDept.id)
 
@@ -585,10 +1121,10 @@ async function main() {
 
   await createPrerequisites(courses)
 
-  const student = await createTestStudents(smu.id, isDept.id, courses)
+  const students = await createTestStudents(smu.id, isDept.id, courses)
 
-  if (student) {
-    await createReviews(student, courses, professors)
+  if (students && students.length > 0) {
+    await createReviews(students[1], courses, professors) // Use sophomore for reviews
   }
 
   await createAdminUsers(smu.id, isDept.id)
@@ -598,7 +1134,12 @@ async function main() {
   console.log("  Superadmin: superadmin@planr.com / admin123")
   console.log("  SMU Admin: admin@smu.edu.sg / admin123")
   console.log("  IS Coordinator: coordinator@smu.edu.sg / admin123")
-  console.log("  Student: student1@smu.edu.sg / student123")
+  console.log("\n  Students (all use password: student123):")
+  console.log("    - freshman@smu.edu.sg (Year 1, GPA 0.0, 0 courses)")
+  console.log("    - sophomore@smu.edu.sg (Year 2, GPA 3.5, 8 courses)")
+  console.log("    - junior@smu.edu.sg (Year 3, GPA 3.7, 20 courses)")
+  console.log("    - senior@smu.edu.sg (Year 4, GPA 3.8, 32 courses)")
+  console.log("    - struggling@smu.edu.sg (Year 3, GPA 2.3, 12 courses, D in CS102)")
 }
 
 main()

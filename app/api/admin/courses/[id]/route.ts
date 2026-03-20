@@ -11,7 +11,7 @@ const updateCourseSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().optional(),
   units: z.number().int().min(0).max(20).optional(),
-  departmentId: z.string().uuid().optional(),
+  departmentId: z.string().uuid().optional().or(z.literal("")),
   isActive: z.boolean().optional(),
 });
 
@@ -67,8 +67,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    // If changing department, verify it belongs to the same university
-    if (validation.data.departmentId) {
+    // If changing department, verify it belongs to the same university (if not empty)
+    if (validation.data.departmentId !== undefined && validation.data.departmentId !== "") {
       const department = await prisma.department.findUnique({
         where: { id: validation.data.departmentId },
         select: { universityId: true },
@@ -110,7 +110,12 @@ export async function PATCH(
     // Update course
     const updatedCourse = await prisma.course.update({
       where: { id: courseId },
-      data: validation.data,
+      data: {
+        ...validation.data,
+        departmentId: validation.data.departmentId !== undefined
+          ? (validation.data.departmentId === "" ? null : validation.data.departmentId)
+          : undefined,
+      },
       include: {
         university: {
           select: {

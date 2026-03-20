@@ -12,7 +12,7 @@ const createCourseSchema = z.object({
   description: z.string().default(""),
   units: z.number().int().min(0).max(20),
   universityId: z.string().uuid(),
-  departmentId: z.string().uuid(),
+  departmentId: z.string().uuid().optional().or(z.literal("")),
   isActive: z.boolean().default(true),
 });
 
@@ -150,24 +150,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify university and department exist and match
-    const department = await prisma.department.findUnique({
-      where: { id: validation.data.departmentId },
-      select: { universityId: true },
-    });
+    // Verify department exists and matches university (if department is provided)
+    if (validation.data.departmentId && validation.data.departmentId !== "") {
+      const department = await prisma.department.findUnique({
+        where: { id: validation.data.departmentId },
+        select: { universityId: true },
+      });
 
-    if (!department) {
-      return NextResponse.json(
-        { error: "Department not found" },
-        { status: 404 }
-      );
-    }
+      if (!department) {
+        return NextResponse.json(
+          { error: "Department not found" },
+          { status: 404 }
+        );
+      }
 
-    if (department.universityId !== validation.data.universityId) {
-      return NextResponse.json(
-        { error: "Department does not belong to the specified university" },
-        { status: 400 }
-      );
+      if (department.universityId !== validation.data.universityId) {
+        return NextResponse.json(
+          { error: "Department does not belong to the specified university" },
+          { status: 400 }
+        );
+      }
     }
 
     // Check for duplicate course code within the university
@@ -187,7 +189,12 @@ export async function POST(request: NextRequest) {
 
     // Create course
     const course = await prisma.course.create({
-      data: validation.data,
+      data: {
+        ...validation.data,
+        departmentId: validation.data.departmentId && validation.data.departmentId !== ""
+          ? validation.data.departmentId
+          : null,
+      },
       include: {
         university: {
           select: {

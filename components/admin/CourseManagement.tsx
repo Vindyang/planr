@@ -185,7 +185,7 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
       description: course.description || "",
       units: course.units,
       universityId: course.university.id,
-      departmentId: course.department.id,
+      departmentId: course.department?.id || "",
       isActive: course.isActive,
     });
     setEditingCourse(course);
@@ -193,7 +193,7 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
   };
 
   const handleSaveCourse = async () => {
-    if (!formData.code || !formData.title || !formData.universityId || !formData.departmentId) {
+    if (!formData.code || !formData.title || !formData.universityId) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -373,7 +373,7 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
                     </TableCell>
                   )}
                   <TableCell>
-                    <span className="text-sm">{course.department.name}</span>
+                    <span className="text-sm">{course.department?.name || "General Education"}</span>
                   </TableCell>
                   <TableCell>{course.units}</TableCell>
                   <TableCell>
@@ -519,16 +519,17 @@ export function CourseManagement({ defaultUniversity }: CourseManagementProps) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="department">Department *</Label>
+                <Label htmlFor="department">Department (Optional)</Label>
                 <Select
                   value={formData.departmentId}
                   onValueChange={(value) => setFormData({ ...formData, departmentId: value })}
                   disabled={!formData.universityId || departments.length === 0}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
+                    <SelectValue placeholder="Select department or leave empty for General Education" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">None (General Education)</SelectItem>
                     {departments.map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name}

@@ -129,7 +129,7 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
     // Student-specific fields
     studentId: "",
     majorId: "",
-    year: new Date().getFullYear() - 2000 + 1, // Default to year 1
+    year: 1, // Default to year 1
     enrollmentYear: new Date().getFullYear(),
     expectedGraduationYear: new Date().getFullYear() + 4,
   });
@@ -365,7 +365,7 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
         assignedDepartmentId: "",
         studentId: "",
         majorId: "",
-        year: new Date().getFullYear() - 2000 + 1,
+        year: 1,
         enrollmentYear: new Date().getFullYear(),
         expectedGraduationYear: new Date().getFullYear() + 4,
       });
@@ -978,7 +978,7 @@ export function UserManagement({ defaultUniversity }: UserManagementProps = {}) 
                   assignedDepartmentId: "",
                   studentId: "",
                   majorId: "",
-                  year: new Date().getFullYear() - 2000 + 1,
+                  year: 1,
                   enrollmentYear: new Date().getFullYear(),
                   expectedGraduationYear: new Date().getFullYear() + 4,
                 });
