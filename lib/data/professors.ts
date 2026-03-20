@@ -1,24 +1,31 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
-import { University } from "@prisma/client"
 
 export const getProfessorsByCourse = cache(async (courseId: string) => {
   const instructors = await prisma.courseInstructor.findMany({
     where: { courseId },
     include: {
-      professor: { select: { id: true, name: true, department: true } },
+      professor: {
+        select: {
+          id: true,
+          name: true,
+          department: {
+            select: { name: true, code: true },
+          },
+        },
+      },
     },
   })
 
   // Deduplicate (a professor might teach the same course in multiple terms)
-  const map = new Map<string, { id: string; name: string; department: string }>()
+  const map = new Map<string, { id: string; name: string; department: { name: string; code: string } }>()
   instructors.forEach((i) => map.set(i.professor.id, i.professor))
   return Array.from(map.values())
 })
 
-export const getProfessorsForUniversity = cache(async (university: University) => {
+export const getProfessorsForUniversity = cache(async (universityId: string) => {
   return await prisma.professor.findMany({
-    where: { university },
+    where: { universityId },
     include: {
       courseInstructors: {
         include: {

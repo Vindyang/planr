@@ -18,8 +18,11 @@ export async function GET() {
     }
 
     const professors = await prisma.professor.findMany({
-      where: { university: student.university },
+      where: { universityId: student.universityId },
       include: {
+        department: {
+          select: { name: true, code: true },
+        },
         courseInstructors: {
           include: {
             course: { select: { id: true, code: true, title: true } },
@@ -38,7 +41,7 @@ export async function GET() {
       return {
         id: p.id,
         name: p.name,
-        department: p.department,
+        department: p.department.name,
         courses: Array.from(coursesMap.values()),
       }
     })

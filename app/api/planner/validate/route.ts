@@ -15,6 +15,9 @@ export async function POST() {
     const student = await prisma.student.findUnique({
       where: { userId: session.user.id },
       include: {
+        university: {
+          select: { code: true },
+        },
         completedCourses: {
           include: {
             course: {
@@ -62,7 +65,7 @@ export async function POST() {
     // Fetch all courses for the student's university (for prerequisite checking)
     const allCourses = await prisma.course.findMany({
       where: {
-        university: student.university,
+        universityId: student.universityId,
         isActive: true,
       },
       include: {
@@ -119,7 +122,7 @@ export async function POST() {
       semesters,
       completedCourses,
       allCourses: coursesWithPrereqs,
-      university: student.university,
+      university: student.university.code,
     }
 
     // Run validation

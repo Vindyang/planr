@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const mine = searchParams.get("mine")
 
     const where: Record<string, unknown> = {
-      professor: { university: student.university },
+      professor: { universityId: student.universityId },
     }
     if (professorId) {
       where.professorId = professorId
@@ -54,7 +54,13 @@ export async function GET(request: NextRequest) {
     const reviews = await prisma.professorReview.findMany({
       where,
       include: {
-        professor: { select: { id: true, name: true, department: true } },
+        professor: {
+          select: {
+            id: true,
+            name: true,
+            department: { select: { name: true, code: true } }
+          }
+        },
         course: { select: { id: true, code: true, title: true } },
         student: {
           include: {
@@ -117,7 +123,7 @@ export async function POST(request: NextRequest) {
       where: { id: validation.data.professorId },
     })
 
-    if (!professor || professor.university !== student.university) {
+    if (!professor || professor.universityId !== student.universityId) {
       return NextResponse.json({ error: "Professor not found" }, { status: 404 })
     }
 
@@ -169,7 +175,13 @@ export async function POST(request: NextRequest) {
         isAnonymous: validation.data.isAnonymous,
       },
       include: {
-        professor: { select: { id: true, name: true, department: true } },
+        professor: {
+          select: {
+            id: true,
+            name: true,
+            department: { select: { name: true, code: true } }
+          }
+        },
         course: { select: { id: true, code: true, title: true } },
       },
     })

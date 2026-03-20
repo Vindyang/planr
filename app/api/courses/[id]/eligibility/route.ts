@@ -26,6 +26,9 @@ export async function GET(
     const student = await prisma.student.findUnique({
       where: { userId: session.user.id },
       include: {
+        university: {
+          select: { code: true },
+        },
         completedCourses: {
           include: {
             course: {
@@ -63,7 +66,7 @@ export async function GET(
 
     // Fetch all courses for graph building
     const allCourses = await prisma.course.findMany({
-      where: { university: student.university, isActive: true },
+      where: { universityId: student.universityId, isActive: true },
       include: {
         prerequisites: {
           include: {
@@ -118,7 +121,7 @@ export async function GET(
     const eligibility = checkCourseEligibility(
       courseForCheck,
       completedCourses,
-      { university: student.university }
+      { university: student.university.code }
     )
 
     // Get prerequisite tree

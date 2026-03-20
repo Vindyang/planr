@@ -19,7 +19,7 @@ export function ProfessorReviewCard({ review, onEdit, onDelete }: ProfessorRevie
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <span className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-            {review.professor.department}
+            {review.professor.department.name}
           </span>
           <h3 className="font-serif text-base font-medium">{review.professor.name}</h3>
           {review.course && (

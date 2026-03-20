@@ -304,6 +304,9 @@ export const getValidationResult = cache(async (studentId: string): Promise<Vali
   const student = await prisma.student.findUnique({
     where: { id: studentId },
     include: {
+      university: {
+        select: { code: true },
+      },
       completedCourses: {
         include: {
           course: {
@@ -348,7 +351,7 @@ export const getValidationResult = cache(async (studentId: string): Promise<Vali
   // Fetch all courses with prerequisites for validation
   const allCourses = await prisma.course.findMany({
     where: {
-      university: student.university,
+      universityId: student.universityId,
       isActive: true,
     },
     include: {
@@ -405,7 +408,7 @@ export const getValidationResult = cache(async (studentId: string): Promise<Vali
     semesters,
     completedCourses,
     allCourses: coursesWithPrereqs,
-    university: student.university,
+    university: student.university.code,
   }
 
   // Run validation

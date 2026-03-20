@@ -33,7 +33,7 @@ export const getEligibilityForCourse = cache(async (
   // 3. Get All Courses for Graph (Network Heavy - Keep this optimized)
   // We heavily rely on 'getAllCoursesForUniversity' being cached or fast.
   // In a real app, we might cache this graph in memory or Redis.
-  const allCourses = await getAllCoursesForUniversity(student.university)
+  const allCourses = await getAllCoursesForUniversity(student.universityId)
 
   // 4. Transform data for eligibility checker logic
   const courseForCheck: CourseWithPrereqs = {
@@ -77,7 +77,7 @@ export const getEligibilityForCourse = cache(async (
   const eligibility = checkCourseEligibility(
     courseForCheck,
     completedCourses,
-    { university: student.university }
+    { university: student.university.code }
   )
 
   const prerequisiteTree = getPrerequisiteChain(

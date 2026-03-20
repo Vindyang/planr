@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma"
 import { cache } from "react"
-import { University } from "@prisma/client"
 
 export const getCourseWithPrerequisites = cache(async (courseId: string) => {
   return await prisma.course.findUnique({
@@ -26,9 +25,9 @@ export const getCourseWithPrerequisites = cache(async (courseId: string) => {
 
 // Optimized query with all display fields for dashboard
 // Includes description, tags, and termsOffered in initial query
-export const getCoursesWithDisplayData = cache(async (university: University) => {
+export const getCoursesWithDisplayData = cache(async (universityId: string) => {
   return await prisma.course.findMany({
-    where: { university, isActive: true },
+    where: { universityId, isActive: true },
     select: {
       id: true,
       code: true,
@@ -55,9 +54,9 @@ export const getCoursesWithDisplayData = cache(async (university: University) =>
   })
 })
 
-export const getAllCoursesForUniversity = cache(async (university: University) => {
+export const getAllCoursesForUniversity = cache(async (universityId: string) => {
   return await prisma.course.findMany({
-    where: { university, isActive: true },
+    where: { universityId, isActive: true },
     include: {
       prerequisites: {
         include: {

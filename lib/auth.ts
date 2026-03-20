@@ -11,6 +11,20 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: true,
+        defaultValue: "STUDENT",
+        // SECURITY: All signups default to STUDENT role
+        // Admin accounts are created by:
+        //   1. Seed script (first admin)
+        //   2. Existing admins via "Create Admin" feature in admin panel
+        input: false,
+      },
+    },
+  },
 });
 
 export const getSession = cache(async () => {

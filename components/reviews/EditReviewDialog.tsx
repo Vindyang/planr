@@ -40,7 +40,7 @@ export function EditReviewDialog({
   const label =
     type === "course"
       ? `${(review as CourseReviewData).course.code} - ${(review as CourseReviewData).course.title}`
-      : `${(review as ProfessorReviewData).professor.name} (${(review as ProfessorReviewData).professor.department})`
+      : `${(review as ProfessorReviewData).professor.name} (${(review as ProfessorReviewData).professor.department.name})`
 
   const handleSubmit = async () => {
     if (rating === 0 || difficultyRating === 0 || workloadRating === 0) {

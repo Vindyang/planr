@@ -4,11 +4,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Breadcrumbs } from "./Breadcrumbs";
 
 export function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Determine profile URL based on current route
+  const profileUrl = pathname.startsWith("/admin") ? "/admin/profile" : "/student/profile";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -43,7 +47,7 @@ export function Navbar() {
             <IconBell className="h-5 w-5" />
             <span className="sr-only">Notifications</span>
           </Button>
-          <Link href="/student/profile">
+          <Link href={profileUrl}>
             <Button variant="ghost" size="icon" className="rounded-full">
               <IconUserCircle className="h-6 w-6" />
               <span className="sr-only">User Profile</span>

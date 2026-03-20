@@ -90,7 +90,6 @@ export async function POST() {
       })
 
       if (existingUser) {
-        console.log(`User ${account.email} already exists, skipping...`)
         continue
       }
 
@@ -104,12 +103,35 @@ export async function POST() {
       })
 
       if (result) {
+        // Look up university by code
+        const university = await prisma.university.findUnique({
+          where: { code: account.university },
+        })
+
+        if (!university) {
+          console.error(`❌ University ${account.university} not found`)
+          continue
+        }
+
+        // Look up department (major) by name
+        const major = await prisma.department.findFirst({
+          where: {
+            universityId: university.id,
+            name: account.major,
+          },
+        })
+
+        if (!major) {
+          console.error(`❌ Major ${account.major} not found at ${account.university}`)
+          continue
+        }
+
         // Create student profile
         await prisma.student.create({
           data: {
             userId: result.user.id,
-            university: account.university,
-            major: account.major,
+            universityId: university.id,
+            majorId: major.id,
             year: account.year,
             enrollmentYear: account.enrollmentYear,
             expectedGraduationYear: account.expectedGraduationYear,
