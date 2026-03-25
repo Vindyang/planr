@@ -73,3 +73,36 @@ export const getReviewAggregates = cache(async (courseId: string) => {
     totalReviews: result._count,
   }
 })
+
+export const getBulkReviewAggregates = cache(async (courseIds: string[]) => {
+  if (courseIds.length === 0) return {}
+
+  const reviews = await prisma.courseReview.groupBy({
+    by: ["courseId"],
+    where: { courseId: { in: courseIds } },
+    _avg: {
+      rating: true,
+      difficultyRating: true,
+      workloadRating: true,
+    },
+    _count: true,
+  })
+
+  return reviews.reduce(
+    (acc, review) => {
+      acc[review.courseId] = {
+        averageRating: review._avg.rating ?? 0,
+        averageDifficulty: review._avg.difficultyRating ?? 0,
+        averageWorkload: review._avg.workloadRating ?? 0,
+        totalReviews: review._count,
+      }
+      return acc
+    },
+    {} as Record<string, {
+      averageRating: number
+      averageDifficulty: number
+      averageWorkload: number
+      totalReviews: number
+    }>
+  )
+})

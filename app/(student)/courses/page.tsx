@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { unstable_cache } from "next/cache"
 import CoursesClient from "./CoursesClient"
 import { CoursesPageSkeleton } from "./skeleton/CoursesPageSkeleton"
+import { getBulkReviewAggregates } from "@/lib/data/reviews"
 
 // Cache courses data for 10 minutes since it rarely changes
 const getCachedCourses = unstable_cache(
@@ -89,10 +90,15 @@ async function CoursesContent() {
   // Then fetch courses using cached query
   const courses = await getCachedCourses(student.universityId)
 
+  // Fetch review aggregates for all courses
+  const courseIds = courses.map(c => c.id)
+  const reviewAggregates = await getBulkReviewAggregates(courseIds)
+
   return (
     <CoursesClient
       initialCourses={courses}
       initialStudent={student}
+      reviewAggregates={reviewAggregates}
     />
   )
 }

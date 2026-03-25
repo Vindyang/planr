@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
-import { IconSearch } from "@tabler/icons-react"
+import { IconSearch, IconStar, IconStarFilled } from "@tabler/icons-react"
 import {
   checkCourseEligibility,
   CourseWithPrereqs,
@@ -47,11 +47,18 @@ interface StudentData {
 interface CoursesClientProps {
   initialCourses: CourseData[]
   initialStudent: StudentData
+  reviewAggregates: Record<string, {
+    averageRating: number
+    averageDifficulty: number
+    averageWorkload: number
+    totalReviews: number
+  }>
 }
 
 export default function CoursesClient({
   initialCourses,
   initialStudent,
+  reviewAggregates,
 }: CoursesClientProps) {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") || "")
@@ -234,9 +241,30 @@ export default function CoursesClient({
                   {course.title}
                 </h3>
 
-                <p className="text-sm text-muted-foreground mb-6 line-clamp-2 flex-grow">
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-grow">
                   {course.description}
                 </p>
+
+                {/* Review Summary */}
+                {reviewAggregates[course.id] && reviewAggregates[course.id].totalReviews > 0 ? (
+                  <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <IconStarFilled size={14} className="text-yellow-500" />
+                      <span className="font-medium text-foreground">
+                        {reviewAggregates[course.id].averageRating.toFixed(1)}
+                      </span>
+                    </div>
+                    <span>•</span>
+                    <span>
+                      {reviewAggregates[course.id].totalReviews} {reviewAggregates[course.id].totalReviews === 1 ? 'review' : 'reviews'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 mb-4 text-xs text-muted-foreground">
+                    <IconStar size={14} />
+                    <span>No reviews yet</span>
+                  </div>
+                )}
 
                 <div className="mt-auto flex justify-between items-center border-t border-muted pt-4">
                   {status === "completed" && (
