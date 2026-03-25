@@ -35,6 +35,7 @@ type PlannerBoardProps = {
   onToggleSelectionMode: () => void
   onBulkDelete: () => void
   onCancelSelection: () => void
+  onOpenAIModal: () => void
 }
 
 export function PlannerBoard({
@@ -53,6 +54,7 @@ export function PlannerBoard({
   onToggleSelectionMode,
   onBulkDelete,
   onCancelSelection,
+  onOpenAIModal,
 }: PlannerBoardProps) {
   
   // Find active item for overlay
@@ -122,24 +124,39 @@ export function PlannerBoard({
                     </div>
 
                     <div className="pt-2 flex items-center gap-4">
-                        {!isSelectionMode && data.semesterPlans.length > 0 && (
+                        {!isSelectionMode && (
                             <>
-                                <AddCourseDialog
-                                    availableCourses={data.availableCourses}
-                                    plannedCourseIds={plannedCourseIds}
-                                    semesterPlans={data.semesterPlans}
-                                    onAddCourse={onAddCourse}
-                                    onAddCourses={onAddCourses}
-                                />
-                                {/* Delete Courses Button */}
-                                {plannedCourseIds.size > 0 && (
-                                    <button
-                                        className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
-                                        onClick={onToggleSelectionMode}
-                                    >
-                                        <IconChecks size={18} stroke={1.5} />
-                                        <span>Delete Courses</span>
-                                    </button>
+                                {/* AI Recommendation Button - Always show */}
+                                <button
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                    onClick={onOpenAIModal}
+                                >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                    </svg>
+                                    <span>AI Recommend</span>
+                                </button>
+                                {/* Show Add Course and Delete buttons only when plans exist */}
+                                {data.semesterPlans.length > 0 && (
+                                    <>
+                                        <AddCourseDialog
+                                            availableCourses={data.availableCourses}
+                                            plannedCourseIds={plannedCourseIds}
+                                            semesterPlans={data.semesterPlans}
+                                            onAddCourse={onAddCourse}
+                                            onAddCourses={onAddCourses}
+                                        />
+                                        {/* Delete Courses Button */}
+                                        {plannedCourseIds.size > 0 && (
+                                            <button
+                                                className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                                onClick={onToggleSelectionMode}
+                                            >
+                                                <IconChecks size={18} stroke={1.5} />
+                                                <span>Delete Courses</span>
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </>
                         )}
