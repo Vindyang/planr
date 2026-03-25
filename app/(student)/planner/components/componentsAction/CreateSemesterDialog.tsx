@@ -31,7 +31,7 @@ type CreateSemesterDialogProps = {
 export function CreateSemesterDialog({ 
   onCreate, 
   defaultYear = new Date().getFullYear(),
-  defaultTerm = "Fall",
+  defaultTerm = "Term 1",
   children
 }: CreateSemesterDialogProps & { children?: React.ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -77,10 +77,9 @@ export function CreateSemesterDialog({
                 <SelectValue placeholder="Select term" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Spring">Spring</SelectItem>
-                <SelectItem value="Summer">Summer</SelectItem>
-                <SelectItem value="Fall">Fall</SelectItem>
-                <SelectItem value="Winter">Winter</SelectItem>
+                <SelectItem value="Term 1">Term 1 (Aug-Jan)</SelectItem>
+                <SelectItem value="Term 2">Term 2 (Jan-Apr)</SelectItem>
+                <SelectItem value="Term 3">Term 3 (May-Aug)</SelectItem>
               </SelectContent>
             </Select>
           </div>

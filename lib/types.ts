@@ -11,14 +11,14 @@ export interface Course {
   description: string;
   units: number;
   prerequisites: Prerequisite[];
-  termsOffered: string[]; // e.g., ["Fall", "Spring"]
+  termsOffered: string[]; // e.g., ["Term 1", "Term 2"]
   tags?: string[];
 }
 
 export interface CompletedCourse {
   courseId: string;
   grade: string; // e.g., "A", "B+", "IP" (In Progress)
-  term: string; // e.g., "2023-Fall"
+  term: string; // e.g., "2023-Term 1"
 }
 
 export interface Student {

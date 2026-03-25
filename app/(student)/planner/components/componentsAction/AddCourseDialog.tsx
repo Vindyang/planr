@@ -47,9 +47,9 @@ export function AddCourseDialog({
     return availableCourses.filter((course) => !plannedCourseIds.has(course.id))
   }, [availableCourses, plannedCourseIds])
 
-  // Sort plans logically Fall -> Winter -> Spring -> Summer, and by Year
+  // Sort plans logically Term 1 -> Term 2 -> Term 3, and by Year
   const sortedPlans = React.useMemo(() => {
-    const termOrder: Record<string, number> = { "Fall": 1, "Winter": 2, "Spring": 3, "Summer": 4 }
+    const termOrder: Record<string, number> = { "Term 1": 1, "Term 2": 2, "Term 3": 3 }
     return [...semesterPlans].sort((a, b) => {
       if (a.year !== b.year) return a.year - b.year
       return (termOrder[a.term] || 99) - (termOrder[b.term] || 99)

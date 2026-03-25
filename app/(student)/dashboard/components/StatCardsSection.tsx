@@ -8,7 +8,7 @@ function getNextSemesterFromPlans(
   const now = new Date()
   const month = now.getMonth()
   const year = now.getFullYear()
-  const targetTerm = month >= 0 && month <= 4 ? "Spring" : "Fall"
+  const targetTerm = month >= 0 && month <= 3 ? "Term 2" : month >= 4 && month <= 6 ? "Term 3" : "Term 1"
 
   const plan = semesterPlans.find(
     (p) => p.term === targetTerm && p.year === year

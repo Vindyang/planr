@@ -90,18 +90,18 @@ function findRelevantSemester(plans: SemesterPlan[]) {
   let targetTerm: string
   let targetYear: number
 
-  // Determine target semester based on current month
-  if (month >= 0 && month <= 4) {
-    // Jan-May: Spring semester
-    targetTerm = "Spring"
+  // Determine target semester based on current month (SMU calendar)
+  if (month >= 0 && month <= 3) {
+    // Jan-Apr: Term 2
+    targetTerm = "Term 2"
     targetYear = year
-  } else if (month >= 7 && month <= 11) {
-    // Aug-Dec: Fall semester
-    targetTerm = "Fall"
+  } else if (month >= 4 && month <= 6) {
+    // May-Jul: Term 3
+    targetTerm = "Term 3"
     targetYear = year
   } else {
-    // Jun-Jul: Fall semester
-    targetTerm = "Fall"
+    // Aug-Dec: Term 1
+    targetTerm = "Term 1"
     targetYear = year
   }
 
@@ -114,7 +114,7 @@ function findRelevantSemester(plans: SemesterPlan[]) {
   // Otherwise return the earliest upcoming semester
   const sorted = [...plans].sort((a, b) => {
     if (a.year !== b.year) return a.year - b.year
-    const termOrder: Record<string, number> = { Spring: 0, Summer: 1, Fall: 2 }
+    const termOrder: Record<string, number> = { "Term 1": 0, "Term 2": 1, "Term 3": 2 }
     return (termOrder[a.term] || 0) - (termOrder[b.term] || 0)
   })
 

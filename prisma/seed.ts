@@ -160,7 +160,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Introduction to Information Systems",
         description: "Fundamental concepts of information systems and their role in organizations.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 1"],
         isActive: true,
       },
@@ -171,7 +171,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Database Systems",
         description: "Database design, SQL, and database management systems.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 2"],
         isActive: true,
       },
@@ -182,7 +182,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Web Application Development",
         description: "Modern web development using React, Node.js, and databases.",
         units: 4,
-        termsOffered: ["Spring"],
+        termsOffered: ["Term 2"],
         tags: ["Elective", "Year 3"],
         isActive: true,
       },
@@ -193,7 +193,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Web Application Development I",
         description: "Introduction to web development with HTML, CSS, and JavaScript.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 2"],
         isActive: true,
       },
@@ -204,7 +204,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Data Management",
         description: "Introduction to data management and analytics.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 1"],
         isActive: true,
       },
@@ -216,7 +216,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Introduction to Programming",
         description: "Fundamental programming concepts using Python.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 1"],
         isActive: true,
       },
@@ -227,7 +227,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Programming Fundamentals",
         description: "Advanced programming concepts and problem-solving.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 1"],
         isActive: true,
       },
@@ -238,7 +238,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Data Structures and Algorithms",
         description: "Core data structures and algorithmic techniques.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 2"],
         isActive: true,
       },
@@ -249,7 +249,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Software Engineering",
         description: "Software development methodologies and practices.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 2"],
         isActive: true,
       },
@@ -260,7 +260,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Computer Networks",
         description: "Networking protocols and distributed systems.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 2"],
         isActive: true,
       },
@@ -271,7 +271,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Operating Systems",
         description: "OS design, process management, and memory systems.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 3"],
         isActive: true,
       },
@@ -282,7 +282,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Database Management Systems",
         description: "Advanced database concepts and implementation.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Core", "Year 3"],
         isActive: true,
       },
@@ -293,7 +293,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Artificial Intelligence",
         description: "Introduction to AI and machine learning concepts.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Elective", "Year 3"],
         isActive: true,
       },
@@ -304,7 +304,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Computer Graphics",
         description: "3D graphics, rendering, and visualization.",
         units: 4,
-        termsOffered: ["Fall"],
+        termsOffered: ["Term 1"],
         tags: ["Elective", "Year 3"],
         isActive: true,
       },
@@ -315,7 +315,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Cybersecurity",
         description: "Security principles and threat mitigation.",
         units: 4,
-        termsOffered: ["Spring"],
+        termsOffered: ["Term 2"],
         tags: ["Elective", "Year 3"],
         isActive: true,
       },
@@ -326,7 +326,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Advanced Algorithms",
         description: "Advanced algorithmic techniques and complexity theory.",
         units: 4,
-        termsOffered: ["Fall"],
+        termsOffered: ["Term 1"],
         tags: ["Elective", "Year 4"],
         isActive: true,
       },
@@ -337,7 +337,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Distributed Systems",
         description: "Design and implementation of distributed computing systems.",
         units: 4,
-        termsOffered: ["Spring"],
+        termsOffered: ["Term 2"],
         tags: ["Elective", "Year 4"],
         isActive: true,
       },
@@ -348,7 +348,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Machine Learning",
         description: "Deep learning and neural networks.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Elective", "Year 4"],
         isActive: true,
       },
@@ -359,7 +359,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Cloud Computing",
         description: "Cloud architecture and deployment strategies.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["Elective", "Year 4"],
         isActive: true,
       },
@@ -371,7 +371,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Introduction to Business",
         description: "Fundamentals of business management.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education"],
         isActive: true,
       },
@@ -382,7 +382,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Marketing Principles",
         description: "Marketing strategies and consumer behavior.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education"],
         isActive: true,
       },
@@ -393,7 +393,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Financial Accounting",
         description: "Accounting principles and financial reporting.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education"],
         isActive: true,
       },
@@ -404,7 +404,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Business Statistics",
         description: "Statistical methods for business analysis.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education"],
         isActive: true,
       },
@@ -416,7 +416,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Calculus I",
         description: "Introduction to differential calculus.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Math"],
         isActive: true,
       },
@@ -427,7 +427,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Calculus II",
         description: "Introduction to integral calculus.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Math"],
         isActive: true,
       },
@@ -438,7 +438,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Linear Algebra",
         description: "Matrices, vectors, and linear transformations.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Math"],
         isActive: true,
       },
@@ -449,7 +449,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Discrete Mathematics",
         description: "Logic, sets, and discrete structures.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Math"],
         isActive: true,
       },
@@ -460,7 +460,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "English Composition",
         description: "Academic writing and communication.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Writing"],
         isActive: true,
       },
@@ -471,7 +471,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Technical Writing",
         description: "Professional and technical communication.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Writing"],
         isActive: true,
       },
@@ -482,7 +482,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Microeconomics",
         description: "Economic principles and market systems.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Economics"],
         isActive: true,
       },
@@ -493,7 +493,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Macroeconomics",
         description: "National economic systems and policy.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Economics"],
         isActive: true,
       },
@@ -504,7 +504,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Physics I",
         description: "Mechanics and thermodynamics.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Science"],
         isActive: true,
       },
@@ -515,7 +515,7 @@ async function createSampleCourses(universityId: string, isDeptId: string, csDep
         title: "Introduction to Philosophy",
         description: "Major philosophical questions and traditions.",
         units: 4,
-        termsOffered: ["Fall", "Spring"],
+        termsOffered: ["Term 1", "Term 2"],
         tags: ["General Education", "Humanities"],
         isActive: true,
       },
@@ -597,7 +597,7 @@ async function createCourseInstructors(courses: any[], professors: any[]) {
     data: {
       courseId: courses[0].id, // IS101
       professorId: professors[0].id, // Dr. Sarah Johnson
-      term: "Fall 2024",
+      term: "Term 1 2024",
     },
   })
 
@@ -606,7 +606,7 @@ async function createCourseInstructors(courses: any[], professors: any[]) {
     data: {
       courseId: courses[1].id, // IS210
       professorId: professors[1].id, // Prof. Michael Lee
-      term: "Fall 2024",
+      term: "Term 1 2024",
     },
   })
 
@@ -615,7 +615,7 @@ async function createCourseInstructors(courses: any[], professors: any[]) {
     data: {
       courseId: courses[2].id, // IS315
       professorId: professors[2].id, // Dr. Rachel Tan
-      term: "Spring 2025",
+      term: "Term 2 2025",
     },
   })
 
@@ -624,7 +624,7 @@ async function createCourseInstructors(courses: any[], professors: any[]) {
     data: {
       courseId: courses[3].id, // CS101
       professorId: professors[3].id, // Prof. David Wong
-      term: "Fall 2024",
+      term: "Term 1 2024",
     },
   })
 
@@ -633,7 +633,7 @@ async function createCourseInstructors(courses: any[], professors: any[]) {
     data: {
       courseId: courses[4].id, // CS201
       professorId: professors[4].id, // Dr. Emily Zhang
-      term: "Fall 2024",
+      term: "Term 1 2024",
     },
   })
 
@@ -753,14 +753,14 @@ async function createTestStudents(universityId: string, isDeptId: string, course
     // Add 8 completed courses
     await prisma.completedCourse.createMany({
       data: [
-        { studentId: sophomoreStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A-", term: "Fall 2023" },
-        { studentId: sophomoreStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "B+", term: "Fall 2023" },
-        { studentId: sophomoreStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Fall 2023" },
-        { studentId: sophomoreStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B", term: "Fall 2023" },
-        { studentId: sophomoreStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A-", term: "Spring 2024" },
-        { studentId: sophomoreStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "B+", term: "Spring 2024" },
-        { studentId: sophomoreStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Spring 2024" },
-        { studentId: sophomoreStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "B+", term: "Spring 2024" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A-", term: "Term 1 2023" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "B+", term: "Term 1 2023" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Term 1 2023" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B", term: "Term 1 2023" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A-", term: "Term 2 2024" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "B+", term: "Term 2 2024" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Term 2 2024" },
+        { studentId: sophomoreStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "B+", term: "Term 2 2024" },
       ],
     })
     students.push(sophomoreStudent)
@@ -800,31 +800,31 @@ async function createTestStudents(universityId: string, isDeptId: string, course
     // Add 20 completed courses
     await prisma.completedCourse.createMany({
       data: [
-        // Year 1 - Fall
-        { studentId: juniorStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A", term: "Fall 2022" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "A-", term: "Fall 2022" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Fall 2022" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B+", term: "Fall 2022" },
-        // Year 1 - Spring
-        { studentId: juniorStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A", term: "Spring 2023" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "A-", term: "Spring 2023" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Spring 2023" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "A-", term: "Spring 2023" },
-        // Year 2 - Fall
-        { studentId: juniorStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "A-", term: "Fall 2023" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("CS201")!.id, grade: "A", term: "Fall 2023" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "A-", term: "Fall 2023" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "B+", term: "Fall 2023" },
-        // Year 2 - Spring
-        { studentId: juniorStudent.id, courseId: getCourseByCode("IS216")!.id, grade: "A", term: "Spring 2024" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("CS202")!.id, grade: "A-", term: "Spring 2024" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH202")!.id, grade: "A", term: "Spring 2024" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("ENG102")!.id, grade: "B+", term: "Spring 2024" },
-        // Year 3 - Fall
-        { studentId: juniorStudent.id, courseId: getCourseByCode("IS315")!.id, grade: "A", term: "Fall 2024" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("CS301")!.id, grade: "A-", term: "Fall 2024" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("CS303")!.id, grade: "A", term: "Fall 2024" },
-        { studentId: juniorStudent.id, courseId: getCourseByCode("BUS201")!.id, grade: "B+", term: "Fall 2024" },
+        // Year 1 - Term 1
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A", term: "Term 1 2022" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "A-", term: "Term 1 2022" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Term 1 2022" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B+", term: "Term 1 2022" },
+        // Year 1 - Term 2
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A", term: "Term 2 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "A-", term: "Term 2 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Term 2 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "A-", term: "Term 2 2023" },
+        // Year 2 - Term 1
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "A-", term: "Term 1 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS201")!.id, grade: "A", term: "Term 1 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "A-", term: "Term 1 2023" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "B+", term: "Term 1 2023" },
+        // Year 2 - Term 2
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS216")!.id, grade: "A", term: "Term 2 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS202")!.id, grade: "A-", term: "Term 2 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("MATH202")!.id, grade: "A", term: "Term 2 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("ENG102")!.id, grade: "B+", term: "Term 2 2024" },
+        // Year 3 - Term 1
+        { studentId: juniorStudent.id, courseId: getCourseByCode("IS315")!.id, grade: "A", term: "Term 1 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS301")!.id, grade: "A-", term: "Term 1 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("CS303")!.id, grade: "A", term: "Term 1 2024" },
+        { studentId: juniorStudent.id, courseId: getCourseByCode("BUS201")!.id, grade: "B+", term: "Term 1 2024" },
       ],
     })
     students.push(juniorStudent)
@@ -864,46 +864,46 @@ async function createTestStudents(universityId: string, isDeptId: string, course
     // Add 32 completed courses
     await prisma.completedCourse.createMany({
       data: [
-        // Year 1 - Fall
-        { studentId: seniorStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A", term: "Fall 2021" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "A", term: "Fall 2021" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Fall 2021" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "A-", term: "Fall 2021" },
-        // Year 1 - Spring
-        { studentId: seniorStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A", term: "Spring 2022" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "A", term: "Spring 2022" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Spring 2022" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "A-", term: "Spring 2022" },
-        // Year 2 - Fall
-        { studentId: seniorStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "A", term: "Fall 2022" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS201")!.id, grade: "A", term: "Fall 2022" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "A-", term: "Fall 2022" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "A", term: "Fall 2022" },
-        // Year 2 - Spring
-        { studentId: seniorStudent.id, courseId: getCourseByCode("IS216")!.id, grade: "A", term: "Spring 2023" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS202")!.id, grade: "A", term: "Spring 2023" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS203")!.id, grade: "A-", term: "Spring 2023" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH202")!.id, grade: "A", term: "Spring 2023" },
-        // Year 3 - Fall
-        { studentId: seniorStudent.id, courseId: getCourseByCode("IS315")!.id, grade: "A", term: "Fall 2023" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS301")!.id, grade: "A", term: "Fall 2023" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS302")!.id, grade: "A-", term: "Fall 2023" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS303")!.id, grade: "A", term: "Fall 2023" },
-        // Year 3 - Spring
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS304")!.id, grade: "A-", term: "Spring 2024" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS305")!.id, grade: "A", term: "Spring 2024" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS201")!.id, grade: "A", term: "Spring 2024" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("ENG102")!.id, grade: "A-", term: "Spring 2024" },
-        // Year 4 - Fall
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS401")!.id, grade: "A", term: "Fall 2024" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS403")!.id, grade: "A", term: "Fall 2024" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS404")!.id, grade: "A-", term: "Fall 2024" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS202")!.id, grade: "A", term: "Fall 2024" },
-        // Year 4 - Spring (current)
-        { studentId: seniorStudent.id, courseId: getCourseByCode("CS402")!.id, grade: "A", term: "Spring 2025" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS203")!.id, grade: "A-", term: "Spring 2025" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("ECON102")!.id, grade: "A", term: "Spring 2025" },
-        { studentId: seniorStudent.id, courseId: getCourseByCode("PHYS101")!.id, grade: "A-", term: "Spring 2025" },
+        // Year 1 - Term 1
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "A", term: "Term 1 2021" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "A", term: "Term 1 2021" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "A", term: "Term 1 2021" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "A-", term: "Term 1 2021" },
+        // Year 1 - Term 2
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "A", term: "Term 2 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "A", term: "Term 2 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "A", term: "Term 2 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "A-", term: "Term 2 2022" },
+        // Year 2 - Term 1
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "A", term: "Term 1 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS201")!.id, grade: "A", term: "Term 1 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "A-", term: "Term 1 2022" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "A", term: "Term 1 2022" },
+        // Year 2 - Term 2
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS216")!.id, grade: "A", term: "Term 2 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS202")!.id, grade: "A", term: "Term 2 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS203")!.id, grade: "A-", term: "Term 2 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("MATH202")!.id, grade: "A", term: "Term 2 2023" },
+        // Year 3 - Term 1
+        { studentId: seniorStudent.id, courseId: getCourseByCode("IS315")!.id, grade: "A", term: "Term 1 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS301")!.id, grade: "A", term: "Term 1 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS302")!.id, grade: "A-", term: "Term 1 2023" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS303")!.id, grade: "A", term: "Term 1 2023" },
+        // Year 3 - Term 2
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS304")!.id, grade: "A-", term: "Term 2 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS305")!.id, grade: "A", term: "Term 2 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS201")!.id, grade: "A", term: "Term 2 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("ENG102")!.id, grade: "A-", term: "Term 2 2024" },
+        // Year 4 - Term 1
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS401")!.id, grade: "A", term: "Term 1 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS403")!.id, grade: "A", term: "Term 1 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS404")!.id, grade: "A-", term: "Term 1 2024" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS202")!.id, grade: "A", term: "Term 1 2024" },
+        // Year 4 - Term 2 (current)
+        { studentId: seniorStudent.id, courseId: getCourseByCode("CS402")!.id, grade: "A", term: "Term 2 2025" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("BUS203")!.id, grade: "A-", term: "Term 2 2025" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("ECON102")!.id, grade: "A", term: "Term 2 2025" },
+        { studentId: seniorStudent.id, courseId: getCourseByCode("PHYS101")!.id, grade: "A-", term: "Term 2 2025" },
       ],
     })
     students.push(seniorStudent)
@@ -943,21 +943,21 @@ async function createTestStudents(universityId: string, isDeptId: string, course
     // Add 12 completed courses with lower grades, including D in CS102
     await prisma.completedCourse.createMany({
       data: [
-        // Year 1 - Fall
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "C+", term: "Fall 2022" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "C", term: "Fall 2022" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "C-", term: "Fall 2022" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B-", term: "Fall 2022" },
-        // Year 1 - Spring
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "C", term: "Spring 2023" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "D", term: "Spring 2023" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "C", term: "Spring 2023" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "C+", term: "Spring 2023" },
-        // Year 2 - Fall
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "C-", term: "Fall 2023" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "C", term: "Fall 2023" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "B", term: "Fall 2023" },
-        { studentId: strugglingStudent.id, courseId: getCourseByCode("PHIL101")!.id, grade: "B+", term: "Fall 2023" },
+        // Year 1 - Term 1
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS101")!.id, grade: "C+", term: "Term 1 2022" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("CS101")!.id, grade: "C", term: "Term 1 2022" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH101")!.id, grade: "C-", term: "Term 1 2022" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("ENG101")!.id, grade: "B-", term: "Term 1 2022" },
+        // Year 1 - Term 2
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS112")!.id, grade: "C", term: "Term 2 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("CS102")!.id, grade: "D", term: "Term 2 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH102")!.id, grade: "C", term: "Term 2 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("ECON101")!.id, grade: "C+", term: "Term 2 2023" },
+        // Year 2 - Term 1
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("IS210")!.id, grade: "C-", term: "Term 1 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("MATH201")!.id, grade: "C", term: "Term 1 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("BUS101")!.id, grade: "B", term: "Term 1 2023" },
+        { studentId: strugglingStudent.id, courseId: getCourseByCode("PHIL101")!.id, grade: "B+", term: "Term 1 2023" },
       ],
     })
     students.push(strugglingStudent)
@@ -983,7 +983,7 @@ async function createReviews(student: any, courses: any[], professors: any[]) {
       difficultyRating: 3,
       workloadRating: 3,
       content: "Great introductory course! Dr. Johnson explains concepts clearly and the assignments are practical.",
-      term: "Fall 2023",
+      term: "Term 1 2023",
     },
   })
 
@@ -996,7 +996,7 @@ async function createReviews(student: any, courses: any[], professors: any[]) {
       difficultyRating: 2,
       workloadRating: 3,
       content: "Solid programming fundamentals. Good for beginners but can be slow if you have prior experience.",
-      term: "Fall 2023",
+      term: "Term 1 2023",
     },
   })
 
@@ -1010,7 +1010,7 @@ async function createReviews(student: any, courses: any[], professors: any[]) {
       difficultyRating: 3,
       workloadRating: 3,
       content: "Dr. Johnson is an excellent teacher. She's approachable, responsive, and really cares about student learning.",
-      term: "Fall 2023",
+      term: "Term 1 2023",
     },
   })
 
@@ -1024,7 +1024,7 @@ async function createReviews(student: any, courses: any[], professors: any[]) {
       difficultyRating: 2,
       workloadRating: 3,
       content: "Prof. Wong is knowledgeable and organized. Lectures can be a bit dry but the content is solid.",
-      term: "Fall 2023",
+      term: "Term 1 2023",
     },
   })
 

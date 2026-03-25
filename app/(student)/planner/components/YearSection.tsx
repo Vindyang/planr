@@ -22,8 +22,8 @@ type YearSectionProps = {
 }
 
 export function YearSection({ year, plans, onRemoveCourse, onDeletePlan, onCreatePlan, isSelectionMode, selectedCourses, onToggleSelection }: YearSectionProps) {
-  // Sort plans: Fall -> Winter -> Spring -> Summer
-  const termOrder: Record<string, number> = { "Fall": 1, "Winter": 2, "Spring": 3, "Summer": 4 }
+  // Sort plans: Term 1 -> Term 2 -> Term 3
+  const termOrder: Record<string, number> = { "Term 1": 1, "Term 2": 2, "Term 3": 3 }
   
   const sortedPlans = [...plans].sort((a, b) => {
       return (termOrder[a.term] || 99) - (termOrder[b.term] || 99)
@@ -31,11 +31,11 @@ export function YearSection({ year, plans, onRemoveCourse, onDeletePlan, onCreat
 
   // Calculate default term for next semester based on existing plans
   const getNextTerm = () => {
-      const terms = ["Fall", "Winter", "Spring", "Summer"]
-      if (sortedPlans.length === 0) return "Fall"
+      const terms = ["Term 1", "Term 2", "Term 3"]
+      if (sortedPlans.length === 0) return "Term 1"
       const lastTerm = sortedPlans[sortedPlans.length - 1].term
       const idx = terms.indexOf(lastTerm)
-      if (idx === -1 || idx === terms.length - 1) return "Fall"
+      if (idx === -1 || idx === terms.length - 1) return "Term 1"
       return terms[idx + 1]
   }
 

@@ -9,7 +9,7 @@ export const MOCK_COURSES: Course[] = [
     description: "Fundamental concepts of computing and programming.",
     units: 1,
     prerequisites: [],
-    termsOffered: ["Fall", "Spring"],
+    termsOffered: ["Term 1", "Term 2"],
     tags: ["Core"],
   },
   {
@@ -19,7 +19,7 @@ export const MOCK_COURSES: Course[] = [
     description: "Basic programming constructs, functions, and arrays.",
     units: 1,
     prerequisites: [{ courseId: "CS101", type: "hard" }],
-    termsOffered: ["Fall", "Spring"],
+    termsOffered: ["Term 1", "Term 2"],
     tags: ["Core"],
   },
   {
@@ -29,7 +29,7 @@ export const MOCK_COURSES: Course[] = [
     description: "Lists, stacks, queues, trees, graphs, and hash tables.",
     units: 1,
     prerequisites: [{ courseId: "CS102", type: "hard" }],
-    termsOffered: ["Fall", "Spring"],
+    termsOffered: ["Term 1", "Term 2"],
     tags: ["Core"],
   },
   {
@@ -39,7 +39,7 @@ export const MOCK_COURSES: Course[] = [
     description: "Analysis of algorithms, sorting, searching, and graph algorithms.",
     units: 1,
     prerequisites: [{ courseId: "CS201", type: "hard" }],
-    termsOffered: ["Fall", "Spring"],
+    termsOffered: ["Term 1", "Term 2"],
     tags: ["Core"],
   },
   {
@@ -49,7 +49,7 @@ export const MOCK_COURSES: Course[] = [
     description: "Principles of software design, development, and testing.",
     units: 1,
     prerequisites: [{ courseId: "CS201", type: "hard" }],
-    termsOffered: ["Spring"],
+    termsOffered: ["Term 2"],
     tags: ["Elective"],
   },
    {
@@ -59,7 +59,7 @@ export const MOCK_COURSES: Course[] = [
     description: "Introduction to AI, search, logic, and machine learning.",
     units: 1,
     prerequisites: [{ courseId: "CS202", type: "hard" }],
-    termsOffered: ["Fall"],
+    termsOffered: ["Term 1"],
     tags: ["Elective", "AI"],
   },
    {
@@ -69,7 +69,7 @@ export const MOCK_COURSES: Course[] = [
     description: "Managing the software product lifecycle from conception to launch.",
     units: 1,
     prerequisites: [{ courseId: "CS102", type: "hard" }],
-    termsOffered: ["Fall", "Spring"],
+    termsOffered: ["Term 1", "Term 2"],
     tags: ["Core"],
   }
 ];
@@ -82,8 +82,8 @@ export const MOCK_STUDENT: Student = {
   enrollmentYear: 2024,
   gpa: 3.67,
   completedCourses: [
-    { courseId: "CS101", grade: "A", term: "2024-Fall" },
-    { courseId: "CS102", grade: "B+", term: "2024-Spring" },
+    { courseId: "CS101", grade: "A", term: "2024-Term 1" },
+    { courseId: "CS102", grade: "B+", term: "2024-Term 2" },
     // Has NOT taken CS201 yet
   ],
 };

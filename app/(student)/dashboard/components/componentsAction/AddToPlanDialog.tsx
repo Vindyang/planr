@@ -31,10 +31,9 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
   // Helper functions for smart defaults
   const getDefaultTerm = () => {
     const month = new Date().getMonth() + 1
-    if (month >= 1 && month <= 3) return "Spring"
-    if (month >= 4 && month <= 6) return "Summer"
-    if (month >= 7 && month <= 9) return "Fall"
-    return "Winter"
+    if (month >= 1 && month <= 4) return "Term 2"
+    if (month >= 5 && month <= 7) return "Term 3"
+    return "Term 1"
   }
 
   const getDefaultYear = () => {
@@ -144,10 +143,9 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Spring">Spring</SelectItem>
-                      <SelectItem value="Summer">Summer</SelectItem>
-                      <SelectItem value="Fall">Fall</SelectItem>
-                      <SelectItem value="Winter">Winter</SelectItem>
+                      <SelectItem value="Term 1">Term 1 (Aug-Jan)</SelectItem>
+                      <SelectItem value="Term 2">Term 2 (Jan-Apr)</SelectItem>
+                      <SelectItem value="Term 3">Term 3 (May-Aug)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

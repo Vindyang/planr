@@ -238,7 +238,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
   const currentYear = new Date().getFullYear()
   const termOptions: string[] = []
   for (let year = currentYear; year >= currentYear - 5; year--) {
-    termOptions.push(`${year}-Fall`, `${year}-Spring`)
+    termOptions.push(`${year}-Term 1`, `${year}-Term 2`, `${year}-Term 3`)
   }
 
   // Calculate total units from completed courses

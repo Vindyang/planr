@@ -211,7 +211,7 @@ export function PlannerBoard({
                                 <CreateSemesterDialog 
                                     onCreate={onCreatePlan}
                                     defaultYear={sortedYears[sortedYears.length - 1] + 1}
-                                    defaultTerm="Fall"
+                                    defaultTerm="Term 1"
                                 >
                                     <button className="flex flex-col items-center gap-4 group">
                                         <div className="w-16 h-16 rounded-full border border-[#DAD6CF] bg-white flex items-center justify-center text-[#DAD6CF] group-hover:text-[#0A0A0A] group-hover:border-[#0A0A0A] transition-all">
