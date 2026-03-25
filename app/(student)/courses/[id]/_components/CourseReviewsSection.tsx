@@ -26,7 +26,6 @@ interface CourseReviewsSectionProps {
   isCompleted: boolean
   hasReviewed: boolean
   initialCourseReviews: CourseReviewData[]
-  initialAggregates: ReviewAggregates
   initialProfessors: Array<{ id: string; name: string; department: string }>
   completedCourses: CompletedCourseOption[]
 }
@@ -50,7 +49,6 @@ export function CourseReviewsSection({
   isCompleted,
   hasReviewed,
   initialCourseReviews,
-  initialAggregates,
   initialProfessors,
   completedCourses,
 }: CourseReviewsSectionProps) {

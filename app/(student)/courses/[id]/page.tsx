@@ -8,7 +8,7 @@ import { EligibilityStatus } from "@/lib/eligibility"
 import { getCourseWithPrerequisites } from "@/lib/data/courses"
 import { getStudentProfile } from "@/lib/data/students"
 import { getEligibilityForCourse } from "@/lib/eligibility/service"
-import { getCourseReviewsByCourse, getReviewAggregates } from "@/lib/data/reviews"
+import { getCourseReviewsByCourse } from "@/lib/data/reviews"
 import { getProfessorsByCourse } from "@/lib/data/professors"
 import { getPlannerData } from "@/lib/planner/actions"
 import { CourseReviewsSection } from "./_components/CourseReviewsSection"
@@ -23,11 +23,10 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
 
   // 1. Parallel Data Fetching
-  const [course, student, courseReviews, reviewAggregates, fetchedProfessors] = await Promise.all([
+  const [course, student, courseReviews, fetchedProfessors] = await Promise.all([
     getCourseWithPrerequisites(id),
     getStudentProfile(session.user.id),
     getCourseReviewsByCourse(id),
-    getReviewAggregates(id),
     getProfessorsByCourse(id),
   ])
 
@@ -413,7 +412,6 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                     studentName: r.isAnonymous ? null : r.student.user.name,
                     isOwn: r.studentId === student?.id,
                   }))}
-                  initialAggregates={reviewAggregates}
                   initialProfessors={courseProfessors}
                   completedCourses={
                     student?.completedCourses
