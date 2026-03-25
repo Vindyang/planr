@@ -31,6 +31,19 @@ interface CourseReviewsSectionProps {
   completedCourses: CompletedCourseOption[]
 }
 
+async function parseApiError(response: Response, fallback: string) {
+  try {
+    const data = await response.json()
+    if (typeof data?.error === "string" && data.error.trim().length > 0) {
+      return data.error
+    }
+  } catch {
+    // ignore non-JSON errors and use fallback
+  }
+
+  return fallback
+}
+
 export function CourseReviewsSection({
   courseId,
   studentId,
@@ -117,22 +130,50 @@ export function CourseReviewsSection({
   const handleDeleteCourseReview = async (id: string) => {
     try {
       const res = await fetch(`/api/reviews/courses/${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Failed to delete")
+      if (!res.ok) {
+        const message = await parseApiError(res, "Failed to delete review")
+
+        // If it no longer exists, treat as successful cleanup to avoid false negatives.
+        if (res.status === 404 && message === "Review not found") {
+          toast.success("Review deleted")
+          fetchCourseReviews()
+          return
+        }
+
+        throw new Error(message)
+      }
+
       toast.success("Review deleted")
       fetchCourseReviews()
-    } catch {
-      toast.error("Failed to delete review")
+    } catch (error) {
+      toast.error("Failed to delete review", {
+        description: (error as Error).message,
+      })
     }
   }
 
   const handleDeleteProfessorReview = async (id: string) => {
     try {
       const res = await fetch(`/api/reviews/professors/${id}`, { method: "DELETE" })
-      if (!res.ok) throw new Error("Failed to delete")
+      if (!res.ok) {
+        const message = await parseApiError(res, "Failed to delete review")
+
+        // If it no longer exists, treat as successful cleanup to avoid false negatives.
+        if (res.status === 404 && message === "Review not found") {
+          toast.success("Review deleted")
+          fetchProfessorReviews()
+          return
+        }
+
+        throw new Error(message)
+      }
+
       toast.success("Review deleted")
       fetchProfessorReviews()
-    } catch {
-      toast.error("Failed to delete review")
+    } catch (error) {
+      toast.error("Failed to delete review", {
+        description: (error as Error).message,
+      })
     }
   }
 

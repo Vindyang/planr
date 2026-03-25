@@ -43,11 +43,11 @@ export function CreateSemesterDialog({
     try {
       setLoading(true)
       await onCreate(term, parseInt(year))
-      toast.success("Semester plan created successfully")
+      toast.success("Term plan created successfully")
       setOpen(false)
     } catch (error) {
       console.error(error)
-      toast.error("Failed to create semester", {
+      toast.error("Failed to create term", {
         description: (error as Error).message
       })
     } finally {
@@ -58,13 +58,13 @@ export function CreateSemesterDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {children || <Button>+ Add Semester</Button>}
+        {children || <Button>+ Add Term</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Semester Plan</DialogTitle>
+          <DialogTitle>Add Term Plan</DialogTitle>
           <DialogDescription>
-            Create a new semester plan to start adding courses.
+            Create a new term plan to start adding courses.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -101,7 +101,7 @@ export function CreateSemesterDialog({
             Cancel
           </Button>
           <Button onClick={handleCreate} disabled={loading}>
-            {loading ? "Creating..." : "Create Semester"}
+            {loading ? "Creating..." : "Create Term"}
           </Button>
         </DialogFooter>
       </DialogContent>

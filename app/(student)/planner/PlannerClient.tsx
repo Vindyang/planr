@@ -300,11 +300,11 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
         try {
           await deleteSemesterPlan(planToDelete)
-          toast.success("Semester deleted", {
-            description: "Successfully deleted semester and all its courses",
+          toast.success("Term deleted", {
+            description: "Successfully deleted term and all its courses",
           })
         } catch (error) {
-          toast.error("Failed to delete semester", {
+          toast.error("Failed to delete term", {
             description: (error as Error).message,
           })
         }
@@ -328,11 +328,11 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
          try {
              await createSemesterPlan(term, year)
-             toast.success("Semester created", {
+             toast.success("Term created", {
                description: `Successfully created ${term} ${year}`,
              })
          } catch (e) {
-             toast.error("Failed to create semester", {
+             toast.error("Failed to create term", {
                  description: (e as Error).message
              })
          }
@@ -514,9 +514,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
       <AlertDialog open={!!planToDelete} onOpenChange={(open) => !open && setPlanToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Semester Plan</AlertDialogTitle>
+            <AlertDialogTitle>Delete Term Plan</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this semester plan? All courses in it will be removed.
+              Are you sure you want to delete this term plan? All courses in it will be removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

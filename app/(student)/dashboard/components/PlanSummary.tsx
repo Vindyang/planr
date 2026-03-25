@@ -30,7 +30,7 @@ export function PlanSummary({ semesterPlans }: PlanSummaryProps) {
         </p>
         <Link href="/planner">
           <Button variant="outline" size="sm" className="w-full">
-            Create Semester Plan
+            Create Term Plan
           </Button>
         </Link>
       </Card>

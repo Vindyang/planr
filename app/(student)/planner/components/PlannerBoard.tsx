@@ -182,7 +182,7 @@ export function PlannerBoard({
                             <IconPlus className="w-8 h-8 opacity-50" />
                         </div>
                         <h3 className="text-lg font-serif italic mb-2">Start Planning</h3>
-                        <p className="text-[#666460] mb-6 text-sm max-w-md">Create your first semester to start adding courses to your academic plan.</p>
+                        <p className="text-[#666460] mb-6 text-sm max-w-md">Create your first term to start adding courses to your academic plan.</p>
                         <CreateSemesterDialog onCreate={onCreatePlan} />
                      </div>
                 )}

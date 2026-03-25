@@ -68,19 +68,19 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
 
     try {
       await createSemesterPlan(newSemesterTerm, yearNum)
-      toast.success("Semester created successfully. Please add the course again.")
+      toast.success("Term created successfully. Please add the course again.")
       router.refresh()
       onClose()
     } catch (err: any) {
       if (err.message?.includes("already exists")) {
-        setError("This semester already exists. Refreshing...")
+        setError("This term already exists. Refreshing...")
         router.refresh()
         setTimeout(() => setViewMode("selecting"), 1000)
       } else if (err.message?.includes("maximum of 4 terms")) {
         setError(err.message)
         setNewSemesterYear((parseInt(newSemesterYear) + 1).toString())
       } else {
-        setError(err.message || "Failed to create semester")
+        setError(err.message || "Failed to create term")
       }
     } finally {
       setIsCreatingSemester(false)
@@ -89,7 +89,7 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
 
   const handleAdd = async () => {
     if (!selectedPlanId) {
-      setError("Please select a semester")
+      setError("Please select a term")
       return
     }
 
@@ -116,7 +116,7 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {viewMode === "creating" ? "Create First Semester" : `Add ${course.code} to Plan`}
+            {viewMode === "creating" ? "Create First Term" : `Add ${course.code} to Plan`}
           </DialogTitle>
         </DialogHeader>
 
@@ -125,9 +125,9 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
             <>
               <div className="rounded-lg border p-4 space-y-4 bg-muted/50">
                 <div>
-                  <h4 className="font-medium mb-2">Create Your First Semester</h4>
+                  <h4 className="font-medium mb-2">Create Your First Term</h4>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Set up a semester plan to start organizing your courses.
+                    Set up a term plan to start organizing your courses.
                   </p>
                 </div>
 
@@ -167,7 +167,7 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
 
               <div className="flex gap-2">
                 <Button onClick={handleCreateSemester} disabled={isCreatingSemester}>
-                  {isCreatingSemester ? "Creating..." : "Create Semester"}
+                  {isCreatingSemester ? "Creating..." : "Create Term"}
                 </Button>
                 <Button variant="outline" onClick={onClose}>
                   Cancel
@@ -177,10 +177,10 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
           ) : (
             <>
               <div>
-                <Label htmlFor="semester-select">Select Semester</Label>
+                <Label htmlFor="term-select">Select Term</Label>
                 <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
                   <SelectTrigger className="w-full mt-2">
-                    <SelectValue placeholder="Choose semester..." />
+                    <SelectValue placeholder="Choose term..." />
                   </SelectTrigger>
                   <SelectContent>
                     {semesters.map((sem) => (

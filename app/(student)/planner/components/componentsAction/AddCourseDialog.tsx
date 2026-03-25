@@ -146,7 +146,7 @@ export function AddCourseDialog({
                         <IconArrowLeft size={16} />
                     </button>
                     <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Select Semester Data</span>
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Select Term</span>
                         <span className="text-sm font-medium">Adding {selectedCourseIds.size} {selectedCourseIds.size === 1 ? 'course' : 'courses'}</span>
                     </div>
                 </div>
@@ -155,8 +155,8 @@ export function AddCourseDialog({
                     <CommandInput value="" onValueChange={() => {}} />
                 </div>
                 <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
-                <CommandEmpty>No semesters found.</CommandEmpty>
-                <CommandGroup heading="Select a Semester">
+                <CommandEmpty>No terms found.</CommandEmpty>
+                <CommandGroup heading="Select a Term">
                     {sortedPlans.length > 0 ? sortedPlans.map((plan) => (
                     <CommandItem
                         key={plan.id}
@@ -176,7 +176,7 @@ export function AddCourseDialog({
                     </CommandItem>
                     )) : (
                         <div className="p-4 text-center text-sm text-muted-foreground">
-                            You have not created any semesters yet.
+                            You have not created any terms yet.
                         </div>
                     )}
                 </CommandGroup>

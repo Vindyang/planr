@@ -9,7 +9,6 @@ import { EligibleCoursesListSkeleton } from "./components/skeleton/EligibleCours
 import { PlanSummarySection } from "./components/PlanSummarySection"
 import { PlanSummarySkeleton } from "./components/skeleton/PlanSummarySkeleton"
 import { UpcomingDeadlines } from "./components/UpcomingDeadlines"
-import { UpcomingDeadlinesSkeleton } from "./components/skeleton/UpcomingDeadlinesSkeleton"
 
 export default async function DashboardPage() {
   const session = await getSession()
@@ -75,9 +74,7 @@ export default async function DashboardPage() {
             <PlanSummarySection userId={session.user.id} />
           </Suspense>
 
-          <Suspense fallback={<UpcomingDeadlinesSkeleton />}>
-            <UpcomingDeadlines />
-          </Suspense>
+          <UpcomingDeadlines />
         </aside>
       </div>
     </div>
