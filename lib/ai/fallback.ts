@@ -9,12 +9,9 @@ import type {
   AICourse,
   AIGenerationContext,
   CourseContext,
+  Term,
 } from "./types"
 import { WORKLOAD_CONFIG } from "./types"
-import {
-  buildPrerequisiteGraph,
-  suggestPrerequisiteSequence,
-} from "@/lib/eligibility/prerequisite-graph"
 import type { CourseWithPrereqs } from "@/lib/eligibility/types"
 
 /**
@@ -163,7 +160,7 @@ function getTopologicalOrder(
  */
 function distributeCourses(
   orderedCourses: CourseContext[],
-  targetGraduation: { term: string; year: number },
+  targetGraduation: { term: Term; year: number },
   minUnits: number,
   maxUnits: number,
   allCourses: CourseContext[]
@@ -241,32 +238,33 @@ function distributeCourses(
 
 /**
  * Generate term sequence until target graduation
+ * SMU uses Term 1 (Aug-Jan), Term 2 (Jan-Apr), Term 3 (May-Aug)
  */
 function generateTermSequence(targetGraduation: {
-  term: string
+  term: Term
   year: number
-}): Array<{ term: string; year: number }> {
-  const terms = ["Fall", "Spring", "Summer"]
-  const sequence: Array<{ term: string; year: number }> = []
+}): Array<{ term: Term; year: number }> {
+  const terms: Term[] = ["Term 1", "Term 2", "Term 3"]
+  const sequence: Array<{ term: Term; year: number }> = []
 
   const currentYear = new Date().getFullYear()
   const currentMonth = new Date().getMonth()
 
-  // Determine starting term
-  let startTerm: string
+  // Determine starting term based on SMU calendar
+  let startTerm: Term
   let startYear: number
 
-  if (currentMonth < 5) {
-    // January-April: Start with Spring or Summer
-    startTerm = "Spring"
+  if (currentMonth >= 0 && currentMonth < 4) {
+    // January-April: Start with Term 2
+    startTerm = "Term 2"
     startYear = currentYear
-  } else if (currentMonth < 8) {
-    // May-July: Start with Summer or Fall
-    startTerm = "Summer"
+  } else if (currentMonth >= 4 && currentMonth < 7) {
+    // May-July: Start with Term 3
+    startTerm = "Term 3"
     startYear = currentYear
   } else {
-    // August-December: Start with Fall
-    startTerm = "Fall"
+    // August-December: Start with Term 1
+    startTerm = "Term 1"
     startYear = currentYear
   }
 
@@ -326,7 +324,7 @@ function generateReasoning(course: CourseContext, isFirst: boolean): string {
  * Generate reasoning for semester structure
  */
 function generateSemesterReasoning(
-  term: string,
+  term: Term,
   year: number,
   units: number,
   courseCount: number

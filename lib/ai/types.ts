@@ -21,7 +21,7 @@ export const userPreferencesSchema = z.object({
   startSemester: targetGraduationSchema, // When to start planning from
   targetGraduation: targetGraduationSchema, // When to graduate
   careerTrack: z.string().optional(),
-  includeSummerTerm: z.boolean().default(false), // Whether to include Term 3 (summer)
+  includeSummerTerm: z.boolean(), // Whether to include Term 3 (summer)
   preferredCourses: z.array(z.string()).optional(), // Course IDs
   avoidCourses: z.array(z.string()).optional(), // Course IDs
 })
