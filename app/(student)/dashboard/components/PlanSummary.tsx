@@ -19,9 +19,12 @@ export function PlanSummary({ semesterPlans }: PlanSummaryProps) {
   if (!relevantPlan || relevantPlan.plannedCourses.length === 0) {
     return (
       <Card className="p-6 bg-card border border-border shadow-none rounded-none">
-        <h3 className="text-xs uppercase tracking-wider font-medium text-muted-foreground mb-2">
-          Your Plan
+        <h3 className="text-xs uppercase tracking-wider font-medium text-muted-foreground mb-1">
+          Plan Summary
         </h3>
+        <p className="text-base font-medium text-foreground mb-2">
+          Upcoming term
+        </p>
         <p className="text-sm text-muted-foreground mb-4">
           No courses planned yet.
         </p>
@@ -44,8 +47,11 @@ export function PlanSummary({ semesterPlans }: PlanSummaryProps) {
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-xs uppercase tracking-wider font-medium text-muted-foreground mb-1">
-            {relevantPlan.term} {relevantPlan.year}
+            Plan Summary
           </h3>
+          <p className="text-base font-medium text-foreground mb-1">
+            {relevantPlan.term} {relevantPlan.year}
+          </p>
           <p className="text-sm text-muted-foreground">
             {relevantPlan.plannedCourses.length} courses · {totalUnits} units
           </p>

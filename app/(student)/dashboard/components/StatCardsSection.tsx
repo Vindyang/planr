@@ -20,6 +20,7 @@ function getNextSemesterFromPlans(
       plan?.plannedCourses.reduce((sum, pc) => sum + pc.course.units, 0) ?? 0,
     term: targetTerm,
     year,
+    label: `${targetTerm} ${year}`,
   }
 }
 
@@ -52,6 +53,7 @@ export async function StatCardsSection({ userId }: { userId: string }) {
       year={student.year}
       major={student.major.name}
       nextSemesterCourses={nextSemester.coursesCount}
+      nextTermLabel={nextSemester.label}
       totalCoursesTaken={student.completedCourses.length}
       remainingUnits={remainingUnits}
     />

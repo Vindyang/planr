@@ -17,9 +17,12 @@ export function UpcomingDeadlines() {
 
   return (
     <Card className="p-6 bg-card border border-border shadow-none rounded-none">
-      <h3 className="text-xs uppercase tracking-wider font-medium text-muted-foreground mb-4">
+      <h3 className="text-xs uppercase tracking-wider font-medium text-muted-foreground mb-1">
         Upcoming Deadlines
       </h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        Key academic dates for planning.
+      </p>
       <div className="space-y-3">
         {upcoming.map((deadline) => (
           <div

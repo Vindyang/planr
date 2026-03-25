@@ -117,64 +117,93 @@ function MyReviewsContent() {
 
   return (
     <>
-      <div className="flex flex-col space-y-8 bg-background min-h-[calc(100vh-65px)]">
-        <header className="flex justify-between items-end border-b border-border pb-8">
+      <div className="flex flex-col gap-6 bg-background min-h-[calc(100vh-65px)]">
+        <header className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-4xl leading-none font-normal uppercase tracking-tight text-foreground">
               My Reviews
             </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Track and manage your course and professor feedback.
+            </p>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="font-serif text-lg italic text-muted-foreground">
+          <div className="text-left md:text-right">
+            <p className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+              Total Submitted
+            </p>
+            <p className="font-serif text-lg italic text-muted-foreground">
               {totalReviews} {totalReviews === 1 ? "review" : "reviews"}
-            </span>
-            {totalReviews > 0 && (
-              <WriteReviewDialog
-                completedCourses={completedCourses}
-                professors={professors}
-                reviewedCourseIds={reviewedCourseIds}
-                reviewedProfessorIds={reviewedProfessorIds}
-                onSuccess={fetchData}
-              />
-            )}
+            </p>
           </div>
         </header>
 
-        {/* Tabs */}
-        <div className="flex gap-0 border-b border-border">
+        <div className="flex gap-2 border-b border-border pb-3">
           <button
             onClick={() => setActiveTab("courses")}
-            className={`px-6 py-3 text-xs uppercase tracking-wider border-b-2 transition-colors ${
+            className={`px-4 py-2 text-xs uppercase tracking-wider border transition-colors ${
               activeTab === "courses"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "border-foreground text-foreground bg-card"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
             }`}
           >
             Course Reviews ({courseReviews.length})
           </button>
           <button
             onClick={() => setActiveTab("professors")}
-            className={`px-6 py-3 text-xs uppercase tracking-wider border-b-2 transition-colors ${
+            className={`px-4 py-2 text-xs uppercase tracking-wider border transition-colors ${
               activeTab === "professors"
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                ? "border-foreground text-foreground bg-card"
+                : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
             }`}
           >
             Professor Reviews ({professorReviews.length})
           </button>
         </div>
 
-        {/* Review list */}
-        {activeTab === "courses" ? (
-          courseReviews.length === 0 ? (
-            <Empty className="mt-8 border-none bg-transparent">
+        <section className="min-h-[420px] pt-2">
+          {activeTab === "courses" ? (
+            courseReviews.length === 0 ? (
+              <Empty className="mt-6 border border-border bg-card px-6 py-10 rounded-none">
+                <EmptyMedia>
+                  <IconBook className="h-6 w-6" />
+                </EmptyMedia>
+                <EmptyHeader>
+                  <EmptyTitle>No course reviews found</EmptyTitle>
+                  <EmptyDescription>
+                    You haven&apos;t written any course reviews yet.
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <WriteReviewDialog
+                    completedCourses={completedCourses}
+                    professors={professors}
+                    reviewedCourseIds={reviewedCourseIds}
+                    reviewedProfessorIds={reviewedProfessorIds}
+                    onSuccess={fetchData}
+                  />
+                </EmptyContent>
+              </Empty>
+            ) : (
+              <div className="grid gap-5">
+                {courseReviews.map((review) => (
+                  <CourseReviewCard
+                    key={review.id}
+                    review={review}
+                    onEdit={(r) => setEditingReview({ review: r, type: "course" })}
+                    onDelete={handleDeleteCourseReview}
+                  />
+                ))}
+              </div>
+            )
+          ) : professorReviews.length === 0 ? (
+            <Empty className="mt-6 border border-border bg-card px-6 py-10 rounded-none">
               <EmptyMedia>
-                 <IconBook className="h-6 w-6" />
+                <IconUser className="h-6 w-6" />
               </EmptyMedia>
               <EmptyHeader>
-                <EmptyTitle>No course reviews found</EmptyTitle>
+                <EmptyTitle>No professor reviews found</EmptyTitle>
                 <EmptyDescription>
-                  You haven&apos;t written any course reviews yet.
+                  You haven&apos;t written any professor reviews yet.
                 </EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
@@ -188,50 +217,18 @@ function MyReviewsContent() {
               </EmptyContent>
             </Empty>
           ) : (
-            <div className="grid gap-6">
-              {courseReviews.map((review) => (
-                <CourseReviewCard
+            <div className="grid gap-5">
+              {professorReviews.map((review) => (
+                <ProfessorReviewCard
                   key={review.id}
                   review={review}
-                  onEdit={(r) => setEditingReview({ review: r, type: "course" })}
-                  onDelete={handleDeleteCourseReview}
+                  onEdit={(r) => setEditingReview({ review: r, type: "professor" })}
+                  onDelete={handleDeleteProfessorReview}
                 />
               ))}
             </div>
-          )
-        ) : professorReviews.length === 0 ? (
-          <Empty className="mt-8 border-none bg-transparent">
-            <EmptyMedia>
-               <IconUser className="h-6 w-6" />
-            </EmptyMedia>
-            <EmptyHeader>
-              <EmptyTitle>No professor reviews found</EmptyTitle>
-              <EmptyDescription>
-                You haven&apos;t written any professor reviews yet.
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <WriteReviewDialog
-                completedCourses={completedCourses}
-                professors={professors}
-                reviewedCourseIds={reviewedCourseIds}
-                reviewedProfessorIds={reviewedProfessorIds}
-                onSuccess={fetchData}
-              />
-            </EmptyContent>
-          </Empty>
-        ) : (
-          <div className="grid gap-6">
-            {professorReviews.map((review) => (
-              <ProfessorReviewCard
-                key={review.id}
-                review={review}
-                onEdit={(r) => setEditingReview({ review: r, type: "professor" })}
-                onDelete={handleDeleteProfessorReview}
-              />
-            ))}
-          </div>
-        )}
+          )}
+        </section>
       </div>
 
       {editingReview && (
