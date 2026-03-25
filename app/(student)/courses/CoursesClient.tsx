@@ -250,7 +250,7 @@ export default function CoursesClient({
                     </span>
                   )}
                   {status === "eligible-warnings" && (
-                    <span className="bg-amber-100 text-amber-800 text-xs uppercase tracking-wider px-2 py-1">
+                    <span className="bg-blue-100 text-blue-800 text-xs uppercase tracking-wider px-2 py-1">
                       Eligible*
                     </span>
                   )}

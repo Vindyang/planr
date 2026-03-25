@@ -99,7 +99,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                   eligibility.eligibility.status === EligibilityStatus.ELIGIBLE
                     ? "bg-green-100 text-green-800"
                     : eligibility.eligibility.status === EligibilityStatus.WARNING
-                      ? "bg-amber-100 text-amber-800"
+                      ? "bg-blue-100 text-blue-800"
                       : eligibility.eligibility.status === EligibilityStatus.COREQUISITE_NEEDED
                         ? "bg-blue-100 text-blue-800"
                         : "bg-red-100 text-red-800"
@@ -108,7 +108,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                 {eligibility.eligibility.status === EligibilityStatus.ELIGIBLE
                   ? "Eligible"
                   : eligibility.eligibility.status === EligibilityStatus.WARNING
-                    ? "Eligible (with warnings)"
+                    ? "Eligible (see notes)"
                     : eligibility.eligibility.status === EligibilityStatus.COREQUISITE_NEEDED
                       ? "Needs Corequisite"
                       : "Not Eligible"}

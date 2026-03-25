@@ -19,15 +19,15 @@ import { signOut, useSession } from "@/lib/auth-client"
 import type { StudentProfile } from "@/lib/data/students"
 
 
-// Enriched items with metadata for the new design
+// Navigation items
 const items = [
   {
-    title: "Overview", // We can keep groups visually or merge them if desired. Reference had a flat list, but groups are good for structure.
+    title: "Overview",
     items: [
-        { title: "Dashboard", url: "/dashboard", icon: IconDashboard, number: "001" },
-        { title: "Planner", url: "/planner", icon: IconCalendarEvent, number: "002" },
-        { title: "Courses", url: "/courses", icon: IconBook, number: "003" },
-        { title: "My Reviews", url: "/reviews", icon: IconMessageCircle, number: "004" },
+        { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
+        { title: "Planner", url: "/planner", icon: IconCalendarEvent },
+        { title: "Courses", url: "/courses", icon: IconBook },
+        { title: "My Reviews", url: "/reviews", icon: IconMessageCircle },
     ]
   },
 ]
@@ -67,14 +67,9 @@ export function AppSidebar({ student }: { student: StudentProfile }) {
                                             group-data-[collapsible=icon]:border-none
                                         `}
                                     >
-                                        <Link href={item.url} className="flex w-full h-full items-center justify-between group-data-[collapsible=icon]:justify-center">
-                                            <div className="flex items-center gap-3 group-data-[collapsible=icon]:gap-0">
-                                                <item.icon className="size-4 text-[#0A0A0A]" />
-                                                <span className="text-[#0A0A0A] group-data-[collapsible=icon]:hidden">{item.title}</span>
-                                            </div>
-                                            <span className="font-serif italic text-[#666460] text-sm group-data-[collapsible=icon]:hidden">
-                                                {item.number}
-                                            </span>
+                                        <Link href={item.url} className="flex w-full h-full items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
+                                            <item.icon className="size-4 text-[#0A0A0A]" />
+                                            <span className="text-[#0A0A0A] group-data-[collapsible=icon]:hidden">{item.title}</span>
                                         </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
