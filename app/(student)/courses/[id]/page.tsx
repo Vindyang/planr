@@ -3,7 +3,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
+import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle, IconCalendarCheck } from "@tabler/icons-react"
 import { EligibilityStatus } from "@/lib/eligibility"
 import { getCourseWithPrerequisites } from "@/lib/data/courses"
 import { getStudentProfile } from "@/lib/data/students"
@@ -51,6 +51,14 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const completedGrades = new Map(completedCourses?.map((c) => [c.courseId, c.grade] as const))
   const isCompleted = completedIds.has(course.id)
 
+  // Check if course is in planner
+  const plannedCourseIds = new Set(
+    plannerData?.semesterPlans.flatMap((plan) =>
+      plan.plannedCourses.map((pc) => pc.course.id)
+    ) || []
+  )
+  const isInPlanner = plannedCourseIds.has(course.id)
+
   // 3. Check Eligibility (if needed)
   let eligibility = null
   if (!isCompleted && student) {
@@ -91,6 +99,12 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             {isCompleted && (
               <span className="bg-muted text-muted-foreground text-xs uppercase tracking-wider px-2 py-0.5">
                 Completed
+              </span>
+            )}
+            {!isCompleted && isInPlanner && (
+              <span className="bg-purple-50 text-purple-700 text-xs uppercase tracking-wider px-2 py-0.5 flex items-center gap-1">
+                <IconCalendarCheck size={14} stroke={2} />
+                In Planner
               </span>
             )}
             {!isCompleted && eligibility && (

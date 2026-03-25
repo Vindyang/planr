@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
-import { IconSearch, IconStar, IconStarFilled } from "@tabler/icons-react"
+import { IconSearch, IconStar, IconStarFilled, IconCalendarCheck } from "@tabler/icons-react"
 import {
   checkCourseEligibility,
   CourseWithPrereqs,
@@ -53,12 +53,14 @@ interface CoursesClientProps {
     averageWorkload: number
     totalReviews: number
   }>
+  plannedCourseIds: Set<string>
 }
 
 export default function CoursesClient({
   initialCourses,
   initialStudent,
   reviewAggregates,
+  plannedCourseIds,
 }: CoursesClientProps) {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") || "")
@@ -215,16 +217,25 @@ export default function CoursesClient({
         <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {filteredCourses.map((course) => {
             const status = getEligibilityStatus(course)
+            const isInPlanner = plannedCourseIds.has(course.id)
             return (
               <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
                 className="bg-card border border-border p-6 flex flex-col transition-all duration-200 hover:border-foreground hover:-translate-y-0.5 hover:shadow-md h-full"
               >
-                <div className="flex justify-between mb-3">
-                  <span className="uppercase text-xs tracking-wider font-medium text-muted-foreground">
-                    {course.code}
-                  </span>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="uppercase text-xs tracking-wider font-medium text-muted-foreground">
+                      {course.code}
+                    </span>
+                    {isInPlanner && (
+                      <div className="flex items-center gap-1 text-[0.65rem] text-purple-700 bg-purple-50 px-1.5 py-0.5 w-fit">
+                        <IconCalendarCheck size={12} stroke={2} />
+                        <span className="uppercase tracking-wider font-medium">In Planner</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex gap-1">
                     {course.tags.slice(0, 2).map((tag) => (
                       <span

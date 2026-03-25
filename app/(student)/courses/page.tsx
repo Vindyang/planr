@@ -94,11 +94,29 @@ async function CoursesContent() {
   const courseIds = courses.map(c => c.id)
   const reviewAggregates = await getBulkReviewAggregates(courseIds)
 
+  // Fetch planned courses to show indicators
+  const semesterPlans = await prisma.semesterPlan.findMany({
+    where: { studentId: student.id },
+    include: {
+      plannedCourses: {
+        select: {
+          courseId: true,
+        },
+      },
+    },
+  })
+
+  // Extract unique course IDs that are in the planner
+  const plannedCourseIds = new Set(
+    semesterPlans.flatMap((plan) => plan.plannedCourses.map((pc) => pc.courseId))
+  )
+
   return (
     <CoursesClient
       initialCourses={courses}
       initialStudent={student}
       reviewAggregates={reviewAggregates}
+      plannedCourseIds={plannedCourseIds}
     />
   )
 }
