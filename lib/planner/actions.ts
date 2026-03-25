@@ -145,10 +145,7 @@ export async function addCourseToPlan(planId: string, courseId: string) {
     throw new Error("Plan not found or unauthorized")
   }
 
-  // Check if already planned in THIS plan or ANY plan? 
-  // Usually unique per student, but for now let's just create it.
-  // The UI should handle preventing duplicates or we check here.
-  // Let's check if already in THIS plan for now.
+  // Check if already planned in this semester
   const existing = await prisma.plannedCourse.findFirst({
     where: {
       semesterPlanId: validated.planId,
@@ -157,7 +154,7 @@ export async function addCourseToPlan(planId: string, courseId: string) {
   })
 
   if (existing) {
-    throw new Error("Course already in this plan")
+    throw new Error("This course is already in the selected semester")
   }
 
   await prisma.plannedCourse.create({
@@ -169,6 +166,8 @@ export async function addCourseToPlan(planId: string, courseId: string) {
   })
 
   revalidatePath("/planner")
+  revalidatePath("/courses")
+  revalidatePath(`/courses/${validated.courseId}`)
 }
 
 const addCoursesSchema = z.object({

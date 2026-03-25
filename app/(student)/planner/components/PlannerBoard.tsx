@@ -208,20 +208,17 @@ export function PlannerBoard({
                         <div className="pt-8">
                             <div className="w-full h-px bg-[#DAD6CF] mb-12" />
                             <div className="flex justify-center">
-                                <CreateSemesterDialog 
-                                    onCreate={onCreatePlan}
-                                    defaultYear={sortedYears[sortedYears.length - 1] + 1}
-                                    defaultTerm="Term 1"
+                                <button
+                                    onClick={() => onCreatePlan("Term 1", sortedYears[sortedYears.length - 1] + 1)}
+                                    className="flex flex-col items-center gap-4 group"
                                 >
-                                    <button className="flex flex-col items-center gap-4 group">
-                                        <div className="w-16 h-16 rounded-full border border-[#DAD6CF] bg-white flex items-center justify-center text-[#DAD6CF] group-hover:text-[#0A0A0A] group-hover:border-[#0A0A0A] transition-all">
-                                            <IconPlus size={32} stroke={1.5} />
-                                        </div>
-                                        <span className="text-xs uppercase tracking-[0.1em] font-medium text-[#666460] group-hover:text-[#0A0A0A] transition-colors">
-                                            Add Academic Year {sortedYears[sortedYears.length - 1] + 1}
-                                        </span>
-                                    </button>
-                                </CreateSemesterDialog>
+                                    <div className="w-16 h-16 rounded-full border border-[#DAD6CF] bg-white flex items-center justify-center text-[#DAD6CF] group-hover:text-[#0A0A0A] group-hover:border-[#0A0A0A] transition-all">
+                                        <IconPlus size={32} stroke={1.5} />
+                                    </div>
+                                    <span className="text-xs uppercase tracking-[0.1em] font-medium text-[#666460] group-hover:text-[#0A0A0A] transition-colors">
+                                        Add Academic Year {sortedYears[sortedYears.length - 1] + 1}
+                                    </span>
+                                </button>
                             </div>
                         </div>
                     )}

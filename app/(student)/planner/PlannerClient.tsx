@@ -38,6 +38,7 @@ type OptimisticAction =
   | { type: 'ADD_COURSE'; planId: string; course: any }
   | { type: 'ADD_COURSES'; planId: string; courses: any[] }
   | { type: 'MOVE_COURSE'; courseId: string; targetPlanId: string }
+  | { type: 'CREATE_PLAN'; term: string; year: number }
 
 export default function PlannerClient({ initialData, allCourses, completedUnits = 0, initialValidation }: PlannerClientProps) {
   const [, startTransition] = useTransition()
@@ -140,6 +141,22 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                       (pc: any) => pc.id !== action.courseId
                     ),
             })),
+          }
+
+        case 'CREATE_PLAN':
+          return {
+            ...state,
+            semesterPlans: [
+              ...state.semesterPlans,
+              {
+                id: `temp-${Date.now()}`,
+                term: action.term,
+                year: action.year,
+                plannedCourses: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              },
+            ],
           }
 
         default:
@@ -306,6 +323,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
      }
 
      startTransition(async () => {
+         // Optimistically add the empty semester to UI immediately
+         addOptimisticUpdate({ type: 'CREATE_PLAN', term, year })
+
          try {
              await createSemesterPlan(term, year)
              toast.success("Semester created", {

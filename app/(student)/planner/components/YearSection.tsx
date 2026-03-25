@@ -8,7 +8,6 @@ type SemesterPlanWithCourses = Prisma.semesterPlanGetPayload<{
 }>
 
 import { IconPlus } from "@tabler/icons-react"
-import { CreateSemesterDialog } from "./componentsAction/CreateSemesterDialog"
 
 type YearSectionProps = {
   year: number
@@ -65,20 +64,17 @@ export function YearSection({ year, plans, onRemoveCourse, onDeletePlan, onCreat
 
         {/* Add Term Button - Only show if less than 4 terms */}
         {sortedPlans.length < 4 && (
-            <CreateSemesterDialog 
-                onCreate={onCreatePlan}
-                defaultYear={year}
-                defaultTerm={getNextTerm()}
+            <button
+                onClick={() => onCreatePlan(getNextTerm(), year)}
+                className="bg-[#F4F1ED] p-6 h-full min-h-[280px] flex flex-col items-center justify-center cursor-pointer hover:bg-[#E5E2DE] transition-colors group w-full"
             >
-                <div className="bg-[#F4F1ED] p-6 h-full min-h-[280px] flex flex-col items-center justify-center cursor-pointer hover:bg-[#E5E2DE] transition-colors group">
-                    <div className="w-12 h-12 rounded-full border border-[#DAD6CF] bg-white flex items-center justify-center text-[#DAD6CF] group-hover:text-[#0A0A0A] group-hover:border-[#0A0A0A] transition-all mb-4">
-                        <IconPlus size={24} stroke={1.5} />
-                    </div>
-                    <span className="text-xs uppercase tracking-[0.1em] font-medium text-[#666460] group-hover:text-[#0A0A0A] transition-colors">
-                        Add Term
-                    </span>
+                <div className="w-12 h-12 rounded-full border border-[#DAD6CF] bg-white flex items-center justify-center text-[#DAD6CF] group-hover:text-[#0A0A0A] group-hover:border-[#0A0A0A] transition-all mb-4">
+                    <IconPlus size={24} stroke={1.5} />
                 </div>
-            </CreateSemesterDialog>
+                <span className="text-xs uppercase tracking-[0.1em] font-medium text-[#666460] group-hover:text-[#0A0A0A] transition-colors">
+                    Add Term
+                </span>
+            </button>
         )}
       </div>
     </div>

@@ -67,13 +67,10 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
     setError("")
 
     try {
-      const newSemesterId = await createSemesterPlan(newSemesterTerm, yearNum)
-      toast.success("Semester created successfully")
-
-      // Switch to selecting mode with new semester pre-selected
-      setSelectedPlanId(newSemesterId)
-      setViewMode("selecting")
+      await createSemesterPlan(newSemesterTerm, yearNum)
+      toast.success("Semester created successfully. Please add the course again.")
       router.refresh()
+      onClose()
     } catch (err: any) {
       if (err.message?.includes("already exists")) {
         setError("This semester already exists. Refreshing...")
