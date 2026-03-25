@@ -82,7 +82,7 @@ export async function createSemesterPlan(term: string, year: number): Promise<st
   })
 
   if (existing) {
-    throw new Error("A plan for this semester already exists.")
+    throw new Error("A plan for this term already exists.")
   }
 
   // Check if year limit reached
@@ -154,7 +154,7 @@ export async function addCourseToPlan(planId: string, courseId: string) {
   })
 
   if (existing) {
-    throw new Error("This course is already in the selected semester")
+    throw new Error("This course is already in the selected term")
   }
 
   await prisma.plannedCourse.create({

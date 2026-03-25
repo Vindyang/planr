@@ -25,7 +25,7 @@ export function validateTermAvailability(context: ValidationContext): Violation[
           semesterId: semester.id,
           semesterLabel,
           message: `${plannedCourse.course.code} is typically offered in ${termsOffered.join(", ")}, not ${semester.term}`,
-          suggestion: `Move ${plannedCourse.course.code} to a ${termsOffered[0]} semester`,
+          suggestion: `Move ${plannedCourse.course.code} to ${termsOffered[0]}`,
         })
       }
     }

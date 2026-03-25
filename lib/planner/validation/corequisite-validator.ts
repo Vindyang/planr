@@ -1,6 +1,6 @@
 /**
  * Corequisite Validator
- * Ensures courses are taken together with their corequisites in the same semester
+ * Ensures courses are taken together with their corequisites in the same term
  */
 
 import { Violation, ValidationContext } from "../types"
@@ -29,7 +29,7 @@ export function validateCorequisites(context: ValidationContext): Violation[] {
         // Check if corequisite is already completed
         if (completedIds.has(coreqCourseId)) continue
 
-        // Check if corequisite is in the same semester
+        // Check if corequisite is in the same term
         const coreqInSameSemester = semester.courses.some(
           (c) => c.courseId === coreqCourseId
         )
@@ -42,7 +42,7 @@ export function validateCorequisites(context: ValidationContext): Violation[] {
             courseCode: course.code,
             semesterId: semester.id,
             semesterLabel: getSemesterLabel(semester),
-            message: `Missing corequisite: ${prereq.prerequisiteCourse.code} must be taken in the same semester`,
+            message: `Missing corequisite: ${prereq.prerequisiteCourse.code} must be taken in the same term`,
             suggestion: `Add ${prereq.prerequisiteCourse.code} to ${getSemesterLabel(semester)}`,
           })
         }
