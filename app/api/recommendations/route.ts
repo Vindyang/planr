@@ -14,44 +14,57 @@ import { prisma } from "@/lib/prisma"
  * Generate AI-powered course roadmap for a student
  */
 export async function POST(request: Request) {
+  console.log("📨 POST /api/recommendations - Request received")
+
   try {
     // 1. Authenticate - must be a student
+    console.log("🔐 Authenticating...")
     const session = await requireRole([UserRole.STUDENT])
+    console.log("✅ Authenticated as:", session.user.email)
 
     // 2. Parse and validate request body
+    console.log("📝 Parsing request body...")
     const body = await request.json()
     const validationResult = userPreferencesSchema.safeParse(body)
 
     if (!validationResult.success) {
+      console.error("❌ Invalid preferences:", validationResult.error.issues)
       return NextResponse.json(
         {
           error: "Invalid preferences",
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         },
         { status: 400 }
       )
     }
 
     const preferences = validationResult.data
+    console.log("✅ Preferences validated")
 
     // 3. Get student ID from session
+    console.log("👤 Looking up student profile...")
     const student = await prisma.student.findUnique({
       where: { userId: session.user.id },
       select: { id: true },
     })
 
     if (!student) {
+      console.error("❌ Student profile not found for user:", session.user.id)
       return NextResponse.json(
         { error: "Student profile not found" },
         { status: 404 }
       )
     }
 
+    console.log("✅ Student found:", student.id)
+
     // 4. Generate roadmap with AI
+    console.log("🚀 Starting AI generation...")
     const { roadmap, metadata } = await generateAIRoadmap(
       student.id,
       preferences
     )
+    console.log("✅ AI generation completed")
 
     // 5. Build generation context for validation retry
     const { buildGenerationContext } = await import(

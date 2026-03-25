@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
@@ -43,9 +43,13 @@ export function AIPreferencesForm({
     resolver: zodResolver(userPreferencesSchema),
     defaultValues: {
       workloadLevel: "Balanced",
+      startSemester: {
+        term: defaultTerm,
+        year: currentYear,
+      },
       targetGraduation: {
         term: defaultTerm,
-        year: defaultYear,
+        year: currentYear + 4,
       },
       careerTrack: "",
       includeSummerTerm: false,
@@ -56,6 +60,17 @@ export function AIPreferencesForm({
 
   const workloadLevel = watch("workloadLevel")
   const workloadInfo = WORKLOAD_CONFIG[workloadLevel]
+
+  // Track whether user has manually edited the graduation year
+  const gradYearManuallyEdited = useRef(false)
+  const startYear = watch("startSemester.year")
+
+  // Auto-calculate graduation year = startYear + 4 (unless user manually edited)
+  useEffect(() => {
+    if (!gradYearManuallyEdited.current && startYear) {
+      setValue("targetGraduation.year", startYear + 4)
+    }
+  }, [startYear, setValue])
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -82,16 +97,60 @@ export function AIPreferencesForm({
         )}
       </div>
 
+      {/* Start Semester */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium">Start Planning From</Label>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="startTerm" className="text-xs text-gray-600">
+              Term
+            </Label>
+            <select
+              id="startTerm"
+              {...register("startSemester.term")}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              disabled={isLoading}
+            >
+              <option value="Term 1">Term 1 (Aug-Jan)</option>
+              <option value="Term 2">Term 2 (Jan-Apr)</option>
+              <option value="Term 3">Term 3 (May-Aug)</option>
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="startYear" className="text-xs text-gray-600">
+              Year
+            </Label>
+            <Input
+              id="startYear"
+              type="number"
+              max={currentYear + 10}
+              {...register("startSemester.year", { valueAsNumber: true })}
+              className="w-full"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+        {errors.startSemester && (
+          <p className="text-xs text-red-500">
+            {errors.startSemester.term?.message ||
+              errors.startSemester.year?.message}
+          </p>
+        )}
+        <p className="text-xs text-gray-500">
+          The semester you want to start planning from (typically current or next term)
+        </p>
+      </div>
+
       {/* Target Graduation */}
       <div className="space-y-3">
         <Label className="text-sm font-medium">Target Graduation</Label>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="term" className="text-xs text-gray-600">
+            <Label htmlFor="endTerm" className="text-xs text-gray-600">
               Term
             </Label>
             <select
-              id="term"
+              id="endTerm"
               {...register("targetGraduation.term")}
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
               disabled={isLoading}
@@ -102,15 +161,19 @@ export function AIPreferencesForm({
             </select>
           </div>
           <div>
-            <Label htmlFor="year" className="text-xs text-gray-600">
+            <Label htmlFor="endYear" className="text-xs text-gray-600">
               Year
             </Label>
             <Input
-              id="year"
+              id="endYear"
               type="number"
               min={currentYear}
               max={currentYear + 10}
               {...register("targetGraduation.year", { valueAsNumber: true })}
+              onChange={(e) => {
+                gradYearManuallyEdited.current = true
+                setValue("targetGraduation.year", Number(e.target.value))
+              }}
               className="w-full"
               disabled={isLoading}
             />
@@ -122,6 +185,9 @@ export function AIPreferencesForm({
               errors.targetGraduation.year?.message}
           </p>
         )}
+        <p className="text-xs text-gray-500">
+          Your desired graduation term (typically 4 years from enrollment)
+        </p>
       </div>
 
       {/* Career Track (Optional) */}

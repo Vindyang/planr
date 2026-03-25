@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { AIPreferencesForm } from "./ai-preferences-form"
 import { AIRoadmapView } from "./ai-roadmap-view"
+import { ConflictResolutionModal } from "./conflict-resolution-modal"
 import type { UserPreferences, GenerateRecommendationResponse } from "@/lib/ai/types"
 
 interface AIRecommendationModalProps {
@@ -31,6 +32,15 @@ export function AIRecommendationModal({
   const [recommendation, setRecommendation] =
     useState<GenerateRecommendationResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [conflicts, setConflicts] = useState<Array<{
+    term: string
+    year: number
+    existingCourseCount: number
+    aiCourseCount: number
+    existingCourses: Array<{ code: string; title: string }>
+    aiCourses: Array<{ code: string; title: string }>
+  }> | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   const handlePreferencesSubmit = async (preferences: UserPreferences) => {
     setIsGenerating(true)
@@ -59,7 +69,10 @@ export function AIRecommendationModal({
     }
   }
 
-  const handleApply = async () => {
+  const handleApply = async (
+    replaceExisting = false,
+    semestersToReplace?: Array<{ term: string; year: number }>
+  ) => {
     if (!recommendation) return
 
     setIsApplying(true)
@@ -69,15 +82,34 @@ export function AIRecommendationModal({
       const response = await fetch("/api/recommendations/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roadmap: recommendation.roadmap }),
+        body: JSON.stringify({
+          roadmap: recommendation.roadmap,
+          replaceExisting,
+          semestersToReplace,
+        }),
       })
+
+      // Handle conflicts (status 409)
+      if (response.status === 409) {
+        const data = await response.json()
+        setConflicts(data.conflicts)
+        setShowConfirmDialog(true)
+        setIsApplying(false)
+        return
+      }
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to apply recommendations")
+        console.error("API Error Response:", errorData)
+        const errorMessage = errorData.message
+          ? `${errorData.error}: ${errorData.message}`
+          : errorData.error || "Failed to apply recommendations"
+        throw new Error(errorMessage)
       }
 
       // Success! Close modal and refresh the planner page
+      setShowConfirmDialog(false)
+      setConflicts(null)
       onOpenChange(false)
       router.refresh()
 
@@ -86,6 +118,8 @@ export function AIRecommendationModal({
         setStep("preferences")
         setRecommendation(null)
         setError(null)
+        setConflicts(null)
+        setShowConfirmDialog(false)
       }, 300)
     } catch (err) {
       console.error("Error applying recommendations:", err)
@@ -93,6 +127,18 @@ export function AIRecommendationModal({
     } finally {
       setIsApplying(false)
     }
+  }
+
+  const handleConflictResolve = (
+    semestersToReplace: Array<{ term: string; year: number }>
+  ) => {
+    handleApply(true, semestersToReplace)
+  }
+
+  const handleConflictCancel = () => {
+    setShowConfirmDialog(false)
+    setConflicts(null)
+    setError(null)
   }
 
   const handleBack = () => {
@@ -108,13 +154,28 @@ export function AIRecommendationModal({
         setStep("preferences")
         setRecommendation(null)
         setError(null)
+        setConflicts(null)
+        setShowConfirmDialog(false)
       }, 300)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-5xl md:max-w-6xl lg:max-w-7xl max-h-[90vh] overflow-y-auto">
+    <>
+      {/* Conflict Resolution Modal */}
+      {showConfirmDialog && conflicts && (
+        <ConflictResolutionModal
+          open={showConfirmDialog}
+          conflicts={conflicts}
+          onResolve={handleConflictResolve}
+          onCancel={handleConflictCancel}
+          isApplying={isApplying}
+        />
+      )}
+
+      {/* Main Recommendation Modal */}
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-5xl md:max-w-6xl lg:max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {step === "preferences"
@@ -187,5 +248,6 @@ export function AIRecommendationModal({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   )
 }

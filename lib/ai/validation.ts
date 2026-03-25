@@ -32,54 +32,85 @@ export async function validateWithRetry(
   studentId: string,
   generationContext: AIGenerationContext
 ): Promise<{ roadmap: AIRoadmap; validation: ValidationResult }> {
-  // First validation attempt
-  let validation = await validateAIRoadmap(roadmap, studentId)
+  let currentRoadmap = roadmap
+  let currentValidation = await validateAIRoadmap(roadmap, studentId)
+  const maxRetries = 0 // Disabled - retries not fixing duplicate errors, just slowing generation
 
-  // If invalid and we have errors, try one retry
-  if (!validation.isValid && validation.violations.length > 0) {
-    const errorMessages = validation.violations
+  // Track term offering errors specifically
+  const hasTermOfferingErrors = (validation: ValidationResult) =>
+    validation.violations.some(
+      (v) => v.type === "TERM_UNAVAILABLE" && v.severity === "error"
+    )
+
+  // Retry loop
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    if (currentValidation.isValid) {
+      console.log(`Plan is valid after ${attempt} retries`)
+      break
+    }
+
+    const errorMessages = currentValidation.violations
       .filter((v) => v.severity === "error")
       .map((v) => v.message)
 
-    if (errorMessages.length > 0) {
-      console.log(
-        "AI roadmap has validation errors, attempting retry with feedback..."
+    if (errorMessages.length === 0) {
+      break // Only warnings left
+    }
+
+    const termErrors = hasTermOfferingErrors(currentValidation)
+    console.log(
+      `AI roadmap has ${errorMessages.length} validation errors (${termErrors ? "including term offering violations" : "no term violations"}), attempting retry ${attempt + 1}/${maxRetries}...`
+    )
+
+    try {
+      // Retry with error feedback
+      const retriedRoadmap = await retryWithErrors(
+        generationContext,
+        errorMessages
       )
 
-      try {
-        // Retry with error feedback
-        const retriedRoadmap = await retryWithErrors(
-          generationContext,
-          errorMessages
+      // Validate the retried roadmap
+      const retriedValidation = await validateAIRoadmap(
+        retriedRoadmap,
+        studentId
+      )
+
+      // Use the retried version if it's better (fewer errors OR eliminated term errors)
+      const retriedErrorCount = retriedValidation.violations.filter(
+        (v) => v.severity === "error"
+      ).length
+      const currentErrorCount = currentValidation.violations.filter(
+        (v) => v.severity === "error"
+      ).length
+
+      const retriedTermErrors = hasTermOfferingErrors(retriedValidation)
+      const currentTermErrors = hasTermOfferingErrors(currentValidation)
+
+      // Prefer the retry if:
+      // 1. It has fewer total errors, OR
+      // 2. It eliminates term offering errors (even if total errors are same)
+      if (
+        retriedErrorCount < currentErrorCount ||
+        (currentTermErrors && !retriedTermErrors)
+      ) {
+        console.log(
+          `Retry ${attempt + 1} improved validation: ${currentErrorCount} -> ${retriedErrorCount} errors (term errors: ${currentTermErrors} -> ${retriedTermErrors})`
         )
-
-        // Validate the retried roadmap
-        const retriedValidation = await validateAIRoadmap(
-          retriedRoadmap,
-          studentId
+        currentRoadmap = retriedRoadmap
+        currentValidation = retriedValidation
+      } else {
+        console.log(
+          `Retry ${attempt + 1} did not improve validation, keeping current plan`
         )
-
-        // Use the retried version if it's better (fewer errors)
-        const retriedErrorCount = retriedValidation.violations.filter(
-          (v) => v.severity === "error"
-        ).length
-        const originalErrorCount = validation.violations.filter(
-          (v) => v.severity === "error"
-        ).length
-
-        if (retriedErrorCount < originalErrorCount) {
-          console.log(
-            `Retry improved validation: ${originalErrorCount} -> ${retriedErrorCount} errors`
-          )
-          return { roadmap: retriedRoadmap, validation: retriedValidation }
-        }
-      } catch (error) {
-        console.error("Retry failed, using original roadmap:", error)
+        break // No improvement, stop retrying
       }
+    } catch (error) {
+      console.error(`Retry ${attempt + 1} failed:`, error)
+      break
     }
   }
 
-  return { roadmap, validation }
+  return { roadmap: currentRoadmap, validation: currentValidation }
 }
 
 /**

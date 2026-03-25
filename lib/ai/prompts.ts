@@ -19,43 +19,41 @@ export function buildSystemPrompt(context: AIGenerationContext): string {
     .filter((c) => student.completedCourseIds.includes(c.id))
     .map((c) => c.code)
 
-  return `You are an expert academic advisor helping a university student plan their remaining semesters to graduation.
+  // Get user-selected start and end dates
+  const planStartTerm = preferences.startSemester.term
+  const planStartYear = preferences.startSemester.year
+  const planEndTerm = preferences.targetGraduation.term
+  const planEndYear = preferences.targetGraduation.year
 
-## STUDENT PROFILE
-- Current Year: ${student.year}
-- Enrollment Year: ${student.enrollmentYear}
-- Major ID: ${student.majorId}
-- Completed Courses: ${student.completedCourseIds.length} courses (${student.completedUnits} units)
-${completedCourseCodes.length > 0 ? `  COMPLETED: ${completedCourseCodes.join(", ")}` : "  COMPLETED: None (freshman student)"}
-- Current GPA: ${student.gpa.toFixed(2)}
+  // Calculate remaining units and expected semesters
+  const remainingUnits = universityRules.requiredTotalUnits - student.completedUnits
+  const avgUnitsPerSemester = (workloadConfig.min + workloadConfig.max) / 2
+  const estimatedSemesters = Math.ceil(remainingUnits / avgUnitsPerSemester)
 
-## TARGET GRADUATION
-- Term: ${preferences.targetGraduation.term}
-- Year: ${preferences.targetGraduation.year}
-${preferences.careerTrack ? `- Career Track: ${preferences.careerTrack}` : ""}
+  return `You are an expert academic advisor creating a course plan for ${planStartTerm} ${planStartYear} to ${planEndTerm} ${planEndYear}.
 
-## WORKLOAD PREFERENCE
-- Level: ${preferences.workloadLevel}
-- Units per semester: ${workloadConfig.min}-${workloadConfig.max} units
-- Description: ${workloadConfig.description}
+PLAN SCOPE: Need ${remainingUnits} units across approximately ${estimatedSemesters} semesters (${avgUnitsPerSemester.toFixed(0)} units/semester average).
 
-## UNIVERSITY RULES (CRITICAL - MUST FOLLOW)
-1. **Prerequisites (HARD RULE)**:
-   - A course with prerequisites can ONLY be scheduled if ALL prerequisite courses are either:
-     a) Already COMPLETED (listed in the COMPLETED courses above), OR
-     b) Scheduled in a PRIOR semester in your plan
-   - Example: If IS210 requires IS101, and IS101 is NOT in the completed list, you MUST schedule IS101 in an earlier semester
-   - NEVER schedule a course before its prerequisites are satisfied
-2. **Corequisites**: Courses with corequisite relationships MUST be taken in the SAME semester
-3. **Terms Offered**: Courses can ONLY be scheduled in terms where they are offered (check termsOffered array)
-   - SMU uses: Term 1 (Aug-Jan), Term 2 (Jan-Apr), Term 3 (May-Aug/Special Term)
-   - ${preferences.includeSummerTerm ? "**You MAY use Term 3 (summer)** if it helps with graduation timeline" : "**DO NOT schedule any courses in Term 3** - student does not want summer classes. Only use Term 1 and Term 2."}
-4. **Unit Limits**:
-   - Minimum: ${universityRules.minUnitsPerSemester} units/semester
-   - Maximum (without overload): ${universityRules.maxUnitsWithoutOverload} units/semester
-   - Absolute maximum: ${universityRules.maxUnitsPerSemester} units/semester
-5. **No Duplicates**: A course can only appear ONCE across all semesters
-6. **Total Units Required**: Must plan for at least ${universityRules.requiredTotalUnits} total units to graduate
+## CRITICAL RULES (violations make plan invalid)
+1. **NO DUPLICATES** (most common error): Track which courses you've used. Each course appears ONCE ONLY.
+2. **Term Offerings**: Only schedule courses in terms they're offered (check "Offered:" line)
+3. **Prerequisites**: Schedule prerequisite courses in EARLIER semesters (check "Prerequisites:" line)
+4. **Units**: ${workloadConfig.min}-${workloadConfig.max} units per semester
+5. **No Summer**: ${preferences.includeSummerTerm ? "May use Term 3 if course is offered" : "Only use Term 1 and Term 2 (NO Term 3)"}
+
+## HOW TO AVOID DUPLICATES
+1. Keep a mental list of ALL courses you've already scheduled
+2. Before adding a course to ANY semester, scan ALL previous semesters
+3. If you see a course code you've used before, SKIP IT and choose a different course
+4. When planning later semesters, remember courses from earlier years
+
+## WHEN TO STOP PLANNING
+STOP adding semesters when you reach ${remainingUnits} total units (approximately ${estimatedSemesters} semesters).
+Do NOT create more semesters than needed just to fill the time period.
+
+## STUDENT
+Year ${student.year}, GPA ${student.gpa.toFixed(2)}, ${student.completedUnits}/${universityRules.requiredTotalUnits} units complete
+${completedCourseCodes.length > 0 ? `Completed: ${completedCourseCodes.join(", ")}` : `No courses completed yet`}${preferences.careerTrack ? `\nFocus: ${preferences.careerTrack}` : ""}
 
 ## AVAILABLE COURSES
 ${formatAvailableCourses(availableCourses, student.completedCourseIds)}
@@ -66,21 +64,8 @@ ${preferences.preferredCourses.map((id) => `- ${getCourseById(availableCourses, 
 ${preferences.avoidCourses && preferences.avoidCourses.length > 0 ? `## COURSES TO AVOID (exclude unless absolutely necessary)
 ${preferences.avoidCourses.map((id) => `- ${getCourseById(availableCourses, id)?.code || id}`).join("\n")}` : ""}
 
-## YOUR TASK
-Create an optimal term-by-term course plan from now until ${preferences.targetGraduation.term} ${preferences.targetGraduation.year}.
-
-For each term:
-1. Select courses that are eligible (prerequisites met in prior terms)
-2. Ensure courses are offered in that term (Term 1/Term 2/Term 3)
-3. Respect the workload preference (${workloadConfig.min}-${workloadConfig.max} units)
-4. Balance course difficulty when possible
-5. Schedule prerequisites before courses that need them
-6. Group related courses logically
-7. Provide clear reasoning for each course selection and semester structure
-
 ## OUTPUT FORMAT
-Return a JSON object with this EXACT structure (do not wrap in "plan" or "summary" objects):
-
+Return JSON matching this structure (use course UUIDs from "ID:" lines above, NOT course codes):
 {
   "semesters": [
     {
@@ -88,39 +73,21 @@ Return a JSON object with this EXACT structure (do not wrap in "plan" or "summar
       "year": 2024,
       "courses": [
         {
-          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "id": "uuid-from-available-courses",
           "code": "CS101",
           "title": "Introduction to Computer Science",
           "units": 4,
-          "reasoning": "Foundational course with no prerequisites"
+          "reasoning": "Brief reason for including this course"
         }
       ],
       "totalUnits": 16,
-      "reasoning": "Balanced first semester focusing on foundations"
+      "reasoning": "Brief semester summary"
     }
   ],
   "totalSemesters": 8,
   "totalUnits": 120,
   "meetsRequirements": true
-}
-
-CRITICAL:
-- The "id" field MUST be the UUID from the course's "ID:" line in the AVAILABLE COURSES section
-- Do NOT use the course code as the ID - use the actual UUID string
-- Use the exact field names above. Do NOT use "plan" or "summary" as wrapper objects.
-
-## CRITICAL VALIDATION CHECKLIST
-Before finalizing your plan, verify:
-✓ All prerequisites are satisfied (hard prereqs in PRIOR semesters)
-✓ Corequisites are in SAME semester
-✓ Courses only scheduled when offered (check termsOffered)
-${!preferences.includeSummerTerm ? "✓ **NO courses scheduled in Term 3** (student opted out of summer classes)" : ""}
-✓ No course appears twice
-✓ Unit counts are within limits (${workloadConfig.min}-${workloadConfig.max} per semester)
-✓ Total units >= ${universityRules.requiredTotalUnits}
-✓ Plan ends by ${preferences.targetGraduation.term} ${preferences.targetGraduation.year}
-
-If you cannot create a valid plan meeting all constraints, explain why in the reasoning fields.`
+}`
 }
 
 /**
@@ -172,19 +139,31 @@ export function buildRetryPrompt(
   originalPrompt: string,
   validationErrors: string[]
 ): string {
+  const duplicateErrors = validationErrors.filter(err => err.includes("appears multiple times"))
+  const termErrors = validationErrors.filter(err => err.includes("only offered in") || err.includes("not offered in"))
+  const prereqErrors = validationErrors.filter(err => err.includes("Prerequisite") || err.includes("must be taken before"))
+
+  // Extract unique duplicate courses
+  const duplicateCourses = new Set<string>()
+  duplicateErrors.forEach(err => {
+    const match = err.match(/^([A-Z]+\d+)/)
+    if (match) duplicateCourses.add(match[1])
+  })
+
   return `${originalPrompt}
 
-## VALIDATION ERRORS FROM PREVIOUS ATTEMPT
-Your previous plan had these violations:
-${validationErrors.map((error, i) => `${i + 1}. ${error}`).join("\n")}
+## 🚨 CRITICAL: PREVIOUS PLAN HAD ${validationErrors.length} ERRORS
+${duplicateErrors.length > 0 ? `
+**DUPLICATE COURSES** (${duplicateCourses.size} courses used multiple times):
+${Array.from(duplicateCourses).map(code => `- ${code} ← appears in 2+ semesters`).join("\n")}
 
-Please generate a NEW plan that fixes ALL these violations. Pay special attention to:
-- Prerequisite ordering (prerequisites must be in EARLIER semesters)
-- Corequisite grouping (must be in SAME semester)
-- Term availability (only schedule courses when offered)
-- Unit limits (${WORKLOAD_CONFIG["Balanced"].min}-${WORKLOAD_CONFIG["Balanced"].max} units per semester)
+CRITICAL RULE: Each course can appear ONLY ONCE in entire plan.
+ACTION REQUIRED: Before adding ANY course, manually check if it's already in a previous semester.
+` : ""}
+${termErrors.length > 0 ? `**TERM OFFERING ERRORS**: ${termErrors.length} courses scheduled in wrong terms - verify "Offered:" line\n` : ""}
+${prereqErrors.length > 0 ? `**PREREQUISITE ERRORS**: ${prereqErrors.length} courses before prerequisites - schedule prereqs in earlier semesters\n` : ""}
 
-Generate a corrected plan now.`
+Generate a COMPLETELY NEW plan with ZERO duplicates, correct terms, and proper prerequisite ordering.`
 }
 
 /**

@@ -18,9 +18,10 @@ export type TargetGraduation = z.infer<typeof targetGraduationSchema>
 
 export const userPreferencesSchema = z.object({
   workloadLevel: workloadLevelSchema,
-  targetGraduation: targetGraduationSchema,
+  startSemester: targetGraduationSchema, // When to start planning from
+  targetGraduation: targetGraduationSchema, // When to graduate
   careerTrack: z.string().optional(),
-  includeSummerTerm: z.boolean().optional().default(false), // Whether to include Term 3 (summer)
+  includeSummerTerm: z.boolean().default(false), // Whether to include Term 3 (summer)
   preferredCourses: z.array(z.string()).optional(), // Course IDs
   avoidCourses: z.array(z.string()).optional(), // Course IDs
 })
@@ -72,6 +73,10 @@ export interface ApplyRecommendationResponse {
   created: {
     semesterPlans: number
     plannedCourses: number
+  }
+  replaced?: {
+    semesterPlans: number
+    deletedCourses: number
   }
 }
 

@@ -26,13 +26,16 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: "Invalid roadmap",
-          details: validationResult.error.errors,
+          details: validationResult.error.issues,
         },
         { status: 400 }
       )
     }
 
     const roadmap = validationResult.data
+    const replaceExisting = body.replaceExisting === true
+    const semestersToReplace: Array<{ term: string; year: number }> =
+      body.semestersToReplace || []
 
     // 3. Get student ID
     const student = await prisma.student.findUnique({
@@ -60,23 +63,132 @@ export async function POST(request: Request) {
       )
     }
 
-    // 5. Apply roadmap to planner
-    let createdPlans = 0
-    let createdCourses = 0
+    // 5. Check for conflicts with existing plans
+    const conflicts: Array<{
+      term: string
+      year: number
+      existingCourseCount: number
+      aiCourseCount: number
+      existingCourses: Array<{ code: string; title: string }>
+      aiCourses: Array<{ code: string; title: string }>
+    }> = []
 
     for (const aiSemester of roadmap.semesters) {
-      // Check if semester plan already exists
-      let semesterPlan = await prisma.semesterPlan.findFirst({
+      const existingPlan = await prisma.semesterPlan.findFirst({
         where: {
           studentId: student.id,
           term: aiSemester.term,
           year: aiSemester.year,
         },
+        include: {
+          plannedCourses: {
+            include: {
+              course: {
+                select: {
+                  code: true,
+                  title: true,
+                },
+              },
+            },
+          },
+        },
       })
 
-      // Create if doesn't exist
-      if (!semesterPlan) {
-        semesterPlan = await prisma.semesterPlan.create({
+      if (existingPlan && existingPlan.plannedCourses.length > 0) {
+        // Compare course codes to see if they're actually different
+        const existingCodes = new Set(
+          existingPlan.plannedCourses.map((pc) => pc.course.code)
+        )
+        const aiCodes = new Set(aiSemester.courses.map((c) => c.code))
+
+        // Check if the courses are different (different sizes or different codes)
+        const areDifferent =
+          existingCodes.size !== aiCodes.size ||
+          !Array.from(existingCodes).every((code) => aiCodes.has(code))
+
+        // Only add to conflicts if the courses are actually different
+        if (areDifferent) {
+          conflicts.push({
+            term: aiSemester.term,
+            year: aiSemester.year,
+            existingCourseCount: existingPlan.plannedCourses.length,
+            aiCourseCount: aiSemester.courses.length,
+            existingCourses: existingPlan.plannedCourses.map((pc) => ({
+              code: pc.course.code,
+              title: pc.course.title,
+            })),
+            aiCourses: aiSemester.courses.map((c) => ({
+              code: c.code,
+              title: c.title,
+            })),
+          })
+        }
+      }
+    }
+
+    // 6. If there are conflicts and user hasn't approved replacement, return conflicts
+    if (conflicts.length > 0 && !replaceExisting) {
+      return NextResponse.json(
+        {
+          conflicts,
+          message: "Some semesters already have planned courses",
+        },
+        { status: 409 }
+      )
+    }
+
+    // 7. Apply roadmap to planner
+    let createdPlans = 0
+    let createdCourses = 0
+    let replacedPlans = 0
+    let deletedCourses = 0
+
+    // Build a set of semesters to replace for quick lookup
+    const replaceSet = new Set(
+      semestersToReplace.map((s) => `${s.term}-${s.year}`)
+    )
+
+    for (const aiSemester of roadmap.semesters) {
+      const semesterKey = `${aiSemester.term}-${aiSemester.year}`
+      const shouldReplace =
+        replaceExisting && (semestersToReplace.length === 0 || replaceSet.has(semesterKey))
+
+      // Check if semester plan already exists
+      const existingPlan = await prisma.semesterPlan.findFirst({
+        where: {
+          studentId: student.id,
+          term: aiSemester.term,
+          year: aiSemester.year,
+        },
+        include: {
+          plannedCourses: true,
+        },
+      })
+
+      let semesterPlanId: string
+
+      // If plan exists and has courses
+      if (existingPlan && existingPlan.plannedCourses.length > 0) {
+        if (shouldReplace) {
+          // Delete existing courses before adding AI courses
+          const deleteResult = await prisma.plannedCourse.deleteMany({
+            where: {
+              semesterPlanId: existingPlan.id,
+            },
+          })
+          deletedCourses += deleteResult.count
+          replacedPlans++
+          semesterPlanId = existingPlan.id
+        } else {
+          // Skip this semester - user chose not to replace it
+          continue
+        }
+      } else if (existingPlan) {
+        // Plan exists but no courses
+        semesterPlanId = existingPlan.id
+      } else {
+        // Create new semester plan
+        const newPlan = await prisma.semesterPlan.create({
           data: {
             studentId: student.id,
             term: aiSemester.term,
@@ -85,42 +197,36 @@ export async function POST(request: Request) {
           },
         })
         createdPlans++
+        semesterPlanId = newPlan.id
       }
 
-      // Add courses to the semester plan
+      // Add AI courses to the semester plan
       for (const aiCourse of aiSemester.courses) {
-        // Check if course is already in this plan
-        const existingPlannedCourse = await prisma.plannedCourse.findFirst({
-          where: {
-            semesterPlanId: semesterPlan.id,
+        await prisma.plannedCourse.create({
+          data: {
+            semesterPlanId: semesterPlanId,
             courseId: aiCourse.id,
+            status: "PLANNED",
           },
         })
-
-        // Only add if not already planned
-        if (!existingPlannedCourse) {
-          await prisma.plannedCourse.create({
-            data: {
-              semesterPlanId: semesterPlan.id,
-              courseId: aiCourse.id,
-              status: "PLANNED",
-            },
-          })
-          createdCourses++
-        }
+        createdCourses++
       }
     }
 
-    // 6. Revalidate planner page
+    // 8. Revalidate planner page
     revalidatePath("/planner")
 
-    // 7. Return success
+    // 9. Return success
     const response: ApplyRecommendationResponse = {
       success: true,
       created: {
         semesterPlans: createdPlans,
         plannedCourses: createdCourses,
       },
+      replaced: replacedPlans > 0 ? {
+        semesterPlans: replacedPlans,
+        deletedCourses: deletedCourses,
+      } : undefined,
     }
 
     return NextResponse.json(response)

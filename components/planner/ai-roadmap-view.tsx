@@ -28,7 +28,11 @@ export function AIRoadmapView({
   isApplying = false,
 }: AIRoadmapViewProps) {
   const hasErrors = validation.violations.some((v) => v.severity === "error")
-  const hasWarnings = validation.violations.some((v) => v.severity === "warning")
+
+  // Only show warning banner for non-unit-count warnings (hide minor unit overload warnings)
+  const hasSignificantWarnings = validation.violations.some(
+    (v) => v.severity === "warning" && v.type !== "OVERLOAD"
+  )
 
   return (
     <TooltipProvider>
@@ -73,7 +77,7 @@ export function AIRoadmapView({
         </Card>
       )}
 
-      {hasWarnings && !hasErrors && (
+      {hasSignificantWarnings && !hasErrors && (
         <Card className="border border-gray-300 bg-gray-50 p-4 rounded-none shadow-none">
           <div className="flex gap-3">
             <div className="text-gray-600">
@@ -156,7 +160,7 @@ export function AIRoadmapView({
           Back to Preferences
         </Button>
         <Button
-          onClick={onApply}
+          onClick={() => onApply()}
           disabled={hasErrors || isApplying}
           className="min-w-[150px]"
         >
@@ -213,17 +217,17 @@ function SemesterCard({
   return (
     <Card className="overflow-hidden">
       {/* Semester Header */}
-      <div className="border-b bg-gray-50 px-4 pt-1 pb-2.5">    
-        <div className="flex items-start justify-between">
-          <div className="flex-1 pr-4">
-            <h4 className="text-lg font-bold text-gray-900 tracking-tight leading-none m-0 -mt-0.5">
+      <div className="border-b bg-gray-50 px-4 py-3">    
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-lg font-bold text-gray-900">
               Semester {semesterNumber}: {semester.term} {semester.year}
             </h4>
-            <p className="text-sm text-gray-600 leading-snug mt-1.5 m-0">{semester.reasoning}</p>
+            <p className="mt-1 text-sm text-gray-600">{semester.reasoning}</p>
           </div>
-          <div className="text-right flex flex-col items-end pt-0.5">
-            <p className="text-xs text-gray-500 leading-none uppercase tracking-wider font-semibold mb-1">Total Units</p>
-            <p className="text-lg font-bold text-gray-900 leading-none m-0">{semester.totalUnits}</p>
+          <div className="text-right">
+            <p className="text-xs text-gray-500">Total Units</p>
+            <p className="text-lg font-bold text-gray-900">{semester.totalUnits}</p>
           </div>
         </div>
       </div>
@@ -253,7 +257,7 @@ function CourseRow({
   const hasWarning = violations.some((v) => v.severity === "warning")
 
   return (
-    <div className="px-4 py-2 hover:bg-gray-50">
+    <div className="px-4 py-3 hover:bg-gray-50">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
@@ -320,7 +324,7 @@ function CourseRow({
               </Tooltip>
             )}
           </div>
-          <p className="text-sm text-gray-600 mt-0.5">{course.reasoning}</p>
+          <p className="mt-1 text-sm text-gray-600">{course.reasoning}</p>
         </div>
       </div>
     </div>

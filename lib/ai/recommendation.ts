@@ -1,5 +1,5 @@
 import { generateObject } from "ai"
-import { createGroq } from "@ai-sdk/groq"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { prisma } from "@/lib/prisma"
 import type {
   AIGenerationContext,
@@ -12,9 +12,9 @@ import { aiRoadmapSchema } from "./types"
 import { buildSystemPrompt, buildRetryPrompt } from "./prompts"
 import { generateDeterministicRoadmap } from "./fallback"
 
-// Initialize Groq client
-const groq = createGroq({
-  apiKey: process.env.GROQ_API_KEY,
+// Initialize Google AI client
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY,
 })
 
 /**
@@ -38,15 +38,15 @@ export async function generateAIRoadmap(
     // 1. Build context from database
     const context = await buildGenerationContext(studentId, preferences)
 
-    // 2. Generate roadmap with Groq
-    const roadmap = await generateWithGroq(context)
+    // 2. Generate roadmap with Gemini Flash
+    const roadmap = await generateWithGemini(context)
 
     const processingTime = (Date.now() - startTime) / 1000
 
     return {
       roadmap,
       metadata: {
-        model: "llama-3.3-70b-versatile",
+        model: "gemini-2.5-flash",
         generatedAt: new Date().toISOString(),
         processingTime,
         usedFallback: false,
@@ -74,32 +74,42 @@ export async function generateAIRoadmap(
 }
 
 /**
- * Generate roadmap using Groq with retry logic
+ * Generate roadmap using Gemini Flash with retry logic
  */
-async function generateWithGroq(
+async function generateWithGemini(
   context: AIGenerationContext,
   retryCount = 0
 ): Promise<AIRoadmap> {
   const maxRetries = 1
   const systemPrompt = buildSystemPrompt(context)
 
+  console.log("🤖 Generating with Gemini 2.5 Flash...")
+  console.log("API Key configured:", !!process.env.GEMINI_API_KEY)
+  console.log("Prompt length:", systemPrompt.length, "chars")
+
   try {
     const result = await generateObject({
-      model: groq("llama-3.3-70b-versatile"),
+      model: google("gemini-2.5-flash"), // Use gemini-3-flash-preview for latest
       schema: aiRoadmapSchema,
       prompt: systemPrompt,
       temperature: 0.3, // Lower temperature for more consistent output
     })
 
+    console.log("✅ Gemini generation successful")
+    console.log("Generated semesters:", result.object.semesters?.length)
+
     return result.object as unknown as AIRoadmap
   } catch (error) {
+    console.error("❌ Gemini generation error:", error)
+    console.error("Error details:", error instanceof Error ? error.message : error)
+
     if (retryCount < maxRetries) {
       console.warn(
-        `Groq generation failed (attempt ${retryCount + 1}/${maxRetries + 1}), retrying...`
+        `Gemini generation failed (attempt ${retryCount + 1}/${maxRetries + 1}), retrying...`
       )
       // Wait a bit before retrying
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      return generateWithGroq(context, retryCount + 1)
+      return generateWithGemini(context, retryCount + 1)
     }
 
     throw error
@@ -228,7 +238,7 @@ export async function retryWithErrors(
   const retryPrompt = buildRetryPrompt(originalPrompt, errors)
 
   const result = await generateObject({
-    model: groq("llama-3.3-70b-versatile"),
+    model: google("gemini-2.5-flash"),
     schema: aiRoadmapSchema,
     prompt: retryPrompt,
     temperature: 0.2, // Even lower temperature for retry
