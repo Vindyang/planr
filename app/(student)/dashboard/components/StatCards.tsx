@@ -61,7 +61,7 @@ export function StatCards({
         </CardContent>
       </Card>
 
-      {/* Next Semester Courses */}
+      {/* Upcoming Term Courses */}
       <Card className="bg-card border border-border shadow-none rounded-none p-4">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
           <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Upcoming Term</CardTitle>

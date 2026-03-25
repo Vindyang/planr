@@ -28,7 +28,7 @@ export function YearSection({ year, plans, onRemoveCourse, onDeletePlan, onCreat
       return (termOrder[a.term] || 99) - (termOrder[b.term] || 99)
   })
 
-  // Calculate default term for next semester based on existing plans
+  // Calculate default term for next term based on existing plans
   const getNextTerm = () => {
       const terms = ["Term 1", "Term 2", "Term 3"]
       if (sortedPlans.length === 0) return "Term 1"

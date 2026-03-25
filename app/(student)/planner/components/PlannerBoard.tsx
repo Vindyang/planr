@@ -16,7 +16,12 @@ type PlannerData = {
   semesterPlans: (Prisma.semesterPlanGetPayload<{
     include: { plannedCourses: { include: { course: true } } }
   }>)[]
-  availableCourses: any[] // Using any for now to simplify
+  availableCourses: Array<{
+    id: string
+    code: string
+    title: string
+    units: number
+  }>
 }
 
 type PlannerBoardProps = {
@@ -56,12 +61,12 @@ export function PlannerBoard({
 }: PlannerBoardProps) {
   
   // Find active item for overlay
-  let activeCourse: any = null
+  let activeCourse: PlannerData["availableCourses"][number] | null = null
 
   if (activeId) {
     if (activeId.startsWith("drawer-")) {
       const courseId = activeId.replace("drawer-", "")
-      activeCourse = data.availableCourses.find((c: any) => c.id === courseId)
+      activeCourse = data.availableCourses.find((c) => c.id === courseId) || null
     } else {
       for (const plan of data.semesterPlans) {
         const course = plan.plannedCourses.find((pc) => pc.id === activeId)

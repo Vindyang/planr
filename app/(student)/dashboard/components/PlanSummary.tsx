@@ -13,7 +13,7 @@ type PlanSummaryProps = {
 }
 
 export function PlanSummary({ semesterPlans }: PlanSummaryProps) {
-  // Find current/next semester plan
+  // Find current/next term plan
   const relevantPlan = findRelevantSemester(semesterPlans)
 
   if (!relevantPlan || relevantPlan.plannedCourses.length === 0) {
@@ -96,7 +96,7 @@ function findRelevantSemester(plans: SemesterPlan[]) {
   let targetTerm: string
   let targetYear: number
 
-  // Determine target semester based on current month (SMU calendar)
+  // Determine target term based on current month (SMU calendar)
   if (month >= 0 && month <= 3) {
     // Jan-Apr: Term 2
     targetTerm = "Term 2"
@@ -117,7 +117,7 @@ function findRelevantSemester(plans: SemesterPlan[]) {
   )
   if (exactMatch) return exactMatch
 
-  // Otherwise return the earliest upcoming semester
+  // Otherwise return the earliest upcoming term
   const sorted = [...plans].sort((a, b) => {
     if (a.year !== b.year) return a.year - b.year
     const termOrder: Record<string, number> = { "Term 1": 0, "Term 2": 1, "Term 3": 2 }

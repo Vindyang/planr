@@ -85,10 +85,28 @@ interface ProfileClientProps {
   initialCourses: AvailableCourse[]
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message
+  }
+  return fallback
+}
+
+async function parseApiError(response: Response, fallback: string) {
+  try {
+    const data = await response.json()
+    if (typeof data?.error === "string" && data.error.trim().length > 0) {
+      return data.error
+    }
+  } catch {
+    // ignore non-JSON errors and use fallback
+  }
+  return fallback
+}
+
 export default function ProfileClient({ initialStudent, initialCourses }: ProfileClientProps) {
   const [student, setStudent] = useState<StudentProfile | null>(initialStudent)
   const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>(initialCourses)
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -113,7 +131,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
     try {
       const res = await fetch("/api/student/profile")
       if (!res.ok) {
-        throw new Error("Failed to fetch profile")
+        throw new Error(await parseApiError(res, "Failed to fetch profile"))
       }
       const data = await res.json()
       setStudent(data.student)
@@ -124,7 +142,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
         year: data.student.year,
       })
     } catch (err) {
-      setError("Failed to load profile")
+      setError(getErrorMessage(err, "Failed to load profile"))
     }
   }
 
@@ -162,7 +180,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
         setError(result.error || "Failed to update profile")
       }
     } catch (err) {
-      setError("Failed to update profile")
+      setError(getErrorMessage(err, "Failed to update profile"))
     }
   }
 
@@ -175,7 +193,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
         setError(result.error || "Failed to remove course")
       }
     } catch (err) {
-      setError("Failed to remove course")
+      setError(getErrorMessage(err, "Failed to remove course"))
     }
   }
 
@@ -215,7 +233,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
         setAddCourseError(result.error || "Failed to add course")
       }
     } catch (err) {
-      setAddCourseError("Failed to add course")
+      setAddCourseError(getErrorMessage(err, "Failed to add course"))
     } finally {
       setIsAddingCourse(false)
     }

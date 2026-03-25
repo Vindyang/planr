@@ -27,6 +27,13 @@ type AddToPlanDialogProps = {
   onClose: () => void
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message
+  }
+  return fallback
+}
+
 export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogProps) {
   // Helper functions for smart defaults
   const getDefaultTerm = () => {
@@ -71,16 +78,18 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
       toast.success("Term created successfully. Please add the course again.")
       router.refresh()
       onClose()
-    } catch (err: any) {
-      if (err.message?.includes("already exists")) {
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Failed to create term")
+
+      if (message.includes("already exists")) {
         setError("This term already exists. Refreshing...")
         router.refresh()
         setTimeout(() => setViewMode("selecting"), 1000)
-      } else if (err.message?.includes("maximum of 4 terms")) {
-        setError(err.message)
+      } else if (message.includes("maximum of 4 terms")) {
+        setError(message)
         setNewSemesterYear((parseInt(newSemesterYear) + 1).toString())
       } else {
-        setError(err.message || "Failed to create term")
+        setError(message)
       }
     } finally {
       setIsCreatingSemester(false)
@@ -101,10 +110,11 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
       toast.success(`${course.code} added to plan`)
       router.refresh()
       onClose()
-    } catch (err: any) {
-      setError(err.message || "Failed to add course")
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Failed to add course")
+      setError(message)
       toast.error("Failed to add course", {
-        description: err.message
+        description: message
       })
     } finally {
       setIsLoading(false)

@@ -28,7 +28,7 @@ export type PlannerData = {
   completedCourses: Prisma.completedCourseGetPayload<{
     include: { course: true }
   }>[]
-  gradRequirement?: any // Placeholder for future use
+  gradRequirement?: unknown // Placeholder for future use
 }
 
 // --- Validation Schemas ---

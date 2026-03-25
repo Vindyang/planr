@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconSearch, IconPlus, IconArrowLeft, IconCheck } from "@tabler/icons-react"
+import { IconPlus, IconArrowLeft, IconCheck } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
@@ -12,10 +12,24 @@ import {
   CommandList,
 } from "@/components/ui/command"
 
+type AvailableCourse = {
+  id: string
+  code: string
+  title: string
+  units: number
+}
+
+type SemesterPlanOption = {
+  id: string
+  term: string
+  year: number
+  plannedCourses: Array<{ id: string }>
+}
+
 interface AddCourseDialogProps {
-  availableCourses: any[] // We'll type this better later
+  availableCourses: AvailableCourse[]
   plannedCourseIds: Set<string>
-  semesterPlans: any[]
+  semesterPlans: SemesterPlanOption[]
   onAddCourse: (planId: string, courseId: string) => void
   onAddCourses: (planId: string, courseIds: string[]) => void
 }

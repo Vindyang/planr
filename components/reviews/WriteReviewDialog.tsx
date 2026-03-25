@@ -42,6 +42,19 @@ interface WriteReviewDialogProps {
   defaultCourseId?: string
 }
 
+async function parseApiError(response: Response, fallback: string) {
+  try {
+    const data = await response.json()
+    if (typeof data?.error === "string" && data.error.trim().length > 0) {
+      return data.error
+    }
+  } catch {
+    // ignore non-JSON errors and use fallback
+  }
+
+  return fallback
+}
+
 export function WriteReviewDialog({
   completedCourses,
   professors,
@@ -109,8 +122,7 @@ export function WriteReviewDialog({
         })
 
         if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error)
+          throw new Error(await parseApiError(response, "Failed to submit course review"))
         }
       } else {
         if (!selectedProfessorId) {
@@ -133,8 +145,7 @@ export function WriteReviewDialog({
         })
 
         if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error)
+          throw new Error(await parseApiError(response, "Failed to submit professor review"))
         }
       }
 
