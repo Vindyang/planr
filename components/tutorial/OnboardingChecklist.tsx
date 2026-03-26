@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { IconCheck, IconX, IconMinus, IconListCheck } from "@tabler/icons-react"
+import Link from "next/link"
+import { IconCheck, IconX, IconMinus, IconListCheck, IconArrowRight, IconRoute, IconLock } from "@tabler/icons-react"
 import { CHECKLIST_KEYS, getChecklistState } from "./checklistTracking"
+import type { TourType } from "./tourSteps"
 
 const STEPS = [
-  { key: "VISITED_COURSES" as const, label: "Browse the course catalog" },
-  { key: "CREATED_TERM" as const, label: "Create your first semester" },
-  { key: "ADDED_COURSE" as const, label: "Add a course to your plan" },
+  { key: "VISITED_COURSES" as const, label: "Browse the course catalog", href: "/courses", pendingTour: "browse-courses" as TourType },
+  { key: "CREATED_TERM" as const, label: "Create your first semester", href: "/planner", pendingTour: "create-term" as TourType },
+  { key: "ADDED_COURSE" as const, label: "Add a course to your plan", href: "/planner", pendingTour: "add-course" as TourType },
 ]
 
 export function OnboardingChecklist() {
@@ -95,28 +97,48 @@ export function OnboardingChecklist() {
       </div>
 
       {/* Steps */}
-      <div className="p-5 space-y-3.5">
-        {STEPS.map(({ key, label }) => {
+      <div className="p-5 space-y-2">
+        {STEPS.map(({ key, label, href, pendingTour }) => {
           const isDone = done[key]
+          const isLocked = key === "ADDED_COURSE" && !done.CREATED_TERM
           return (
-            <div key={key} className="flex items-center gap-3">
+            <div key={key} className={`flex items-center gap-3 group ${isLocked ? "opacity-40" : ""}`}>
               <div
                 className={`w-5 h-5 shrink-0 flex items-center justify-center border transition-colors ${
                   isDone ? "bg-[#0A0A0A] border-[#0A0A0A]" : "border-[#DAD6CF] bg-white"
                 }`}
               >
                 {isDone && <IconCheck size={11} stroke={2.5} className="text-white" />}
+                {isLocked && !isDone && <IconLock size={9} stroke={2} className="text-[#999693]" />}
               </div>
               <span
-                className={`text-xs leading-snug ${
+                className={`flex-1 text-xs leading-snug ${
                   isDone ? "line-through text-[#999693]" : "text-[#0A0A0A]"
                 }`}
               >
                 {label}
               </span>
+              {!isDone && !isLocked && (
+                <Link
+                  href={`${href}?tour=${pendingTour}`}
+                  className="p-1 text-[#666460] hover:text-[#0A0A0A] transition-colors"
+                  aria-label={`Go to ${label}`}
+                >
+                  <IconArrowRight size={18} stroke={2.5} />
+                </Link>
+              )}
             </div>
           )
         })}
+
+        {/* Take a tour CTA */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("planr_start_tour"))}
+          className="w-full mt-2 flex items-center justify-center gap-2 border border-[#DAD6CF] py-2.5 text-xs uppercase tracking-[0.1em] font-medium text-[#666460] hover:text-[#0A0A0A] hover:border-[#0A0A0A] transition-colors"
+        >
+          <IconRoute size={14} stroke={1.5} />
+          Take a tour
+        </button>
       </div>
     </div>
   )

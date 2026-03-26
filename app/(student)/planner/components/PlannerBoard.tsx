@@ -146,13 +146,15 @@ export function PlannerBoard({
                                 {/* Show Add Course and Delete buttons only when plans exist */}
                                 {data.semesterPlans.length > 0 && (
                                     <>
-                                        <AddCourseDialog
-                                            availableCourses={data.availableCourses}
-                                            plannedCourseIds={plannedCourseIds}
-                                            semesterPlans={data.semesterPlans}
-                                            onAddCourse={onAddCourse}
-                                            onAddCourses={onAddCourses}
-                                        />
+                                        <span data-tour-id="planner-add-course-btn">
+                                          <AddCourseDialog
+                                              availableCourses={data.availableCourses}
+                                              plannedCourseIds={plannedCourseIds}
+                                              semesterPlans={data.semesterPlans}
+                                              onAddCourse={onAddCourse}
+                                              onAddCourses={onAddCourses}
+                                          />
+                                        </span>
                                         {/* Delete Courses Button */}
                                         {plannedCourseIds.size > 0 && (
                                             <button
@@ -201,7 +203,7 @@ export function PlannerBoard({
 
                 {/* Empty State */}
                 {sortedYears.length === 0 && (
-                     <div className="flex flex-col items-center justify-center p-12 border border-[#DAD6CF] bg-white text-center">
+                     <div data-tour-id="planner-create-term" className="flex flex-col items-center justify-center p-12 border border-[#DAD6CF] bg-white text-center">
                         <div className="p-4 rounded-full bg-[#F4F1ED] mb-4">
                             <IconPlus className="w-8 h-8 opacity-50" />
                         </div>
