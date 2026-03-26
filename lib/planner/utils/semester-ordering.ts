@@ -3,9 +3,9 @@
  */
 
 const TERM_ORDER: Record<string, number> = {
-  Spring: 0,
-  Summer: 1,
-  Fall: 2,
+  "Term 1": 0,
+  "Term 2": 1,
+  "Term 3": 2,
 }
 
 export interface Semester {
@@ -63,12 +63,12 @@ export function isAfter(a: Semester, b: Semester): boolean {
 export function getNextSemester(semester: Semester): Semester {
   const currentTermOrder = TERM_ORDER[semester.term] ?? 0
 
-  if (currentTermOrder === 2) { // Fall -> Spring next year
-    return { term: "Spring", year: semester.year + 1 }
-  } else if (currentTermOrder === 0) { // Spring -> Summer
-    return { term: "Summer", year: semester.year }
-  } else { // Summer -> Fall
-    return { term: "Fall", year: semester.year }
+  if (currentTermOrder === 2) { // Term 3 -> Term 1 next year
+    return { term: "Term 1", year: semester.year + 1 }
+  } else if (currentTermOrder === 0) { // Term 1 -> Term 2
+    return { term: "Term 2", year: semester.year }
+  } else { // Term 2 -> Term 3
+    return { term: "Term 3", year: semester.year }
   }
 }
 
@@ -78,11 +78,11 @@ export function getNextSemester(semester: Semester): Semester {
 export function getPreviousSemester(semester: Semester): Semester {
   const currentTermOrder = TERM_ORDER[semester.term] ?? 0
 
-  if (currentTermOrder === 0) { // Spring -> Fall previous year
-    return { term: "Fall", year: semester.year - 1 }
-  } else if (currentTermOrder === 1) { // Summer -> Spring
-    return { term: "Spring", year: semester.year }
-  } else { // Fall -> Summer
-    return { term: "Summer", year: semester.year }
+  if (currentTermOrder === 0) { // Term 1 -> Term 3 previous year
+    return { term: "Term 3", year: semester.year - 1 }
+  } else if (currentTermOrder === 1) { // Term 2 -> Term 1
+    return { term: "Term 1", year: semester.year }
+  } else { // Term 3 -> Term 2
+    return { term: "Term 2", year: semester.year }
   }
 }

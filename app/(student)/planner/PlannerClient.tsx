@@ -11,6 +11,7 @@ import {
 } from "@dnd-kit/core"
 import { PlannerBoard } from "./components/PlannerBoard"
 import { addCourseToPlan, addCoursesToPlan, moveCourse, removeCourseFromPlan, removeCoursesFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
+import { markChecklistItem } from "@/components/tutorial/checklistTracking"
 import { toast } from "@/components/ui/toast"
 import type { ValidationResult } from "@/lib/planner/types"
 import {
@@ -26,21 +27,52 @@ import {
 import { AIRecommendationModal } from "@/components/planner/ai-recommendation-modal"
 
 type PlannerClientProps = {
-  initialData: any
-  allCourses: any[]
+  initialData: PlannerState
+  allCourses: AvailableCourse[]
   completedUnits?: number
+  currentGpa?: number | null
   initialValidation: ValidationResult
 }
+
+type AvailableCourse = {
+  id: string
+  code: string
+  title: string
+  units: number
+}
+
+type PlannedCourse = {
+  id: string
+  course: AvailableCourse
+  semesterPlanId: string
+  courseId?: string
+  status?: string
+  addedAt?: Date
+}
+
+type SemesterPlan = {
+  id: string
+  term: string
+  year: number
+  plannedCourses: PlannedCourse[]
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+type PlannerState = {
+  semesterPlans: SemesterPlan[]
+} & Record<string, unknown>
 
 type OptimisticAction =
   | { type: 'REMOVE_COURSE'; courseId: string }
   | { type: 'REMOVE_COURSES'; courseIds: string[] }
   | { type: 'DELETE_PLAN'; planId: string }
-  | { type: 'ADD_COURSE'; planId: string; course: any }
-  | { type: 'ADD_COURSES'; planId: string; courses: any[] }
+  | { type: 'ADD_COURSE'; planId: string; course: AvailableCourse }
+  | { type: 'ADD_COURSES'; planId: string; courses: AvailableCourse[] }
   | { type: 'MOVE_COURSE'; courseId: string; targetPlanId: string }
+  | { type: 'CREATE_PLAN'; term: string; year: number }
 
-export default function PlannerClient({ initialData, allCourses, completedUnits = 0, initialValidation }: PlannerClientProps) {
+export default function PlannerClient({ initialData, allCourses, completedUnits = 0, currentGpa, initialValidation }: PlannerClientProps) {
   const [, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -54,15 +86,15 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   // Optimistic state management with useOptimistic
   const [optimisticData, addOptimisticUpdate] = useOptimistic(
     initialData,
-    (state: any, action: OptimisticAction) => {
+    (state: PlannerState, action: OptimisticAction) => {
       switch (action.type) {
         case 'REMOVE_COURSE':
           return {
             ...state,
-            semesterPlans: state.semesterPlans.map((plan: any) => ({
+            semesterPlans: state.semesterPlans.map((plan) => ({
               ...plan,
               plannedCourses: plan.plannedCourses.filter(
-                (pc: any) => pc.id !== action.courseId
+                (pc) => pc.id !== action.courseId
               ),
             })),
           }
@@ -70,10 +102,10 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
         case 'REMOVE_COURSES':
           return {
             ...state,
-            semesterPlans: state.semesterPlans.map((plan: any) => ({
+            semesterPlans: state.semesterPlans.map((plan) => ({
               ...plan,
               plannedCourses: plan.plannedCourses.filter(
-                (pc: any) => !action.courseIds.includes(pc.id)
+                (pc) => !action.courseIds.includes(pc.id)
               ),
             })),
           }
@@ -82,14 +114,14 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           return {
             ...state,
             semesterPlans: state.semesterPlans.filter(
-              (plan: any) => plan.id !== action.planId
+              (plan) => plan.id !== action.planId
             ),
           }
 
         case 'ADD_COURSE':
           return {
             ...state,
-            semesterPlans: state.semesterPlans.map((plan: any) =>
+            semesterPlans: state.semesterPlans.map((plan) =>
               plan.id === action.planId
                 ? {
                     ...plan,
@@ -99,6 +131,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                         id: `temp-${Date.now()}`,
                         course: action.course,
                         semesterPlanId: action.planId,
+                        courseId: action.course.id,
+                        status: "PLANNED",
+                        addedAt: new Date(),
                       },
                     ],
                   }
@@ -109,7 +144,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
         case 'ADD_COURSES':
           return {
             ...state,
-            semesterPlans: state.semesterPlans.map((plan: any) =>
+            semesterPlans: state.semesterPlans.map((plan) =>
               plan.id === action.planId
                 ? {
                     ...plan,
@@ -117,8 +152,11 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                       ...plan.plannedCourses,
                       ...action.courses.map((course, index) => ({
                         id: `temp-${Date.now()}-${index}`,
-                        course: course,
+                        course,
                         semesterPlanId: action.planId,
+                        courseId: course.id,
+                        status: "PLANNED",
+                        addedAt: new Date(),
                       })),
                     ],
                   }
@@ -128,22 +166,38 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
         case 'MOVE_COURSE':
           const courseToMove = state.semesterPlans
-            .flatMap((p: any) => p.plannedCourses)
-            .find((pc: any) => pc.id === action.courseId)
+            .flatMap((p) => p.plannedCourses)
+            .find((pc) => pc.id === action.courseId)
 
           if (!courseToMove) return state
 
           return {
             ...state,
-            semesterPlans: state.semesterPlans.map((plan: any) => ({
+            semesterPlans: state.semesterPlans.map((plan) => ({
               ...plan,
               plannedCourses:
                 plan.id === action.targetPlanId
                   ? [...plan.plannedCourses, courseToMove]
                   : plan.plannedCourses.filter(
-                      (pc: any) => pc.id !== action.courseId
+                      (pc) => pc.id !== action.courseId
                     ),
             })),
+          }
+
+        case 'CREATE_PLAN':
+          return {
+            ...state,
+            semesterPlans: [
+              ...state.semesterPlans,
+              {
+                id: `temp-${Date.now()}`,
+                term: action.term,
+                year: action.year,
+                plannedCourses: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              },
+            ],
           }
 
         default:
@@ -173,7 +227,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
     if (!over) return
 
-    const activeData = active.data.current
+    const activeData = active.data.current as
+      | { type?: "new-course" | "course"; courseId?: string }
+      | undefined
     const overId = over.id as string // This is the planId (droppable)
 
     startTransition(async () => {
@@ -189,16 +245,17 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                 }
 
                 await addCourseToPlan(overId, courseId)
+                markChecklistItem("ADDED_COURSE")
                 toast.success("Course added", {
                   description: "Successfully added course via drag & drop",
                 })
             } else if (activeData?.type === "course") {
-                // Find the current semester plan for this course
-                const currentPlan = optimisticData.semesterPlans.find((plan: any) =>
-                  plan.plannedCourses.some((pc: any) => pc.id === active.id)
+                // Find the current term plan for this course
+                const currentPlan = optimisticData.semesterPlans.find((plan) =>
+                  plan.plannedCourses.some((pc) => pc.id === active.id)
                 )
 
-                // If dropping into the same semester, ignore the action
+                // If dropping into the same term, ignore the action
                 if (currentPlan?.id === overId) {
                   return
                 }
@@ -227,13 +284,13 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   const handleRemoveCourse = (courseId: string) => {
     // Find the course data before deletion for potential undo
     const courseToRemove = optimisticData.semesterPlans
-      .flatMap((plan: any) =>
-        plan.plannedCourses.map((pc: any) => ({
+      .flatMap((plan) =>
+        plan.plannedCourses.map((pc) => ({
           ...pc,
           semesterPlanId: plan.id
         }))
       )
-      .find((pc: any) => pc.id === courseId)
+      .find((pc) => pc.id === courseId)
 
     if (!courseToRemove) return
 
@@ -287,11 +344,11 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
         try {
           await deleteSemesterPlan(planToDelete)
-          toast.success("Semester deleted", {
-            description: "Successfully deleted semester and all its courses",
+          toast.success("Term deleted", {
+            description: "Successfully deleted term and all its courses",
           })
         } catch (error) {
-          toast.error("Failed to delete semester", {
+          toast.error("Failed to delete term", {
             description: (error as Error).message,
           })
         }
@@ -301,7 +358,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
   const handleCreatePlan = async (term: string, year: number) => {
      // Check if year already has 4 terms
-     const yearPlans = optimisticData.semesterPlans.filter((p: any) => p.year === year)
+     const yearPlans = optimisticData.semesterPlans.filter((p) => p.year === year)
      if (yearPlans.length >= 4) {
          toast.error("Year Limit Reached", {
              description: `Academic year ${year} already has the maximum of 4 terms.`
@@ -310,13 +367,17 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
      }
 
      startTransition(async () => {
+         // Optimistically add the empty term to UI immediately
+         addOptimisticUpdate({ type: 'CREATE_PLAN', term, year })
+
          try {
              await createSemesterPlan(term, year)
-             toast.success("Semester created", {
+             markChecklistItem("CREATED_TERM")
+             toast.success("Term created", {
                description: `Successfully created ${term} ${year}`,
              })
          } catch (e) {
-             toast.error("Failed to create semester", {
+             toast.error("Failed to create term", {
                  description: (e as Error).message
              })
          }
@@ -336,6 +397,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
       try {
         await addCourseToPlan(planId, courseId)
+        markChecklistItem("ADDED_COURSE")
         toast.success("Course added", {
           description: "Successfully added course to your plan",
         })
@@ -391,10 +453,10 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
     // Capture all courses data before deletion for potential undo
     const coursesToRemove = optimisticData.semesterPlans
-      .flatMap((plan: any) =>
+      .flatMap((plan) =>
         plan.plannedCourses
-          .filter((pc: any) => courseIds.includes(pc.id))
-          .map((pc: any) => ({
+          .filter((pc) => courseIds.includes(pc.id))
+          .map((pc) => ({
             plannedCourseId: pc.id,
             courseId: pc.course.id,
             semesterPlanId: plan.id,
@@ -418,25 +480,25 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
             label: "Undo",
             onClick: () => {
               startTransition(async () => {
-                // Group courses by semester plan for efficient restoration
-                const coursesBySemester: Record<string, any[]> = coursesToRemove.reduce((acc: Record<string, any[]>, item: any) => {
+                // Group courses by term plan for efficient restoration
+                const coursesBySemester: Record<string, AvailableCourse[]> = coursesToRemove.reduce((acc, item) => {
                   if (!acc[item.semesterPlanId]) {
                     acc[item.semesterPlanId] = []
                   }
                   acc[item.semesterPlanId].push(item.course)
                   return acc
-                }, {})
+                }, {} as Record<string, AvailableCourse[]>)
 
                 // Optimistically add all courses back
                 Object.entries(coursesBySemester).forEach(([planId, courses]) => {
-                  addOptimisticUpdate({ type: 'ADD_COURSES', planId, courses: courses as any[] })
+                  addOptimisticUpdate({ type: 'ADD_COURSES', planId, courses })
                 })
 
                 try {
-                  // Restore courses to their original semesters
+                  // Restore courses to their original terms
                   await Promise.all(
                     Object.entries(coursesBySemester).map(([planId, courses]) =>
-                      addCoursesToPlan(planId, (courses as any[]).map((c: any) => c.id))
+                      addCoursesToPlan(planId, courses.map((c) => c.id))
                     )
                   )
 
@@ -484,6 +546,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           onAddCourse={handleAddCourse}
           onAddCourses={handleAddCourses}
           completedUnits={completedUnits}
+          currentGpa={currentGpa}
           initialValidation={initialValidation}
           isSelectionMode={isSelectionMode}
           selectedCourses={selectedCourses}
@@ -499,9 +562,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
       <AlertDialog open={!!planToDelete} onOpenChange={(open) => !open && setPlanToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Semester Plan</AlertDialogTitle>
+            <AlertDialogTitle>Delete Term Plan</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this semester plan? All courses in it will be removed.
+              Are you sure you want to delete this term plan? All courses in it will be removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

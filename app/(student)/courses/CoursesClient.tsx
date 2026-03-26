@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
+import { markChecklistItem } from "@/components/tutorial/checklistTracking"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
-import { IconSearch } from "@tabler/icons-react"
+import { IconSearch, IconStar, IconStarFilled, IconCalendarCheck } from "@tabler/icons-react"
 import {
   checkCourseEligibility,
   CourseWithPrereqs,
@@ -47,14 +48,27 @@ interface StudentData {
 interface CoursesClientProps {
   initialCourses: CourseData[]
   initialStudent: StudentData
+  reviewAggregates: Record<string, {
+    averageRating: number
+    averageDifficulty: number
+    averageWorkload: number
+    totalReviews: number
+  }>
+  plannedCourseIds: Set<string>
 }
 
 export default function CoursesClient({
   initialCourses,
   initialStudent,
+  reviewAggregates,
+  plannedCourseIds,
 }: CoursesClientProps) {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") || "")
+
+  useEffect(() => {
+    markChecklistItem("VISITED_COURSES")
+  }, [])
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [selectedTerm, setSelectedTerm] = useState<string | null>(null)
 
@@ -208,16 +222,25 @@ export default function CoursesClient({
         <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
           {filteredCourses.map((course) => {
             const status = getEligibilityStatus(course)
+            const isInPlanner = plannedCourseIds.has(course.id)
             return (
               <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
                 className="bg-card border border-border p-6 flex flex-col transition-all duration-200 hover:border-foreground hover:-translate-y-0.5 hover:shadow-md h-full"
               >
-                <div className="flex justify-between mb-3">
-                  <span className="uppercase text-xs tracking-wider font-medium text-muted-foreground">
-                    {course.code}
-                  </span>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="uppercase text-xs tracking-wider font-medium text-muted-foreground">
+                      {course.code}
+                    </span>
+                    {isInPlanner && (
+                      <div className="flex items-center gap-1 text-[0.65rem] text-purple-700 bg-purple-50 px-1.5 py-0.5 w-fit">
+                        <IconCalendarCheck size={12} stroke={2} />
+                        <span className="uppercase tracking-wider font-medium">In Planner</span>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex gap-1">
                     {course.tags.slice(0, 2).map((tag) => (
                       <span
@@ -234,9 +257,30 @@ export default function CoursesClient({
                   {course.title}
                 </h3>
 
-                <p className="text-sm text-muted-foreground mb-6 line-clamp-2 flex-grow">
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-grow">
                   {course.description}
                 </p>
+
+                {/* Review Summary */}
+                {reviewAggregates[course.id] && reviewAggregates[course.id].totalReviews > 0 ? (
+                  <div className="flex items-center gap-2 mb-4 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <IconStarFilled size={14} className="text-yellow-500" />
+                      <span className="font-medium text-foreground">
+                        {reviewAggregates[course.id].averageRating.toFixed(1)}
+                      </span>
+                    </div>
+                    <span>•</span>
+                    <span>
+                      {reviewAggregates[course.id].totalReviews} {reviewAggregates[course.id].totalReviews === 1 ? 'review' : 'reviews'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 mb-4 text-xs text-muted-foreground">
+                    <IconStar size={14} />
+                    <span>No reviews yet</span>
+                  </div>
+                )}
 
                 <div className="mt-auto flex justify-between items-center border-t border-muted pt-4">
                   {status === "completed" && (
@@ -250,7 +294,7 @@ export default function CoursesClient({
                     </span>
                   )}
                   {status === "eligible-warnings" && (
-                    <span className="bg-amber-100 text-amber-800 text-xs uppercase tracking-wider px-2 py-1">
+                    <span className="bg-blue-100 text-blue-800 text-xs uppercase tracking-wider px-2 py-1">
                       Eligible*
                     </span>
                   )}

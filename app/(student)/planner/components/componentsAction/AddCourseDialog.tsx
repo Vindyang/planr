@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconSearch, IconPlus, IconArrowLeft, IconCheck } from "@tabler/icons-react"
+import { IconPlus, IconArrowLeft, IconCheck } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
@@ -12,10 +12,24 @@ import {
   CommandList,
 } from "@/components/ui/command"
 
+type AvailableCourse = {
+  id: string
+  code: string
+  title: string
+  units: number
+}
+
+type SemesterPlanOption = {
+  id: string
+  term: string
+  year: number
+  plannedCourses: Array<{ id: string }>
+}
+
 interface AddCourseDialogProps {
-  availableCourses: any[] // We'll type this better later
+  availableCourses: AvailableCourse[]
   plannedCourseIds: Set<string>
-  semesterPlans: any[]
+  semesterPlans: SemesterPlanOption[]
   onAddCourse: (planId: string, courseId: string) => void
   onAddCourses: (planId: string, courseIds: string[]) => void
 }
@@ -47,9 +61,9 @@ export function AddCourseDialog({
     return availableCourses.filter((course) => !plannedCourseIds.has(course.id))
   }, [availableCourses, plannedCourseIds])
 
-  // Sort plans logically Fall -> Winter -> Spring -> Summer, and by Year
+  // Sort plans logically Term 1 -> Term 2 -> Term 3, and by Year
   const sortedPlans = React.useMemo(() => {
-    const termOrder: Record<string, number> = { "Fall": 1, "Winter": 2, "Spring": 3, "Summer": 4 }
+    const termOrder: Record<string, number> = { "Term 1": 1, "Term 2": 2, "Term 3": 3 }
     return [...semesterPlans].sort((a, b) => {
       if (a.year !== b.year) return a.year - b.year
       return (termOrder[a.term] || 99) - (termOrder[b.term] || 99)
@@ -146,7 +160,7 @@ export function AddCourseDialog({
                         <IconArrowLeft size={16} />
                     </button>
                     <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Select Semester Data</span>
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider">Select Term</span>
                         <span className="text-sm font-medium">Adding {selectedCourseIds.size} {selectedCourseIds.size === 1 ? 'course' : 'courses'}</span>
                     </div>
                 </div>
@@ -155,8 +169,8 @@ export function AddCourseDialog({
                     <CommandInput value="" onValueChange={() => {}} />
                 </div>
                 <CommandList className="max-h-[300px] overflow-y-auto overflow-x-hidden">
-                <CommandEmpty>No semesters found.</CommandEmpty>
-                <CommandGroup heading="Select a Semester">
+                <CommandEmpty>No terms found.</CommandEmpty>
+                <CommandGroup heading="Select a Term">
                     {sortedPlans.length > 0 ? sortedPlans.map((plan) => (
                     <CommandItem
                         key={plan.id}
@@ -176,7 +190,7 @@ export function AddCourseDialog({
                     </CommandItem>
                     )) : (
                         <div className="p-4 text-center text-sm text-muted-foreground">
-                            You have not created any semesters yet.
+                            You have not created any terms yet.
                         </div>
                     )}
                 </CommandGroup>

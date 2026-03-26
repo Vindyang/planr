@@ -1,14 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { GraduationTracker } from "./GraduationTracker"
 import { ValidationPanel } from "./ValidationPanel"
 import { Prisma } from "@prisma/client"
-import { useDraggable } from "@dnd-kit/core"
-import { CSS } from "@dnd-kit/utilities"
-import { IconSearch, IconX, IconBook, IconChartBar, IconChevronRight, IconChevronLeft } from "@tabler/icons-react"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { IconX, IconChevronRight, IconChevronLeft } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import type { ValidationResult } from "@/lib/planner/types"
 
@@ -21,6 +16,7 @@ type Plan = Prisma.semesterPlanGetPayload<{
 interface PlannerSidebarProps {
   plans: Plan[]
   completedUnits?: number
+  currentGpa?: number | null
   initialValidation: ValidationResult
   isCollapsed: boolean
   onToggle: () => void
@@ -29,23 +25,17 @@ interface PlannerSidebarProps {
 export function PlannerSidebar({
   plans,
   completedUnits = 0,
+  currentGpa,
   initialValidation,
   isCollapsed,
   onToggle
 }: PlannerSidebarProps) {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-      setMounted(true)
-  }, [])
-
   // Progress Data Calculation
   const plannedUnits = plans.reduce(
     (total: number, plan) =>
       total + plan.plannedCourses.reduce((sum: number, item) => sum + item.course.units, 0),
     0
   )
-  const totalUnits = (completedUnits || 0) + plannedUnits
   const requiredUnits = 120 
 
   return (
@@ -88,6 +78,7 @@ export function PlannerSidebar({
                     <GraduationTracker
                         totalUnits={plannedUnits}
                         completedUnits={completedUnits}
+                        currentGpa={currentGpa}
                         requiredUnits={requiredUnits}
                     />
                 </div>

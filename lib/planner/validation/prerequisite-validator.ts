@@ -32,7 +32,7 @@ export function validatePrerequisites(context: ValidationContext): Violation[] {
         // Check if prerequisite is completed
         if (completedIds.has(prereqCourseId)) continue
 
-        // Check if prerequisite is planned in an earlier semester
+        // Check if prerequisite is planned in an earlier term
         let prereqSemester = null
         for (const sem of semesters) {
           const found = sem.courses.find((c) => c.courseId === prereqCourseId)
@@ -52,10 +52,10 @@ export function validatePrerequisites(context: ValidationContext): Violation[] {
             semesterId: semester.id,
             semesterLabel: getSemesterLabel(semester),
             message: `Missing prerequisite: ${prereq.prerequisiteCourse.code} - ${prereq.prerequisiteCourse.title}`,
-            suggestion: `Add ${prereq.prerequisiteCourse.code} to an earlier semester`,
+            suggestion: `Add ${prereq.prerequisiteCourse.code} to an earlier term`,
           })
         } else {
-          // Check if prerequisite is in an earlier semester
+          // Check if prerequisite is in an earlier term
           const currentOrder = semesterOrder.get(semester.id) ?? 0
           const prereqOrder = semesterOrder.get(prereqSemester.id) ?? 0
 

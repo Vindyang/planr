@@ -4,7 +4,7 @@ import { getSession } from "@/lib/auth"
 import { z } from "zod"
 
 const createSemesterSchema = z.object({
-  term: z.enum(["Fall", "Spring", "Summer"]),
+  term: z.enum(["Term 1", "Term 2", "Term 3"]),
   year: z.number().int().min(2020).max(2035),
 })
 

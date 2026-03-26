@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select"
 import { IconEdit, IconCheck, IconX, IconTrash, IconPlus, IconSearch } from "@tabler/icons-react"
 import { updateStudentProfile, addCompletedCourse, removeCompletedCourse } from "./actions"
-import { VALID_GRADES } from "@/lib/gpa"
+import { VALID_GRADES, calculateGPA } from "@/lib/gpa"
 
 interface CompletedCourse {
   id: string
@@ -85,10 +85,71 @@ interface ProfileClientProps {
   initialCourses: AvailableCourse[]
 }
 
+type ParsedTermMeta = {
+  year: number | null
+  termNumber: number | null
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message
+  }
+  return fallback
+}
+
+function getDepartmentName(dept: unknown) {
+  if (typeof dept === "string") return dept
+  if (dept && typeof dept === "object" && "name" in dept && typeof (dept as { name?: unknown }).name === "string") {
+    return (dept as { name: string }).name
+  }
+  return ""
+}
+
+function parseTermMeta(term: string): ParsedTermMeta {
+  // Supports common stored formats:
+  // - "2026-Term 1"
+  // - "Term 1 2026"
+  // - "2026 Term 1"
+  const normalized = term.trim()
+
+  const yearFirst = normalized.match(/(\d{4})\s*[- ]\s*Term\s*(\d)/i)
+  if (yearFirst) {
+    return {
+      year: parseInt(yearFirst[1], 10),
+      termNumber: parseInt(yearFirst[2], 10),
+    }
+  }
+
+  const termFirst = normalized.match(/Term\s*(\d)\s*[- ]\s*(\d{4})/i)
+  if (termFirst) {
+    return {
+      termNumber: parseInt(termFirst[1], 10),
+      year: parseInt(termFirst[2], 10),
+    }
+  }
+
+  const yearOnly = normalized.match(/(\d{4})/)
+  return {
+    year: yearOnly ? parseInt(yearOnly[1], 10) : null,
+    termNumber: null,
+  }
+}
+
+async function parseApiError(response: Response, fallback: string) {
+  try {
+    const data = await response.json()
+    if (typeof data?.error === "string" && data.error.trim().length > 0) {
+      return data.error
+    }
+  } catch {
+    // ignore non-JSON errors and use fallback
+  }
+  return fallback
+}
+
 export default function ProfileClient({ initialStudent, initialCourses }: ProfileClientProps) {
   const [student, setStudent] = useState<StudentProfile | null>(initialStudent)
   const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>(initialCourses)
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -103,9 +164,13 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
   const [courseSearch, setCourseSearch] = useState("")
   const [selectedCourseId, setSelectedCourseId] = useState("")
   const [selectedGrade, setSelectedGrade] = useState("")
-  const [selectedTerm, setSelectedTerm] = useState("")
+  const [selectedTermNumber, setSelectedTermNumber] = useState("")
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState("")
   const [isAddingCourse, setIsAddingCourse] = useState(false)
   const [addCourseError, setAddCourseError] = useState("")
+  const [completedSearch, setCompletedSearch] = useState("")
+  const [completedYearFilter, setCompletedYearFilter] = useState("all")
+  const [completedTermFilter, setCompletedTermFilter] = useState("all")
 
   // Removed initial useEffect fetch
 
@@ -113,18 +178,18 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
     try {
       const res = await fetch("/api/student/profile")
       if (!res.ok) {
-        throw new Error("Failed to fetch profile")
+        throw new Error(await parseApiError(res, "Failed to fetch profile"))
       }
       const data = await res.json()
       setStudent(data.student)
       setEditForm({
-        major: data.student.major,
-        secondMajor: data.student.secondMajor || "",
-        minor: data.student.minor || "",
+        major: getDepartmentName(data.student.major),
+        secondMajor: getDepartmentName(data.student.secondMajor),
+        minor: getDepartmentName(data.student.minor),
         year: data.student.year,
       })
     } catch (err) {
-      setError("Failed to load profile")
+      setError(getErrorMessage(err, "Failed to load profile"))
     }
   }
 
@@ -162,7 +227,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
         setError(result.error || "Failed to update profile")
       }
     } catch (err) {
-      setError("Failed to update profile")
+      setError(getErrorMessage(err, "Failed to update profile"))
     }
   }
 
@@ -175,7 +240,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
         setError(result.error || "Failed to remove course")
       }
     } catch (err) {
-      setError("Failed to remove course")
+      setError(getErrorMessage(err, "Failed to remove course"))
     }
   }
 
@@ -183,7 +248,8 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
     setIsAddCourseOpen(true)
     setSelectedCourseId("")
     setSelectedGrade("")
-    setSelectedTerm("")
+    setSelectedTermNumber("")
+    setSelectedAcademicYear("")
     setCourseSearch("")
     setAddCourseError("")
     // We can fetch fresh courses just in case, or stick to initial
@@ -193,7 +259,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
   }
 
   async function handleAddCourse() {
-    if (!selectedCourseId || !selectedGrade || !selectedTerm) {
+    if (!selectedCourseId || !selectedGrade || !selectedTermNumber || !selectedAcademicYear) {
       setAddCourseError("Please fill in all fields")
       return
     }
@@ -202,6 +268,8 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
     setAddCourseError("")
 
     try {
+      const selectedTerm = `${selectedAcademicYear}-${selectedTermNumber}`
+
       const result = await addCompletedCourse({
         courseId: selectedCourseId,
         grade: selectedGrade,
@@ -215,7 +283,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
         setAddCourseError(result.error || "Failed to add course")
       }
     } catch (err) {
-      setAddCourseError("Failed to add course")
+      setAddCourseError(getErrorMessage(err, "Failed to add course"))
     } finally {
       setIsAddingCourse(false)
     }
@@ -234,15 +302,126 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
 
   const selectedCourse = availableCourses.find((c) => c.id === selectedCourseId)
 
-  // Generate term options
+  // Generate academic year options
   const currentYear = new Date().getFullYear()
-  const termOptions: string[] = []
+  const academicYearOptions: string[] = []
   for (let year = currentYear; year >= currentYear - 5; year--) {
-    termOptions.push(`${year}-Fall`, `${year}-Spring`)
+    academicYearOptions.push(year.toString())
   }
 
   // Calculate total units from completed courses
   const totalUnits = student?.completedCourses.reduce((sum, cc) => sum + cc.course.units, 0) || 0
+
+  const completedCoursesWithMeta = (student?.completedCourses || []).map((cc) => ({
+    ...cc,
+    ...parseTermMeta(cc.term),
+  }))
+
+  const availableCompletedYears = Array.from(
+    new Set(completedCoursesWithMeta.map((cc) => cc.year).filter((year): year is number => year !== null))
+  ).sort((a, b) => b - a)
+
+  const filteredCompletedCourses = completedCoursesWithMeta.filter((cc) => {
+    const matchesSearch =
+      completedSearch.trim().length === 0 ||
+      cc.course.code.toLowerCase().includes(completedSearch.toLowerCase()) ||
+      cc.course.title.toLowerCase().includes(completedSearch.toLowerCase())
+
+    const matchesYear =
+      completedYearFilter === "all" ||
+      (cc.year !== null && cc.year.toString() === completedYearFilter)
+
+    const matchesTerm =
+      completedTermFilter === "all" ||
+      (cc.termNumber !== null && `Term ${cc.termNumber}` === completedTermFilter)
+
+    return matchesSearch && matchesYear && matchesTerm
+  })
+
+  const filteredTermGpaSummaries = (() => {
+    if (filteredCompletedCourses.length === 0) return []
+
+    const grouped = new Map<string, Array<{ grade: string; units: number; year: number | null; termNumber: number | null }>>()
+
+    filteredCompletedCourses.forEach((cc) => {
+      grouped.set(cc.term, [
+        ...(grouped.get(cc.term) || []),
+        { grade: cc.grade, units: cc.course.units, year: cc.year, termNumber: cc.termNumber },
+      ])
+    })
+
+    const summaries = Array.from(grouped.entries()).map(([termLabel, courses]) => ({
+      termLabel,
+      gpa: calculateGPA(courses),
+      courseCount: courses.length,
+      year: courses[0]?.year ?? null,
+      termNumber: courses[0]?.termNumber ?? null,
+    }))
+
+    return summaries.sort((a, b) => {
+      const yearA = a.year ?? -Infinity
+      const yearB = b.year ?? -Infinity
+      if (yearA !== yearB) return yearB - yearA
+      const termA = a.termNumber ?? 99
+      const termB = b.termNumber ?? 99
+      return termA - termB
+    })
+  })()
+
+  const sortedFilteredCompletedCourses = [...filteredCompletedCourses].sort((a, b) => {
+    const yearA = a.year ?? -Infinity
+    const yearB = b.year ?? -Infinity
+    if (yearA !== yearB) return yearB - yearA
+    const termA = a.termNumber ?? 99
+    const termB = b.termNumber ?? 99
+    if (termA !== termB) return termA - termB
+    return a.course.code.localeCompare(b.course.code)
+  })
+
+  const termGpaByLabel = new Map(
+    filteredTermGpaSummaries.map((summary) => [summary.termLabel, summary.gpa] as const)
+  )
+
+  const groupedCoursesByTerm = (() => {
+    const grouped = new Map<
+      string,
+      {
+        year: number | null
+        termNumber: number | null
+        courses: typeof sortedFilteredCompletedCourses
+      }
+    >()
+
+    sortedFilteredCompletedCourses.forEach((cc) => {
+      const key = `${cc.year ?? "Unknown"}-Term ${cc.termNumber ?? "?"}`
+      const existing = grouped.get(key)
+      if (existing) {
+        existing.courses.push(cc)
+      } else {
+        grouped.set(key, {
+          year: cc.year,
+          termNumber: cc.termNumber,
+          courses: [cc],
+        })
+      }
+    })
+
+    return Array.from(grouped.values()).sort((a, b) => {
+      const yearA = a.year ?? -Infinity
+      const yearB = b.year ?? -Infinity
+      if (yearA !== yearB) return yearB - yearA
+      const termA = a.termNumber ?? 99
+      const termB = b.termNumber ?? 99
+      return termA - termB
+    })
+  })()
+
+  const filteredCgpa = calculateGPA(
+    filteredCompletedCourses.map((cc) => ({
+      grade: cc.grade,
+      units: cc.course.units,
+    }))
+  )
 
   if (!student) {
       return (
@@ -450,7 +629,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
             <h3 className="text-lg font-medium font-serif italic">Completed Courses</h3>
             <div className="flex items-center gap-3">
               <Badge variant="outline" className="font-normal text-muted-foreground">
-                {student.completedCourses.length} Courses
+                {filteredCompletedCourses.length} / {student.completedCourses.length} Courses
               </Badge>
               <Button
                 variant="outline"
@@ -479,35 +658,134 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {student.completedCourses.map((cc) => (
-                  <div
-                    key={cc.id}
-                    className="group flex flex-col justify-between p-4 border border-input/50 hover:border-sidebar-border hover:shadow-sm transition-all duration-200 bg-background/50 hover:bg-background"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">{cc.course.code}</span>
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                            onClick={() => handleRemoveCourse(cc.id)}
-                          >
-                            <IconTrash className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                      <h4 className="font-medium text-foreground leading-tight">{cc.course.title}</h4>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{cc.term} · {cc.course.units} CU</span>
-                      <span className="font-serif italic font-medium">{cc.grade}</span>
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-4">
+                  <div className="lg:col-span-2 space-y-2">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Find Course</Label>
+                    <div className="relative">
+                      <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by code or title..."
+                        value={completedSearch}
+                        onChange={(e) => setCompletedSearch(e.target.value)}
+                        className="pl-9 bg-transparent"
+                      />
                     </div>
                   </div>
-                ))}
+                  <div className="space-y-2 md:col-span-1">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Year</Label>
+                    <Select value={completedYearFilter} onValueChange={setCompletedYearFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="All years" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All years</SelectItem>
+                        {availableCompletedYears.map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 md:col-span-1">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Term</Label>
+                    <Select value={completedTermFilter} onValueChange={setCompletedTermFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="All terms" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All terms</SelectItem>
+                        <SelectItem value="Term 1">Term 1</SelectItem>
+                        <SelectItem value="Term 2">Term 2</SelectItem>
+                        <SelectItem value="Term 3">Term 3</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Showing <span className="text-foreground font-medium">{filteredCompletedCourses.length}</span> courses
+                    {" · "}
+                    <span className="text-foreground font-medium">
+                      {filteredCompletedCourses.reduce((sum, cc) => sum + cc.course.units, 0)} CU
+                    </span>
+                    {" · "}
+                    GPA <span className="text-foreground font-medium">{filteredCgpa.toFixed(2)}</span>
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-xs uppercase tracking-wider"
+                    onClick={() => {
+                      setCompletedSearch("")
+                      setCompletedYearFilter("all")
+                      setCompletedTermFilter("all")
+                    }}
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+
+                {groupedCoursesByTerm.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground border border-dashed border-border/60">
+                    <p>No completed courses match your current filters.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {groupedCoursesByTerm.map((group) => {
+                      const termLabel = `${group.year ?? "Unknown Year"} · ${group.termNumber ? `Term ${group.termNumber}` : "Unknown Term"}`
+                      const lookupLabel = group.courses[0]?.term ?? ""
+                      const termGpa = termGpaByLabel.get(lookupLabel)
+
+                      return (
+                        <div key={termLabel} className="border border-border/60 bg-background/40">
+                          <div className="px-4 py-3 bg-muted/35 border-b border-border/60 flex items-center justify-between">
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                              {termLabel}
+                            </p>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              {typeof termGpa === "number" && (
+                                <p>
+                                  GPA <span className="font-serif italic text-foreground">{termGpa.toFixed(2)}</span>
+                                </p>
+                              )}
+                              <p>
+                                {group.courses.length} courses
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="divide-y divide-border/60">
+                            {group.courses.map((cc) => (
+                              <div key={cc.id} className="px-4 py-3 flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                    {cc.course.code}
+                                  </p>
+                                  <p className="text-sm text-foreground truncate">{cc.course.title}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">{cc.course.units} CU</p>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="font-serif italic text-sm text-foreground">{cc.grade}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                    onClick={() => handleRemoveCourse(cc.id)}
+                                  >
+                                    <IconTrash className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -520,7 +798,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
           <SheetHeader>
             <SheetTitle className="text-lg font-medium">Add Completed Course</SheetTitle>
             <SheetDescription>
-              Select a course, grade, and the term you completed it.
+              Select a course, grade, term number, and academic year.
             </SheetDescription>
           </SheetHeader>
 
@@ -593,21 +871,36 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
               </Select>
             </div>
 
-            {/* Term selector */}
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Term</Label>
-              <Select value={selectedTerm} onValueChange={setSelectedTerm}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select term" />
-                </SelectTrigger>
-                <SelectContent>
-                  {termOptions.map((term) => (
-                    <SelectItem key={term} value={term}>
-                      {term}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Term and academic year selectors */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Term</Label>
+                <Select value={selectedTermNumber} onValueChange={setSelectedTermNumber}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select term" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Term 1">Term 1</SelectItem>
+                    <SelectItem value="Term 2">Term 2</SelectItem>
+                    <SelectItem value="Term 3">Term 3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Academic Year</Label>
+                <Select value={selectedAcademicYear} onValueChange={setSelectedAcademicYear}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {academicYearOptions.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -621,7 +914,7 @@ export default function ProfileClient({ initialStudent, initialCourses }: Profil
             </Button>
             <Button
               onClick={handleAddCourse}
-              disabled={isAddingCourse || !selectedCourseId || !selectedGrade || !selectedTerm}
+              disabled={isAddingCourse || !selectedCourseId || !selectedGrade || !selectedTermNumber || !selectedAcademicYear}
               className="text-xs uppercase tracking-wider"
             >
               {isAddingCourse ? "Adding..." : "Add Course"}

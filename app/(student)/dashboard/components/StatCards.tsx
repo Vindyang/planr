@@ -8,6 +8,7 @@ type StatCardsProps = {
   year: number
   major: string
   nextSemesterCourses: number
+  nextTermLabel: string
   totalCoursesTaken: number
   remainingUnits: number
 }
@@ -18,6 +19,7 @@ export function StatCards({
   year,
   major,
   nextSemesterCourses,
+  nextTermLabel,
   totalCoursesTaken,
   remainingUnits,
 }: StatCardsProps) {
@@ -59,15 +61,17 @@ export function StatCards({
         </CardContent>
       </Card>
 
-      {/* Next Semester Courses */}
+      {/* Upcoming Term Courses */}
       <Card className="bg-card border border-border shadow-none rounded-none p-4">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-3">
-          <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Planned Next</CardTitle>
+          <CardTitle className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Upcoming Term</CardTitle>
           <IconCalendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent className="p-0">
           <div className="text-2xl font-serif italic text-foreground">{nextSemesterCourses}</div>
-          <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">Courses planned</p>
+          <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground mt-1">
+            {nextTermLabel} planned
+          </p>
         </CardContent>
       </Card>
 

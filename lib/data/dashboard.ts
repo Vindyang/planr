@@ -10,18 +10,18 @@ export async function getNextSemesterSummary(studentId: string) {
   let targetYear: number
 
   // Determine target semester
-  // Jan-May (0-4): Spring semester
-  // Jun-Jul (5-6): Fall semester
-  // Aug-Dec (7-11): Fall semester
+  // Jan-May (0-4): Term 2
+  // Jun-Jul (5-6): Term 3
+  // Aug-Dec (7-11): Term 1
   if (month >= 0 && month <= 4) {
-    targetTerm = "Spring"
+    targetTerm = "Term 2"
     targetYear = year
-  } else if (month >= 7 && month <= 11) {
-    targetTerm = "Fall"
+  } else if (month >= 5 && month <= 6) {
+    targetTerm = "Term 3"
     targetYear = year
   } else {
-    // Jun-Jul: look for Fall
-    targetTerm = "Fall"
+    // Aug-Dec: Term 1
+    targetTerm = "Term 1"
     targetYear = year
   }
 

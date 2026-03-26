@@ -3,12 +3,12 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle } from "@tabler/icons-react"
+import { IconArrowLeft, IconCheck, IconX, IconAlertTriangle, IconCalendarCheck } from "@tabler/icons-react"
 import { EligibilityStatus } from "@/lib/eligibility"
 import { getCourseWithPrerequisites } from "@/lib/data/courses"
 import { getStudentProfile } from "@/lib/data/students"
 import { getEligibilityForCourse } from "@/lib/eligibility/service"
-import { getCourseReviewsByCourse, getReviewAggregates } from "@/lib/data/reviews"
+import { getCourseReviewsByCourse } from "@/lib/data/reviews"
 import { getProfessorsByCourse } from "@/lib/data/professors"
 import { getPlannerData } from "@/lib/planner/actions"
 import { CourseReviewsSection } from "./_components/CourseReviewsSection"
@@ -23,11 +23,10 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
 
   // 1. Parallel Data Fetching
-  const [course, student, courseReviews, reviewAggregates, fetchedProfessors] = await Promise.all([
+  const [course, student, courseReviews, fetchedProfessors] = await Promise.all([
     getCourseWithPrerequisites(id),
     getStudentProfile(session.user.id),
     getCourseReviewsByCourse(id),
-    getReviewAggregates(id),
     getProfessorsByCourse(id),
   ])
 
@@ -50,6 +49,14 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const completedIds = new Set(completedCourses?.map((c) => c.courseId))
   const completedGrades = new Map(completedCourses?.map((c) => [c.courseId, c.grade] as const))
   const isCompleted = completedIds.has(course.id)
+
+  // Check if course is in planner
+  const plannedCourseIds = new Set(
+    plannerData?.semesterPlans.flatMap((plan) =>
+      plan.plannedCourses.map((pc) => pc.course.id)
+    ) || []
+  )
+  const isInPlanner = plannedCourseIds.has(course.id)
 
   // 3. Check Eligibility (if needed)
   let eligibility = null
@@ -93,13 +100,19 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                 Completed
               </span>
             )}
+            {!isCompleted && isInPlanner && (
+              <span className="bg-purple-50 text-purple-700 text-xs uppercase tracking-wider px-2 py-0.5 flex items-center gap-1">
+                <IconCalendarCheck size={14} stroke={2} />
+                In Planner
+              </span>
+            )}
             {!isCompleted && eligibility && (
               <span
                 className={`text-xs uppercase tracking-wider px-2 py-0.5 ${
                   eligibility.eligibility.status === EligibilityStatus.ELIGIBLE
                     ? "bg-green-100 text-green-800"
                     : eligibility.eligibility.status === EligibilityStatus.WARNING
-                      ? "bg-amber-100 text-amber-800"
+                      ? "bg-blue-100 text-blue-800"
                       : eligibility.eligibility.status === EligibilityStatus.COREQUISITE_NEEDED
                         ? "bg-blue-100 text-blue-800"
                         : "bg-red-100 text-red-800"
@@ -108,7 +121,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                 {eligibility.eligibility.status === EligibilityStatus.ELIGIBLE
                   ? "Eligible"
                   : eligibility.eligibility.status === EligibilityStatus.WARNING
-                    ? "Eligible (with warnings)"
+                    ? "Eligible (see notes)"
                     : eligibility.eligibility.status === EligibilityStatus.COREQUISITE_NEEDED
                       ? "Needs Corequisite"
                       : "Not Eligible"}
@@ -399,7 +412,6 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
                     studentName: r.isAnonymous ? null : r.student.user.name,
                     isOwn: r.studentId === student?.id,
                   }))}
-                  initialAggregates={reviewAggregates}
                   initialProfessors={courseProfessors}
                   completedCourses={
                     student?.completedCourses

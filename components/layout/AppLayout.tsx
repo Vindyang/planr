@@ -4,6 +4,8 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Navbar } from "@/components/layout/Navbar";
 import type { StudentProfile } from "@/lib/data/students";
+import { WelcomeModal } from "@/components/tutorial/WelcomeModal";
+import { OnboardingChecklist } from "@/components/tutorial/OnboardingChecklist";
 
 export function AppLayout({
   children,
@@ -23,6 +25,8 @@ export function AppLayout({
             </main>
          </SidebarInset>
       </div>
+      <WelcomeModal />
+      <OnboardingChecklist />
     </SidebarProvider>
   );
 }

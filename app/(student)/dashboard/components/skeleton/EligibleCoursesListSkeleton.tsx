@@ -4,7 +4,10 @@ import { Card } from "@/components/ui/card"
 export function EligibleCoursesListSkeleton() {
   return (
     <div className="space-y-4">
-      <Skeleton className="h-6 w-64" />
+      <div className="space-y-2">
+        <Skeleton className="h-7 w-52" />
+        <Skeleton className="h-4 w-72" />
+      </div>
       <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="p-6 space-y-3">

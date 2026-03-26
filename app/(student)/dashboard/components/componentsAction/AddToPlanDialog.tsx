@@ -27,14 +27,20 @@ type AddToPlanDialogProps = {
   onClose: () => void
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message
+  }
+  return fallback
+}
+
 export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogProps) {
   // Helper functions for smart defaults
   const getDefaultTerm = () => {
     const month = new Date().getMonth() + 1
-    if (month >= 1 && month <= 3) return "Spring"
-    if (month >= 4 && month <= 6) return "Summer"
-    if (month >= 7 && month <= 9) return "Fall"
-    return "Winter"
+    if (month >= 1 && month <= 4) return "Term 2"
+    if (month >= 5 && month <= 7) return "Term 3"
+    return "Term 1"
   }
 
   const getDefaultYear = () => {
@@ -68,23 +74,22 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
     setError("")
 
     try {
-      const newSemesterId = await createSemesterPlan(newSemesterTerm, yearNum)
-      toast.success("Semester created successfully")
-
-      // Switch to selecting mode with new semester pre-selected
-      setSelectedPlanId(newSemesterId)
-      setViewMode("selecting")
+      await createSemesterPlan(newSemesterTerm, yearNum)
+      toast.success("Term created successfully. Please add the course again.")
       router.refresh()
-    } catch (err: any) {
-      if (err.message?.includes("already exists")) {
-        setError("This semester already exists. Refreshing...")
+      onClose()
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Failed to create term")
+
+      if (message.includes("already exists")) {
+        setError("This term already exists. Refreshing...")
         router.refresh()
         setTimeout(() => setViewMode("selecting"), 1000)
-      } else if (err.message?.includes("maximum of 4 terms")) {
-        setError(err.message)
+      } else if (message.includes("maximum of 4 terms")) {
+        setError(message)
         setNewSemesterYear((parseInt(newSemesterYear) + 1).toString())
       } else {
-        setError(err.message || "Failed to create semester")
+        setError(message)
       }
     } finally {
       setIsCreatingSemester(false)
@@ -93,7 +98,7 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
 
   const handleAdd = async () => {
     if (!selectedPlanId) {
-      setError("Please select a semester")
+      setError("Please select a term")
       return
     }
 
@@ -105,10 +110,11 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
       toast.success(`${course.code} added to plan`)
       router.refresh()
       onClose()
-    } catch (err: any) {
-      setError(err.message || "Failed to add course")
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Failed to add course")
+      setError(message)
       toast.error("Failed to add course", {
-        description: err.message
+        description: message
       })
     } finally {
       setIsLoading(false)
@@ -120,7 +126,7 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {viewMode === "creating" ? "Create First Semester" : `Add ${course.code} to Plan`}
+            {viewMode === "creating" ? "Create First Term" : `Add ${course.code} to Plan`}
           </DialogTitle>
         </DialogHeader>
 
@@ -129,9 +135,9 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
             <>
               <div className="rounded-lg border p-4 space-y-4 bg-muted/50">
                 <div>
-                  <h4 className="font-medium mb-2">Create Your First Semester</h4>
+                  <h4 className="font-medium mb-2">Create Your First Term</h4>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Set up a semester plan to start organizing your courses.
+                    Set up a term plan to start organizing your courses.
                   </p>
                 </div>
 
@@ -144,10 +150,9 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Spring">Spring</SelectItem>
-                      <SelectItem value="Summer">Summer</SelectItem>
-                      <SelectItem value="Fall">Fall</SelectItem>
-                      <SelectItem value="Winter">Winter</SelectItem>
+                      <SelectItem value="Term 1">Term 1 (Aug-Jan)</SelectItem>
+                      <SelectItem value="Term 2">Term 2 (Jan-Apr)</SelectItem>
+                      <SelectItem value="Term 3">Term 3 (May-Aug)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -172,7 +177,7 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
 
               <div className="flex gap-2">
                 <Button onClick={handleCreateSemester} disabled={isCreatingSemester}>
-                  {isCreatingSemester ? "Creating..." : "Create Semester"}
+                  {isCreatingSemester ? "Creating..." : "Create Term"}
                 </Button>
                 <Button variant="outline" onClick={onClose}>
                   Cancel
@@ -182,10 +187,10 @@ export function AddToPlanDialog({ course, semesters, onClose }: AddToPlanDialogP
           ) : (
             <>
               <div>
-                <Label htmlFor="semester-select">Select Semester</Label>
+                <Label htmlFor="term-select">Select Term</Label>
                 <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
                   <SelectTrigger className="w-full mt-2">
-                    <SelectValue placeholder="Choose semester..." />
+                    <SelectValue placeholder="Choose term..." />
                   </SelectTrigger>
                   <SelectContent>
                     {semesters.map((sem) => (

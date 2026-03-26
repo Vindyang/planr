@@ -8,7 +8,7 @@ function getNextSemesterFromPlans(
   const now = new Date()
   const month = now.getMonth()
   const year = now.getFullYear()
-  const targetTerm = month >= 0 && month <= 4 ? "Spring" : "Fall"
+  const targetTerm = month >= 0 && month <= 3 ? "Term 2" : month >= 4 && month <= 6 ? "Term 3" : "Term 1"
 
   const plan = semesterPlans.find(
     (p) => p.term === targetTerm && p.year === year
@@ -20,6 +20,7 @@ function getNextSemesterFromPlans(
       plan?.plannedCourses.reduce((sum, pc) => sum + pc.course.units, 0) ?? 0,
     term: targetTerm,
     year,
+    label: `${targetTerm} ${year}`,
   }
 }
 
@@ -52,6 +53,7 @@ export async function StatCardsSection({ userId }: { userId: string }) {
       year={student.year}
       major={student.major.name}
       nextSemesterCourses={nextSemester.coursesCount}
+      nextTermLabel={nextSemester.label}
       totalCoursesTaken={student.completedCourses.length}
       remainingUnits={remainingUnits}
     />

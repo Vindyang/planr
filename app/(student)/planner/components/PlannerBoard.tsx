@@ -16,7 +16,12 @@ type PlannerData = {
   semesterPlans: (Prisma.semesterPlanGetPayload<{
     include: { plannedCourses: { include: { course: true } } }
   }>)[]
-  availableCourses: any[] // Using any for now to simplify
+  availableCourses: Array<{
+    id: string
+    code: string
+    title: string
+    units: number
+  }>
 }
 
 type PlannerBoardProps = {
@@ -28,6 +33,7 @@ type PlannerBoardProps = {
   onAddCourse: (planId: string, courseId: string) => Promise<void>
   onAddCourses: (planId: string, courseIds: string[]) => Promise<void>
   completedUnits?: number
+  currentGpa?: number | null
   initialValidation: ValidationResult
   isSelectionMode: boolean
   selectedCourses: Set<string>
@@ -47,6 +53,7 @@ export function PlannerBoard({
   onAddCourse,
   onAddCourses,
   completedUnits = 0,
+  currentGpa,
   initialValidation,
   isSelectionMode,
   selectedCourses,
@@ -58,12 +65,12 @@ export function PlannerBoard({
 }: PlannerBoardProps) {
   
   // Find active item for overlay
-  let activeCourse: any = null
+  let activeCourse: PlannerData["availableCourses"][number] | null = null
 
   if (activeId) {
     if (activeId.startsWith("drawer-")) {
       const courseId = activeId.replace("drawer-", "")
-      activeCourse = data.availableCourses.find((c: any) => c.id === courseId)
+      activeCourse = data.availableCourses.find((c) => c.id === courseId) || null
     } else {
       for (const plan of data.semesterPlans) {
         const course = plan.plannedCourses.find((pc) => pc.id === activeId)
@@ -199,7 +206,7 @@ export function PlannerBoard({
                             <IconPlus className="w-8 h-8 opacity-50" />
                         </div>
                         <h3 className="text-lg font-serif italic mb-2">Start Planning</h3>
-                        <p className="text-[#666460] mb-6 text-sm max-w-md">Create your first semester to start adding courses to your academic plan.</p>
+                        <p className="text-[#666460] mb-6 text-sm max-w-md">Create your first term to start adding courses to your academic plan.</p>
                         <CreateSemesterDialog onCreate={onCreatePlan} />
                      </div>
                 )}
@@ -225,20 +232,17 @@ export function PlannerBoard({
                         <div className="pt-8">
                             <div className="w-full h-px bg-[#DAD6CF] mb-12" />
                             <div className="flex justify-center">
-                                <CreateSemesterDialog 
-                                    onCreate={onCreatePlan}
-                                    defaultYear={sortedYears[sortedYears.length - 1] + 1}
-                                    defaultTerm="Fall"
+                                <button
+                                    onClick={() => onCreatePlan("Term 1", sortedYears[sortedYears.length - 1] + 1)}
+                                    className="flex flex-col items-center gap-4 group"
                                 >
-                                    <button className="flex flex-col items-center gap-4 group">
-                                        <div className="w-16 h-16 rounded-full border border-[#DAD6CF] bg-white flex items-center justify-center text-[#DAD6CF] group-hover:text-[#0A0A0A] group-hover:border-[#0A0A0A] transition-all">
-                                            <IconPlus size={32} stroke={1.5} />
-                                        </div>
-                                        <span className="text-xs uppercase tracking-[0.1em] font-medium text-[#666460] group-hover:text-[#0A0A0A] transition-colors">
-                                            Add Academic Year {sortedYears[sortedYears.length - 1] + 1}
-                                        </span>
-                                    </button>
-                                </CreateSemesterDialog>
+                                    <div className="w-16 h-16 rounded-full border border-[#DAD6CF] bg-white flex items-center justify-center text-[#DAD6CF] group-hover:text-[#0A0A0A] group-hover:border-[#0A0A0A] transition-all">
+                                        <IconPlus size={32} stroke={1.5} />
+                                    </div>
+                                    <span className="text-xs uppercase tracking-[0.1em] font-medium text-[#666460] group-hover:text-[#0A0A0A] transition-colors">
+                                        Add Academic Year {sortedYears[sortedYears.length - 1] + 1}
+                                    </span>
+                                </button>
                             </div>
                         </div>
                     )}
@@ -251,6 +255,7 @@ export function PlannerBoard({
               <PlannerSidebar
                  plans={data.semesterPlans}
                  completedUnits={completedUnits}
+                 currentGpa={currentGpa}
                  initialValidation={initialValidation}
                  isCollapsed={!isSidebarOpen}
                  onToggle={() => setIsSidebarOpen(!isSidebarOpen)}

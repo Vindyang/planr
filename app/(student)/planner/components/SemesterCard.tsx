@@ -65,7 +65,7 @@ export function SemesterCard({
             <button 
               onClick={() => onDeletePlan(planId)}
               className="text-[#666460] hover:text-[#ef4444] transition-colors"
-               title="Delete Semester"
+               title="Delete Term"
             >
               <IconTrash size={14} />
             </button>

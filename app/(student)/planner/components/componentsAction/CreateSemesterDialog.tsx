@@ -31,7 +31,7 @@ type CreateSemesterDialogProps = {
 export function CreateSemesterDialog({ 
   onCreate, 
   defaultYear = new Date().getFullYear(),
-  defaultTerm = "Fall",
+  defaultTerm = "Term 1",
   children
 }: CreateSemesterDialogProps & { children?: React.ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -43,11 +43,11 @@ export function CreateSemesterDialog({
     try {
       setLoading(true)
       await onCreate(term, parseInt(year))
-      toast.success("Semester plan created successfully")
+      toast.success("Term plan created successfully")
       setOpen(false)
     } catch (error) {
       console.error(error)
-      toast.error("Failed to create semester", {
+      toast.error("Failed to create term", {
         description: (error as Error).message
       })
     } finally {
@@ -58,13 +58,13 @@ export function CreateSemesterDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {children || <Button>+ Add Semester</Button>}
+        {children || <Button>+ Add Term</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Semester Plan</DialogTitle>
+          <DialogTitle>Add Term Plan</DialogTitle>
           <DialogDescription>
-            Create a new semester plan to start adding courses.
+            Create a new term plan to start adding courses.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -77,10 +77,9 @@ export function CreateSemesterDialog({
                 <SelectValue placeholder="Select term" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Spring">Spring</SelectItem>
-                <SelectItem value="Summer">Summer</SelectItem>
-                <SelectItem value="Fall">Fall</SelectItem>
-                <SelectItem value="Winter">Winter</SelectItem>
+                <SelectItem value="Term 1">Term 1 (Aug-Jan)</SelectItem>
+                <SelectItem value="Term 2">Term 2 (Jan-Apr)</SelectItem>
+                <SelectItem value="Term 3">Term 3 (May-Aug)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -102,7 +101,7 @@ export function CreateSemesterDialog({
             Cancel
           </Button>
           <Button onClick={handleCreate} disabled={loading}>
-            {loading ? "Creating..." : "Create Semester"}
+            {loading ? "Creating..." : "Create Term"}
           </Button>
         </DialogFooter>
       </DialogContent>

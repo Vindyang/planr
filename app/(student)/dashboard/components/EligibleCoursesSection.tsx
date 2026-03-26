@@ -48,14 +48,19 @@ export async function EligibleCoursesSection({ userId }: { userId: string }) {
   )
 
   return (
-    <div>
-      <h3 className="text-xl font-semibold tracking-tight mb-4">
-        Eligible Courses for Next Semester
-      </h3>
+    <section>
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold tracking-tight">
+          Eligible Courses
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Courses you can add in your upcoming term.
+        </p>
+      </div>
       <EligibleCoursesList
         courses={filteredEligibleCourses}
         semesterPlans={plannerData.semesterPlans}
       />
-    </div>
+    </section>
   )
 }
