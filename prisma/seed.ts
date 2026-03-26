@@ -667,8 +667,8 @@ async function createPrerequisites(courses: any[]) {
   // CS201 requires CS101
   await prisma.prerequisite.create({
     data: {
-      courseId: courses[4].id, // CS201
-      prerequisiteCourseId: courses[3].id, // CS101
+      courseId: courses[7].id, // CS201
+      prerequisiteCourseId: courses[5].id, // CS101
       type: "HARD",
     },
   })

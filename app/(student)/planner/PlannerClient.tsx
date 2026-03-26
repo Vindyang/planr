@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { AIRecommendationModal } from "@/components/planner/ai-recommendation-modal"
 
 type PlannerClientProps = {
   initialData: PlannerState
@@ -78,6 +79,9 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   // Selection mode state
   const [isSelectionMode, setIsSelectionMode] = useState(false)
   const [selectedCourses, setSelectedCourses] = useState<Set<string>>(new Set())
+
+  // AI modal state
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false)
 
   // Optimistic state management with useOptimistic
   const [optimisticData, addOptimisticUpdate] = useOptimistic(
@@ -550,6 +554,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           onToggleSelectionMode={() => setIsSelectionMode(!isSelectionMode)}
           onBulkDelete={handleBulkDelete}
           onCancelSelection={handleCancelSelection}
+          onOpenAIModal={() => setIsAIModalOpen(true)}
         />
       </DndContext>
 
@@ -570,6 +575,12 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* AI Recommendation Modal */}
+      <AIRecommendationModal
+        open={isAIModalOpen}
+        onOpenChange={setIsAIModalOpen}
+      />
     </>
   )
 }
