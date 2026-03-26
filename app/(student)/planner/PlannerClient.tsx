@@ -11,6 +11,7 @@ import {
 } from "@dnd-kit/core"
 import { PlannerBoard } from "./components/PlannerBoard"
 import { addCourseToPlan, addCoursesToPlan, moveCourse, removeCourseFromPlan, removeCoursesFromPlan, deleteSemesterPlan, createSemesterPlan } from "@/lib/planner/actions"
+import { markChecklistItem } from "@/components/tutorial/checklistTracking"
 import { toast } from "@/components/ui/toast"
 import type { ValidationResult } from "@/lib/planner/types"
 import {
@@ -28,6 +29,7 @@ type PlannerClientProps = {
   initialData: PlannerState
   allCourses: AvailableCourse[]
   completedUnits?: number
+  currentGpa?: number | null
   initialValidation: ValidationResult
 }
 
@@ -69,7 +71,7 @@ type OptimisticAction =
   | { type: 'MOVE_COURSE'; courseId: string; targetPlanId: string }
   | { type: 'CREATE_PLAN'; term: string; year: number }
 
-export default function PlannerClient({ initialData, allCourses, completedUnits = 0, initialValidation }: PlannerClientProps) {
+export default function PlannerClient({ initialData, allCourses, completedUnits = 0, currentGpa, initialValidation }: PlannerClientProps) {
   const [, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -239,6 +241,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                 }
 
                 await addCourseToPlan(overId, courseId)
+                markChecklistItem("ADDED_COURSE")
                 toast.success("Course added", {
                   description: "Successfully added course via drag & drop",
                 })
@@ -365,6 +368,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
          try {
              await createSemesterPlan(term, year)
+             markChecklistItem("CREATED_TERM")
              toast.success("Term created", {
                description: `Successfully created ${term} ${year}`,
              })
@@ -389,6 +393,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
       try {
         await addCourseToPlan(planId, courseId)
+        markChecklistItem("ADDED_COURSE")
         toast.success("Course added", {
           description: "Successfully added course to your plan",
         })
@@ -537,6 +542,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           onAddCourse={handleAddCourse}
           onAddCourses={handleAddCourses}
           completedUnits={completedUnits}
+          currentGpa={currentGpa}
           initialValidation={initialValidation}
           isSelectionMode={isSelectionMode}
           selectedCourses={selectedCourses}

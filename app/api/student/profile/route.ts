@@ -27,6 +27,34 @@ export async function GET() {
             email: true,
           },
         },
+        university: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        major: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        secondMajor: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        minor: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
         completedCourses: {
           include: {
             course: true,

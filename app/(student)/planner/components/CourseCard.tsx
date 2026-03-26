@@ -1,5 +1,6 @@
 "use client"
 
+import { useSyncExternalStore } from "react"
 import { useDraggable } from "@dnd-kit/core"
 import { CSS } from "@dnd-kit/utilities"
 import { cn } from "@/lib/utils"
@@ -17,6 +18,12 @@ type CourseCardProps = {
 }
 
 export function CourseCard({ id, code, title, units, isOverlay, error, isSelectionMode = false, isSelected = false, onToggleSelection }: CourseCardProps) {
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: id,
     data: {
@@ -35,7 +42,7 @@ export function CourseCard({ id, code, title, units, isOverlay, error, isSelecti
 
   // Common card content - mimics the "Weekly Schedule" white blocks
   // e.g. <div className="bg-white p-2 text-xs border-l-2 border-[#0A0A0A]">
-  const CardBody = () => (
+  const cardBody = (
     <div className={cn(
         "bg-white p-3 text-xs border-l-2 shadow-sm transition-all",
         error ? "border-l-[#ef4444] bg-[#fff5f5]" : "",
@@ -85,7 +92,7 @@ export function CourseCard({ id, code, title, units, isOverlay, error, isSelecti
   if (isOverlay) {
     return (
       <div className="w-full shadow-xl rotate-2 cursor-grabbing">
-        <CardBody />
+        {cardBody}
       </div>
     )
   }
@@ -100,7 +107,18 @@ export function CourseCard({ id, code, title, units, isOverlay, error, isSelecti
         )}
       >
         <div className="hover:translate-x-1 transition-transform">
-          <CardBody />
+          {cardBody}
+        </div>
+      </div>
+    )
+  }
+
+  // Avoid hydration mismatch from dnd-kit generated accessibility IDs on initial SSR.
+  if (!mounted) {
+    return (
+      <div className="group relative w-full touch-none outline-none mb-2 opacity-100">
+        <div className="hover:translate-x-1 transition-transform cursor-grab active:cursor-grabbing">
+          {cardBody}
         </div>
       </div>
     )
@@ -118,7 +136,7 @@ export function CourseCard({ id, code, title, units, isOverlay, error, isSelecti
       )}
     >
       <div className="hover:translate-x-1 transition-transform cursor-grab active:cursor-grabbing">
-        <CardBody />
+        {cardBody}
       </div>
     </div>
   )

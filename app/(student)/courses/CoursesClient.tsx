@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
+import { markChecklistItem } from "@/components/tutorial/checklistTracking"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { IconSearch, IconStar, IconStarFilled, IconCalendarCheck } from "@tabler/icons-react"
@@ -64,6 +65,10 @@ export default function CoursesClient({
 }: CoursesClientProps) {
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchParams.get("q") || "")
+
+  useEffect(() => {
+    markChecklistItem("VISITED_COURSES")
+  }, [])
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [selectedTerm, setSelectedTerm] = useState<string | null>(null)
 

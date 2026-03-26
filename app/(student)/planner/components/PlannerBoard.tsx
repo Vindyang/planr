@@ -33,6 +33,7 @@ type PlannerBoardProps = {
   onAddCourse: (planId: string, courseId: string) => Promise<void>
   onAddCourses: (planId: string, courseIds: string[]) => Promise<void>
   completedUnits?: number
+  currentGpa?: number | null
   initialValidation: ValidationResult
   isSelectionMode: boolean
   selectedCourses: Set<string>
@@ -51,6 +52,7 @@ export function PlannerBoard({
   onAddCourse,
   onAddCourses,
   completedUnits = 0,
+  currentGpa,
   initialValidation,
   isSelectionMode,
   selectedCourses,
@@ -236,6 +238,7 @@ export function PlannerBoard({
               <PlannerSidebar
                  plans={data.semesterPlans}
                  completedUnits={completedUnits}
+                 currentGpa={currentGpa}
                  initialValidation={initialValidation}
                  isCollapsed={!isSidebarOpen}
                  onToggle={() => setIsSidebarOpen(!isSidebarOpen)}

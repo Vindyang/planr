@@ -1,6 +1,6 @@
 "use client"
 
-import { IconCheck, IconCircle, IconAlertTriangle, IconChevronDown } from "@tabler/icons-react"
+import { IconCheck, IconAlertTriangle } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 import {
   Accordion,
@@ -13,6 +13,7 @@ interface GraduationTrackerProps {
   totalUnits: number
   requiredUnits?: number
   completedUnits: number
+  currentGpa?: number | null
   majorCourses?: number
   requiredMajorCourses?: number
 }
@@ -64,6 +65,7 @@ export function GraduationTracker({
   totalUnits,
   requiredUnits = 120, // Default for most universities
   completedUnits,
+  currentGpa,
   majorCourses = 0,
   requiredMajorCourses = 10,
 }: GraduationTrackerProps) {
@@ -112,7 +114,9 @@ export function GraduationTracker({
             <div>
                <span className="block text-[10px] uppercase tracking-widest text-[#666460] mb-1">Current GPA</span>
                <div className="flex items-baseline gap-1">
-                 <span className="font-serif italic text-2xl text-[#0A0A0A]">3.8</span>
+                 <span className="font-serif italic text-2xl text-[#0A0A0A]">
+                   {typeof currentGpa === "number" ? currentGpa.toFixed(2) : "N/A"}
+                 </span>
                </div>
             </div>
             <div>
@@ -145,7 +149,7 @@ export function GraduationTracker({
          </div>
          
          <Accordion type="single" collapsible className="w-full bg-white border border-[#DAD6CF] rounded-sm shadow-sm">
-            {requirements.map((req, i) => (
+            {requirements.map((req) => (
                 <AccordionItem 
                     value={req.id} 
                     key={req.id} 
@@ -191,4 +195,3 @@ export function GraduationTracker({
     </div>
   )
 }
-
