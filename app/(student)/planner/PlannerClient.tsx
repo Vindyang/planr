@@ -83,6 +83,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   // AI modal state
   const [isAIModalOpen, setIsAIModalOpen] = useState(false)
 
+
   // Optimistic state management with useOptimistic
   const [optimisticData, addOptimisticUpdate] = useOptimistic(
     initialData,
@@ -237,6 +238,8 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
             if (activeData?.type === "new-course") {
                 // Dragging from drawer - optimistically add to UI
                 const courseId = activeData.courseId
+                if (!courseId) return
+
                 const course = allCourses.find(c => c.id === courseId)
 
                 if (course) {
@@ -414,7 +417,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
       // Find the course data for optimistic update
       const courses = courseIds
         .map(id => allCourses.find(c => c.id === id))
-        .filter(Boolean) // Remove any undefined values
+        .filter((c): c is AvailableCourse => c !== undefined)
 
       if (courses.length > 0) {
         // Optimistically add all courses (auto-reverts on error)
@@ -536,7 +539,8 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
       >
         <PlannerBoard
           data={{
-              semesterPlans: optimisticData.semesterPlans,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              semesterPlans: optimisticData.semesterPlans as any,
               availableCourses: allCourses
           }}
           activeId={activeId}

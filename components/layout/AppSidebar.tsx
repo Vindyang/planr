@@ -24,10 +24,10 @@ const items = [
   {
     title: "Overview",
     items: [
-        { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-        { title: "Planner", url: "/planner", icon: IconCalendarEvent },
-        { title: "Courses", url: "/courses", icon: IconBook },
-        { title: "My Reviews", url: "/reviews", icon: IconMessageCircle },
+        { title: "Dashboard", url: "/dashboard", icon: IconDashboard, tourId: "nav-dashboard" },
+        { title: "Planner", url: "/planner", icon: IconCalendarEvent, tourId: "nav-planner" },
+        { title: "Courses", url: "/courses", icon: IconBook, tourId: "nav-courses" },
+        { title: "My Reviews", url: "/reviews", icon: IconMessageCircle, tourId: "nav-reviews" },
     ]
   },
 ]
@@ -53,7 +53,7 @@ export function AppSidebar({ student }: { student: StudentProfile }) {
                         {group.items.map((item) => {
                             const isActive = pathname === item.url || pathname.startsWith(item.url + "/");
                             return (
-                                <SidebarMenuItem key={item.title}>
+                                <SidebarMenuItem key={item.title} data-tour-id={item.tourId}>
                                     <SidebarMenuButton 
                                         asChild 
                                         isActive={isActive} 

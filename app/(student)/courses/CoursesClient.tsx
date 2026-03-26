@@ -155,7 +155,7 @@ export default function CoursesClient({
 
       {/* Search & Filters */}
       <div className="space-y-4">
-        <div className="relative">
+        <div className="relative" data-tour-id="courses-search">
           <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
@@ -220,13 +220,14 @@ export default function CoursesClient({
         </div>
       ) : (
         <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
-          {filteredCourses.map((course) => {
+          {filteredCourses.map((course, index) => {
             const status = getEligibilityStatus(course)
             const isInPlanner = plannedCourseIds.has(course.id)
             return (
               <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
+                data-tour-id={index === 0 ? "courses-card" : undefined}
                 className="bg-card border border-border p-6 flex flex-col transition-all duration-200 hover:border-foreground hover:-translate-y-0.5 hover:shadow-md h-full"
               >
                 <div className="flex justify-between items-start mb-3">
