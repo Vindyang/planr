@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { IconAlertTriangle, IconX, IconCheck, IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 import { Violation, ValidationResult } from "@/lib/planner/types"
 import { cn } from "@/lib/utils"
@@ -12,6 +12,11 @@ interface ValidationPanelProps {
 
 export function ValidationPanel({ initialValidation, onValidate }: ValidationPanelProps) {
   const [validation, setValidation] = useState<ValidationResult>(initialValidation)
+
+  useEffect(() => {
+    setValidation(initialValidation)
+  }, [initialValidation])
+
   const [isLoading, setIsLoading] = useState(false)
   const [isExpanded, setIsExpanded] = useState(true)
 
