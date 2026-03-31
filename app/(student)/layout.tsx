@@ -27,6 +27,28 @@ export default async function AuthenticatedLayout({
   if (!student) {
     throw new Error("Student profile not found")
   }
+  
+  const { prisma } = await import("@/lib/prisma")
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isFirstLogin: true, onboardingStatus: true },
+  })
 
-  return <AppLayout student={student}>{children}</AppLayout>
+  // Parse JSON status or provide defaults
+  const onboardingStatus = (user?.onboardingStatus as Record<string, boolean>) || {
+    VISITED_COURSES: false,
+    CREATED_TERM: false,
+    ADDED_COURSE: false,
+    DISMISSED: false,
+  }
+
+  return (
+    <AppLayout 
+      student={student}
+      isFirstLogin={user?.isFirstLogin ?? false}
+      onboardingStatus={onboardingStatus}
+    >
+      {children}
+    </AppLayout>
+  )
 }

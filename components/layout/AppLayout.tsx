@@ -13,10 +13,14 @@ import type { TourType } from "@/components/tutorial/tourSteps";
 
 export function AppLayout({
   children,
-  student
+  student,
+  isFirstLogin,
+  onboardingStatus
 }: {
   children: React.ReactNode
   student: StudentProfile
+  isFirstLogin: boolean
+  onboardingStatus: Record<string, boolean>
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -60,8 +64,8 @@ export function AppLayout({
             </main>
          </SidebarInset>
       </div>
-      <WelcomeModal />
-      <OnboardingChecklist />
+      <WelcomeModal isFirstLogin={isFirstLogin} />
+      <OnboardingChecklist initialStatus={onboardingStatus} />
       {isTourOpen && <TourOverlay onClose={() => setIsTourOpen(false)} initialStep={tourInitialStep} tourType={tourType} />}
     </SidebarProvider>
   );

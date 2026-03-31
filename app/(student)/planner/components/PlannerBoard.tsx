@@ -148,29 +148,28 @@ export function PlannerBoard({
                                 {/* Show Add Course and Delete buttons only when plans exist */}
                                 {data.semesterPlans.length > 0 && (
                                     <>
-                                        <span data-tour-id="planner-add-course-btn">
-                                          <AddCourseDialog
-                                              availableCourses={data.availableCourses}
-                                              plannedCourseIds={plannedCourseIds}
-                                              semesterPlans={data.semesterPlans}
-                                              onAddCourse={onAddCourse}
-                                              onAddCourses={onAddCourses}
-                                          />
-                                        </span>
-                                        {/* Delete Courses Button */}
+                                        <AddCourseDialog
+                                            availableCourses={data.availableCourses}
+                                            plannedCourseIds={plannedCourseIds}
+                                            semesterPlans={data.semesterPlans}
+                                            onAddCourse={onAddCourse}
+                                            onAddCourses={onAddCourses}
+                                        />
+                                        {/* Select Courses Button */}
                                         {plannedCourseIds.size > 0 && (
                                             <button
                                                 className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
                                                 onClick={onToggleSelectionMode}
                                             >
                                                 <IconChecks size={18} stroke={1.5} />
-                                                <span>Delete Courses</span>
+                                                <span>Select Courses</span>
                                             </button>
                                         )}
                                     </>
                                 )}
                             </>
                         )}
+                        
                         {isSelectionMode && (
                             <>
                                 {/* Cancel Selection Button */}
@@ -181,6 +180,17 @@ export function PlannerBoard({
                                     <IconX size={18} stroke={1.5} />
                                     <span>Cancel</span>
                                 </button>
+                                
+                                {/* Delete Selected Button */}
+                                {selectedCourses.size > 0 && (
+                                    <button
+                                        onClick={onBulkDelete}
+                                        className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                    >
+                                        <IconTrash size={16} stroke={1.5} />
+                                        <span>Delete {selectedCourses.size} Course{selectedCourses.size > 1 ? 's' : ''}</span>
+                                    </button>
+                                )}
                             </>
                         )}
                         {/* Sidebar Toggle Button */}
@@ -233,21 +243,20 @@ export function PlannerBoard({
 
                     {/* Add Next Year Section */}
                     {sortedYears.length > 0 && (
-                        <div className="pt-8">
-                            <div className="w-full h-px bg-[#DAD6CF] mb-12" />
-                            <div className="flex justify-center">
-                                <button
-                                    onClick={() => onCreatePlan("Term 1", sortedYears[sortedYears.length - 1] + 1)}
-                                    className="flex flex-col items-center gap-4 group"
-                                >
-                                    <div className="w-16 h-16 rounded-full border border-[#DAD6CF] bg-white flex items-center justify-center text-[#DAD6CF] group-hover:text-[#0A0A0A] group-hover:border-[#0A0A0A] transition-all">
-                                        <IconPlus size={32} stroke={1.5} />
-                                    </div>
-                                    <span className="text-xs uppercase tracking-[0.1em] font-medium text-[#666460] group-hover:text-[#0A0A0A] transition-colors">
+                        <div className="pt-12 pb-8">
+                            <button
+                                onClick={() => onCreatePlan("Term 1", sortedYears[sortedYears.length - 1] + 1)}
+                                className="flex items-center w-full group cursor-pointer"
+                            >
+                                <div className="flex-1 h-px bg-[#DAD6CF] group-hover:bg-[#0A0A0A] transition-colors" />
+                                <div className="px-6 py-2 border border-[#DAD6CF] rounded-full mx-8 flex items-center gap-2 group-hover:border-[#0A0A0A] transition-colors bg-[#F4F1ED] group-hover:bg-white text-[#666460] group-hover:text-[#0A0A0A]">
+                                    <IconPlus size={14} stroke={2} className="transition-colors" />
+                                    <span className="text-xs uppercase tracking-[0.1em] font-medium transition-colors">
                                         Add Academic Year {sortedYears[sortedYears.length - 1] + 1}
                                     </span>
-                                </button>
-                            </div>
+                                </div>
+                                <div className="flex-1 h-px bg-[#DAD6CF] group-hover:bg-[#0A0A0A] transition-colors" />
+                            </button>
                         </div>
                     )}
                 </div>
@@ -282,31 +291,7 @@ export function PlannerBoard({
         ) : null}
       </DragOverlay>
 
-      {/* Floating Action Bar - Show when courses are selected */}
-      {isSelectionMode && selectedCourses.size > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4">
-          <div className="bg-[#0A0A0A] text-white px-6 py-4 rounded-lg shadow-2xl border border-[#0A0A0A] flex items-center gap-6">
-            <span className="text-sm font-medium">
-              {selectedCourses.size} course{selectedCourses.size > 1 ? 's' : ''} selected
-            </span>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={onCancelSelection}
-                className="uppercase text-xs tracking-[0.1em] font-medium bg-white/10 hover:bg-white/20 text-white gap-2 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={onBulkDelete}
-                className="uppercase text-xs tracking-[0.1em] font-medium bg-[#ef4444] hover:bg-[#dc2626] text-white gap-2 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
-              >
-                <IconTrash size={16} stroke={1.5} />
-                <span>Delete Selected</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Floating Action Bar removed in favor of top header actions */}
     </div>
   )
 }

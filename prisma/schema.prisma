@@ -127,7 +127,8 @@ model user {
   emailVerified         Boolean     @default(false) @map("email_verified")
   image                 String?
   role                  UserRole    @default(STUDENT)
-
+  isFirstLogin          Boolean     @default(true) @map("is_first_login")
+  onboardingStatus      Json?       @map("onboarding_status")
   // Multi-tenant assignments (for ADMIN and COORDINATOR roles)
   assignedUniversityId  String?     @map("assigned_university_id")
   assignedDepartmentId  String?     @map("assigned_department_id")

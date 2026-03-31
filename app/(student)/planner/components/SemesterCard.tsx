@@ -4,7 +4,7 @@ import { useDroppable } from "@dnd-kit/core"
 import { cn } from "@/lib/utils"
 import { CourseCard } from "./CourseCard"
 import { Prisma } from "@prisma/client"
-import { IconTrash, IconX } from "@tabler/icons-react"
+import { IconTrash, IconX, IconPlus } from "@tabler/icons-react"
 
 type PlannedCourseWithCourse = Prisma.plannedCourseGetPayload<{
   include: { course: true }
@@ -98,10 +98,30 @@ export function SemesterCard({
                 />
               </div>
             ))}
-            {courses.length === 0 && (
-              <div className="flex flex-col items-center justify-center border border-dashed border-[#DAD6CF] opacity-50 p-6 min-h-[120px]">
-                <span className="text-[0.65rem] uppercase tracking-widest text-[#666460]">Drop Courses</span>
-              </div>
+            {courses.length === 0 ? (
+              <button 
+                data-tour-id="planner-add-course-btn"
+                onClick={() => window.dispatchEvent(new CustomEvent("planr_open_add_course"))}
+                className="w-full flex-1 flex flex-col items-center justify-center border border-dashed border-[#DAD6CF] min-h-[200px] hover:bg-[#DAD6CF]/30 transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-2 mb-1.5 text-[#999693] group-hover:text-[#0A0A0A] transition-colors">
+                  <IconPlus size={16} stroke={2} />
+                  <span className="text-xs uppercase tracking-[0.1em] font-bold">
+                    Add Courses
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#999693] font-medium uppercase tracking-[0.1em] max-w-[140px] text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  Click or drag here
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("planr_open_add_course"))}
+                className="w-full py-3 flex items-center justify-center border border-dashed border-[#DAD6CF] hover:bg-[#DAD6CF]/30 transition-colors cursor-pointer group mt-2"
+              >
+                <IconPlus size={14} stroke={1.5} className="mr-2 text-[#666460] group-hover:text-[#0A0A0A] transition-colors" />
+                <span className="text-[0.65rem] uppercase tracking-widest text-[#666460] group-hover:text-[#0A0A0A] transition-colors">Add Course</span>
+              </button>
             )}
           </div>
       </div>
