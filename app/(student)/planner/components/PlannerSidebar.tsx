@@ -20,6 +20,7 @@ interface PlannerSidebarProps {
   initialValidation: ValidationResult
   isCollapsed: boolean
   onToggle: () => void
+  requiredUnits?: number
 }
 
 export function PlannerSidebar({
@@ -28,7 +29,8 @@ export function PlannerSidebar({
   currentGpa,
   initialValidation,
   isCollapsed,
-  onToggle
+  onToggle,
+  requiredUnits = 120
 }: PlannerSidebarProps) {
   // Progress Data Calculation
   const plannedUnits = plans.reduce(
@@ -36,7 +38,6 @@ export function PlannerSidebar({
       total + plan.plannedCourses.reduce((sum: number, item) => sum + item.course.units, 0),
     0
   )
-  const requiredUnits = 120 
 
   return (
     <div className={cn(

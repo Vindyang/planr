@@ -44,7 +44,7 @@ export async function StatCardsSection({ userId }: { userId: string }) {
     0
   )
 
-  const remainingUnits = Math.max(0, 120 - completedUnits - plannedUnits)
+  const remainingUnits = Math.max(0, student.major.requiredUnits - completedUnits - plannedUnits)
 
   return (
     <StatCards

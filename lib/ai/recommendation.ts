@@ -216,7 +216,7 @@ export async function buildGenerationContext(
     minUnitsPerSemester: 12,
     maxUnitsPerSemester: 21,
     maxUnitsWithoutOverload: 18,
-    requiredTotalUnits: 120, // This should ideally come from major requirements
+    requiredTotalUnits: student.major.requiredUnits, // Dynamically fetched from major requirements
   }
 
   return {

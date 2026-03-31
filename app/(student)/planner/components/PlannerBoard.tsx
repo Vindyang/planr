@@ -42,6 +42,7 @@ type PlannerBoardProps = {
   onBulkDelete: () => void
   onCancelSelection: () => void
   onOpenAIModal: () => void
+  requiredUnits?: number
 }
 
 export function PlannerBoard({
@@ -62,6 +63,7 @@ export function PlannerBoard({
   onBulkDelete,
   onCancelSelection,
   onOpenAIModal,
+  requiredUnits = 120,
 }: PlannerBoardProps) {
   
   // Find active item for overlay
@@ -261,6 +263,7 @@ export function PlannerBoard({
                  initialValidation={initialValidation}
                  isCollapsed={!isSidebarOpen}
                  onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                 requiredUnits={requiredUnits}
               />
           </div>
       </div>

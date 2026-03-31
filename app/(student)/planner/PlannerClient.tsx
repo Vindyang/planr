@@ -32,6 +32,7 @@ type PlannerClientProps = {
   completedUnits?: number
   currentGpa?: number | null
   initialValidation: ValidationResult
+  requiredUnits?: number
 }
 
 type AvailableCourse = {
@@ -72,7 +73,7 @@ type OptimisticAction =
   | { type: 'MOVE_COURSE'; courseId: string; targetPlanId: string }
   | { type: 'CREATE_PLAN'; term: string; year: number }
 
-export default function PlannerClient({ initialData, allCourses, completedUnits = 0, currentGpa, initialValidation }: PlannerClientProps) {
+export default function PlannerClient({ initialData, allCourses, completedUnits = 0, currentGpa, initialValidation, requiredUnits = 120 }: PlannerClientProps) {
   const [, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -552,6 +553,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           completedUnits={completedUnits}
           currentGpa={currentGpa}
           initialValidation={initialValidation}
+          requiredUnits={requiredUnits}
           isSelectionMode={isSelectionMode}
           selectedCourses={selectedCourses}
           onToggleSelection={handleToggleSelection}
