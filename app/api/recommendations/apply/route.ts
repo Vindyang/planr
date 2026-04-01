@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     // 3. Get student ID
     const student = await prisma.student.findUnique({
       where: { userId: session.user.id },
-      select: { id: true },
+      select: { id: true, universityId: true },
     })
 
     if (!student) {
