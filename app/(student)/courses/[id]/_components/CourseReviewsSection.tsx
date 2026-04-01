@@ -200,7 +200,7 @@ export function CourseReviewsSection({
       <div className="flex gap-0 border-b border-border">
         <button
           onClick={() => setActiveTab("courses")}
-          className={`px-4 py-2 text-xs uppercase tracking-wider border-b-2 transition-colors ${
+          className={`px-4 py-2 text-xs uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${
             activeTab === "courses"
               ? "border-foreground text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -210,7 +210,7 @@ export function CourseReviewsSection({
         </button>
         <button
           onClick={() => setActiveTab("professors")}
-          className={`px-4 py-2 text-xs uppercase tracking-wider border-b-2 transition-colors ${
+          className={`px-4 py-2 text-xs uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${
             activeTab === "professors"
               ? "border-foreground text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground"

@@ -28,11 +28,11 @@ export function PlanSummary({ semesterPlans }: PlanSummaryProps) {
         <p className="text-sm text-muted-foreground mb-4">
           No courses planned yet.
         </p>
-        <Link href="/planner">
-          <Button variant="outline" size="sm" className="w-full">
+        <Button asChild variant="outline" size="sm" className="w-full">
+          <Link href="/planner">
             Create Term Plan
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </Card>
     )
   }
@@ -78,12 +78,12 @@ export function PlanSummary({ semesterPlans }: PlanSummaryProps) {
         )}
       </div>
 
-      <Link href="/planner">
-        <Button variant="outline" size="sm" className="w-full">
+      <Button asChild variant="outline" size="sm" className="w-full">
+        <Link href="/planner">
           View Full Plan
           <IconChevronRight className="ml-2 h-4 w-4" />
-        </Button>
-      </Link>
+        </Link>
+      </Button>
     </Card>
   )
 }

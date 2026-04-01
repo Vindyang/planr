@@ -137,7 +137,7 @@ export function PlannerBoard({
                             <>
                                 {/* AI Recommendation Button - Always show */}
                                 <button
-                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
                                     onClick={onOpenAIModal}
                                 >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -158,7 +158,7 @@ export function PlannerBoard({
                                         {/* Select Courses Button */}
                                         {plannedCourseIds.size > 0 && (
                                             <button
-                                                className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                                className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
                                                 onClick={onToggleSelectionMode}
                                             >
                                                 <IconChecks size={18} stroke={1.5} />
@@ -174,7 +174,7 @@ export function PlannerBoard({
                             <>
                                 {/* Cancel Selection Button */}
                                 <button
-                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
                                     onClick={onCancelSelection}
                                 >
                                     <IconX size={18} stroke={1.5} />
@@ -185,7 +185,7 @@ export function PlannerBoard({
                                 {selectedCourses.size > 0 && (
                                     <button
                                         onClick={onBulkDelete}
-                                        className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                                        className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
                                     >
                                         <IconTrash size={16} stroke={1.5} />
                                         <span>Delete {selectedCourses.size} Course{selectedCourses.size > 1 ? 's' : ''}</span>
@@ -195,7 +195,7 @@ export function PlannerBoard({
                         )}
                         {/* Sidebar Toggle Button */}
                         <button
-                            className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors"
+                            className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         >
                             {isSidebarOpen ? (
