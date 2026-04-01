@@ -62,6 +62,7 @@ export function TourOverlay({
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [rect, setRect] = useState<Rect | null>(null)
   const [viewport, setViewport] = useState({ w: typeof window !== "undefined" ? window.innerWidth : 0, h: typeof window !== "undefined" ? window.innerHeight : 0 })
+  const [isSearching, setIsSearching] = useState(true)
 
   const step = steps[currentStep]
 
@@ -82,16 +83,21 @@ export function TourOverlay({
   }, [step.id])
 
   useEffect(() => {
-    // Retry finding the element — page may still be rendering after navigation
+    setIsSearching(true)
     let attempts = 0
     const MAX_ATTEMPTS = 10
     const tryFind = () => {
       const el = document.querySelector(`[data-tour-id="${step.id}"]`)
       if (el) {
         updateRect()
+        setIsSearching(false) // Found it
       } else if (attempts < MAX_ATTEMPTS) {
         attempts++
         setTimeout(tryFind, 150)
+      } else {
+        // Exhausted attempts, fallback to center
+        setRect(null)
+        setIsSearching(false)
       }
     }
     tryFind()
@@ -108,11 +114,13 @@ export function TourOverlay({
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [onClose, currentStep])
+  }, [onClose, currentStep, steps.length])
 
   const isLast = currentStep === steps.length - 1
   const isFirst = currentStep === 0
 
+  if (isSearching) return null
+  
   // Spotlight clip-path: cuts a rectangular hole for the highlighted element
   const clipPath = rect
     ? `polygon(

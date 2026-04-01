@@ -306,6 +306,9 @@ export const getValidationResult = cache(async (studentId: string): Promise<Vali
       university: {
         select: { code: true },
       },
+      major: {
+        select: { requiredUnits: true },
+      },
       completedCourses: {
         include: {
           course: {
@@ -408,6 +411,7 @@ export const getValidationResult = cache(async (studentId: string): Promise<Vali
     completedCourses,
     allCourses: coursesWithPrereqs,
     university: student.university.code,
+    requiredUnits: student.major.requiredUnits,
   }
 
   // Run validation

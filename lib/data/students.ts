@@ -19,6 +19,7 @@ export const getStudentProfile = cache(async (userId: string) => {
           id: true,
           code: true,
           name: true,
+          requiredUnits: true,
         },
       },
       secondMajor: {

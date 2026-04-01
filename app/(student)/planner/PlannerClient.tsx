@@ -32,6 +32,8 @@ type PlannerClientProps = {
   completedUnits?: number
   currentGpa?: number | null
   initialValidation: ValidationResult
+  requiredUnits?: number
+  majorName?: string | null
 }
 
 type AvailableCourse = {
@@ -72,7 +74,15 @@ type OptimisticAction =
   | { type: 'MOVE_COURSE'; courseId: string; targetPlanId: string }
   | { type: 'CREATE_PLAN'; term: string; year: number }
 
-export default function PlannerClient({ initialData, allCourses, completedUnits = 0, currentGpa, initialValidation }: PlannerClientProps) {
+export default function PlannerClient({
+  initialData,
+  allCourses,
+  completedUnits = 0,
+  currentGpa,
+  initialValidation,
+  requiredUnits = 120,
+  majorName,
+}: PlannerClientProps) {
   const [, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -242,16 +252,16 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
                 const course = allCourses.find(c => c.id === courseId)
 
-                if (course) {
-                  // Optimistically add the course
-                  addOptimisticUpdate({ type: 'ADD_COURSE', planId: overId, course })
-                }
-
-                await addCourseToPlan(overId, courseId)
-                markChecklistItem("ADDED_COURSE")
-                toast.success("Course added", {
-                  description: "Successfully added course via drag & drop",
-                })
+                toast.promise(
+                  addCourseToPlan(overId, courseId).then(() => {
+                    markChecklistItem("ADDED_COURSE")
+                  }),
+                  {
+                    loading: "Adding course...",
+                    success: "Course added",
+                    error: (err) => `Failed to add course: ${(err as Error).message}`
+                  }
+                )
             } else if (activeData?.type === "course") {
                 // Find the current term plan for this course
                 const currentPlan = optimisticData.semesterPlans.find((plan) =>
@@ -263,17 +273,15 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
                   return
                 }
 
-                // Moving existing course - optimistically update
-                addOptimisticUpdate({
-                  type: 'MOVE_COURSE',
-                  courseId: active.id as string,
-                  targetPlanId: overId
-                })
-
-                await moveCourse(active.id as string, overId)
-                toast.success("Course moved", {
-                  description: "Successfully moved course to another term",
-                })
+                // Moving existing course
+                toast.promise(
+                  moveCourse(active.id as string, overId),
+                  {
+                    loading: "Moving course...",
+                    success: "Course moved",
+                    error: (err) => `Failed to move course: ${err.message}`
+                  }
+                )
             }
         } catch (error) {
             console.error("Move failed", error)
@@ -299,40 +307,16 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
     const { semesterPlanId, course } = courseToRemove
 
-    // Optimistically remove course immediately (no confirmation dialog)
-    startTransition(async () => {
-      addOptimisticUpdate({ type: 'REMOVE_COURSE', courseId })
-
-      try {
-        await removeCourseFromPlan(courseId)
-        toast.success("Course removed", {
-          description: "Successfully removed course from your plan",
-          action: {
-            label: "Undo",
-            onClick: () => {
-              startTransition(async () => {
-                // Optimistically add the course back
-                addOptimisticUpdate({ type: 'ADD_COURSE', planId: semesterPlanId, course })
-
-                try {
-                  await addCourseToPlan(semesterPlanId, course.id)
-                  toast.success("Course restored", {
-                    description: "Successfully restored the course",
-                  })
-                } catch (error) {
-                  toast.error("Failed to restore course", {
-                    description: (error as Error).message,
-                  })
-                }
-              })
-            }
-          }
-        })
-      } catch (error) {
-        toast.error("Failed to remove course", {
-          description: (error as Error).message,
-        })
-      }
+    // Remove course immediately
+    startTransition(() => {
+      toast.promise(
+        removeCourseFromPlan(courseId),
+        {
+          loading: "Removing course...",
+          success: () => "Course removed",
+          error: (err) => `Failed to remove course: ${err.message}`
+        }
+      )
     })
   }
 
@@ -389,51 +373,30 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
 
 
   const handleAddCourse = async (planId: string, courseId: string) => {
-    startTransition(async () => {
-      // Find the course data for optimistic update
-      const course = allCourses.find(c => c.id === courseId)
-
-      if (course) {
-        // Optimistically add the course (auto-reverts on error)
-        addOptimisticUpdate({ type: 'ADD_COURSE', planId, course })
-      }
-
-      try {
-        await addCourseToPlan(planId, courseId)
-        markChecklistItem("ADDED_COURSE")
-        toast.success("Course added", {
-          description: "Successfully added course to your plan",
-        })
-      } catch (e) {
-        toast.error("Failed to add course", {
-          description: (e as Error).message
-        })
-      }
+    startTransition(() => {
+      toast.promise(
+        addCourseToPlan(planId, courseId).then(() => {
+          markChecklistItem("ADDED_COURSE")
+        }),
+        {
+          loading: "Adding course...",
+          success: "Course added",
+          error: (err) => `Failed to add course: ${(err as Error).message}`
+        }
+      )
     })
   }
 
   const handleAddCourses = async (planId: string, courseIds: string[]) => {
-    startTransition(async () => {
-      // Find the course data for optimistic update
-      const courses = courseIds
-        .map(id => allCourses.find(c => c.id === id))
-        .filter((c): c is AvailableCourse => c !== undefined)
-
-      if (courses.length > 0) {
-        // Optimistically add all courses (auto-reverts on error)
-        addOptimisticUpdate({ type: 'ADD_COURSES', planId, courses })
-      }
-
-      try {
-        await addCoursesToPlan(planId, courseIds)
-        toast.success("Courses added", {
-          description: `Successfully added ${courseIds.length} course${courseIds.length > 1 ? 's' : ''} to your plan`,
-        })
-      } catch (e) {
-        toast.error("Failed to add courses", {
-          description: (e as Error).message
-        })
-      }
+    startTransition(() => {
+      toast.promise(
+        addCoursesToPlan(planId, courseIds),
+        {
+          loading: "Adding courses...",
+          success: `${courseIds.length} course${courseIds.length > 1 ? 's' : ''} added`,
+          error: (err) => `Failed to add courses: ${(err as Error).message}`
+        }
+      )
     })
   }
 
@@ -471,57 +434,16 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
     setSelectedCourses(new Set())
     setIsSelectionMode(false)
 
-    // Optimistically update the UI (auto-reverts on error)
-    startTransition(async () => {
-      addOptimisticUpdate({ type: 'REMOVE_COURSES', courseIds })
-
-      try {
-        await removeCoursesFromPlan(courseIds)
-        toast.success("Courses removed", {
-          description: `Successfully removed ${courseIds.length} course${courseIds.length > 1 ? 's' : ''}`,
-          action: {
-            label: "Undo",
-            onClick: () => {
-              startTransition(async () => {
-                // Group courses by term plan for efficient restoration
-                const coursesBySemester: Record<string, AvailableCourse[]> = coursesToRemove.reduce((acc, item) => {
-                  if (!acc[item.semesterPlanId]) {
-                    acc[item.semesterPlanId] = []
-                  }
-                  acc[item.semesterPlanId].push(item.course)
-                  return acc
-                }, {} as Record<string, AvailableCourse[]>)
-
-                // Optimistically add all courses back
-                Object.entries(coursesBySemester).forEach(([planId, courses]) => {
-                  addOptimisticUpdate({ type: 'ADD_COURSES', planId, courses })
-                })
-
-                try {
-                  // Restore courses to their original terms
-                  await Promise.all(
-                    Object.entries(coursesBySemester).map(([planId, courses]) =>
-                      addCoursesToPlan(planId, courses.map((c) => c.id))
-                    )
-                  )
-
-                  toast.success("Courses restored", {
-                    description: `Successfully restored ${coursesToRemove.length} course${coursesToRemove.length > 1 ? 's' : ''}`,
-                  })
-                } catch (error) {
-                  toast.error("Failed to restore courses", {
-                    description: (error as Error).message,
-                  })
-                }
-              })
-            }
-          }
-        })
-      } catch (error) {
-        toast.error("Failed to remove courses", {
-          description: (error as Error).message,
-        })
-      }
+    // Update the UI
+    startTransition(() => {
+      toast.promise(
+        removeCoursesFromPlan(courseIds),
+        {
+          loading: "Removing courses...",
+          success: `Successfully removed ${courseIds.length} course${courseIds.length > 1 ? 's' : ''}`,
+          error: (err) => `Failed to remove courses: ${err.message}`
+        }
+      )
     })
   }
 
@@ -533,6 +455,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
   return (
     <>
       <DndContext
+        id="planner-dnd-context"
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
@@ -552,6 +475,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
           completedUnits={completedUnits}
           currentGpa={currentGpa}
           initialValidation={initialValidation}
+          requiredUnits={requiredUnits}
           isSelectionMode={isSelectionMode}
           selectedCourses={selectedCourses}
           onToggleSelection={handleToggleSelection}
@@ -584,6 +508,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
       <AIRecommendationModal
         open={isAIModalOpen}
         onOpenChange={setIsAIModalOpen}
+        majorName={majorName}
       />
     </>
   )

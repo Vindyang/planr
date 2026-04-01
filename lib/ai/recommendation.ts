@@ -201,7 +201,7 @@ export async function buildGenerationContext(
       units: course.units,
       termsOffered: course.termsOffered,
       tags: course.tags,
-      prerequisites: course.prerequisites.map((p: any) => ({
+      prerequisites: course.prerequisites.map((p) => ({
         courseId: p.prerequisiteCourseId,
         courseCode: p.prerequisiteCourse.code,
         type: p.type,
@@ -213,10 +213,10 @@ export async function buildGenerationContext(
 
   // University rules (these could be fetched from university settings in the future)
   const universityRules = {
-    minUnitsPerSemester: 12,
-    maxUnitsPerSemester: 21,
-    maxUnitsWithoutOverload: 18,
-    requiredTotalUnits: 120, // This should ideally come from major requirements
+    minUnitsPerSemester: 3,
+    maxUnitsPerSemester: 6,
+    maxUnitsWithoutOverload: 5,
+    requiredTotalUnits: student.major.requiredUnits, // Dynamically fetched from major requirements
   }
 
   return {

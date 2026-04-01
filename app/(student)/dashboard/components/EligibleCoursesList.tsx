@@ -113,11 +113,11 @@ export function EligibleCoursesList({
 
             {/* Action Buttons */}
             <div className="flex gap-2">
-              <Link href={`/courses/${course.id}`} className="flex-1">
-                <Button size="sm" className="w-full">
+              <Button asChild size="sm" className="w-full flex-1">
+                <Link href={`/courses/${course.id}`}>
                   View Details
-                </Button>
-              </Link>
+                </Link>
+              </Button>
               <div className="flex-1">
                 <AddToPlanButton
                   course={{

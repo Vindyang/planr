@@ -39,7 +39,7 @@ export function validatePlan(context: ValidationContext): ValidationResult {
  * Calculate statistics about the plan
  */
 function calculatePlanStatistics(context: ValidationContext): PlanStatistics {
-  const { semesters, completedCourses, allCourses } = context
+  const { semesters, completedCourses, allCourses, requiredUnits = 120 } = context
 
   // Total units across all planned semesters
   let totalUnits = 0
@@ -86,7 +86,7 @@ function calculatePlanStatistics(context: ValidationContext): PlanStatistics {
   const completedUnitsTotal = completedCourses.reduce((sum: number, cc) => sum + (cc.course?.units || 0), 0)
   const completedCoursesCount = completedCourses.length
   const remainingCoursesCount = 0 // Would need total required courses to calculate
-  const remainingUnitsCount = Math.max(0, 120 - completedUnitsTotal - totalUnits) // Assuming 120 units required
+  const remainingUnitsCount = Math.max(0, requiredUnits - completedUnitsTotal - totalUnits)
 
   return {
     totalSemesters,

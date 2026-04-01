@@ -223,7 +223,7 @@ function MyReviewsContent() {
         <div className="flex gap-2 border-b border-border pb-3">
           <button
             onClick={() => setActiveTab("courses")}
-            className={`px-4 py-2 text-xs uppercase tracking-wider border transition-colors ${
+            className={`px-4 py-2 text-xs uppercase tracking-wider border transition-colors cursor-pointer ${
               activeTab === "courses"
                 ? "border-foreground text-foreground bg-card"
                 : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
@@ -233,7 +233,7 @@ function MyReviewsContent() {
           </button>
           <button
             onClick={() => setActiveTab("professors")}
-            className={`px-4 py-2 text-xs uppercase tracking-wider border transition-colors ${
+            className={`px-4 py-2 text-xs uppercase tracking-wider border transition-colors cursor-pointer ${
               activeTab === "professors"
                 ? "border-foreground text-foreground bg-card"
                 : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"

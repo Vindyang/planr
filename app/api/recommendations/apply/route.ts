@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     // 3. Get student ID
     const student = await prisma.student.findUnique({
       where: { userId: session.user.id },
-      select: { id: true },
+      select: { id: true, universityId: true },
     })
 
     if (!student) {
@@ -49,6 +49,14 @@ export async function POST(request: Request) {
         { status: 404 }
       )
     }
+
+    // Build course lookup to guard against hallucinated or stale IDs
+    const availableCourses = await prisma.course.findMany({
+      where: { universityId: student.universityId },
+      select: { id: true, code: true },
+    })
+    const courseById = new Map(availableCourses.map((c) => [c.id, c.id]))
+    const courseIdByCode = new Map(availableCourses.map((c) => [c.code, c.id]))
 
     // 4. Validate roadmap one more time (security)
     const validation = await validateAIRoadmap(roadmap, student.id)
@@ -202,10 +210,23 @@ export async function POST(request: Request) {
 
       // Add AI courses to the semester plan
       for (const aiCourse of aiSemester.courses) {
+        const resolvedCourseId =
+          courseById.get(aiCourse.id) ?? courseIdByCode.get(aiCourse.code)
+
+        if (!resolvedCourseId) {
+          return NextResponse.json(
+            {
+              error: "Roadmap contains an unknown course",
+              message: `${aiCourse.code} is not a valid course in your university catalog.`,
+            },
+            { status: 400 }
+          )
+        }
+
         await prisma.plannedCourse.create({
           data: {
             semesterPlanId: semesterPlanId,
-            courseId: aiCourse.id,
+            courseId: resolvedCourseId,
             status: "PLANNED",
           },
         })

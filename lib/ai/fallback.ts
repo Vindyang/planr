@@ -12,11 +12,10 @@ import type {
   Term,
 } from "./types"
 import { WORKLOAD_CONFIG } from "./types"
-import type { CourseWithPrereqs } from "@/lib/eligibility/types"
 
 /**
  * Generate a deterministic roadmap using rule-based algorithm
- * This is used as a fallback when Groq API fails
+ * This is used as a fallback when AI output is invalid
  */
 export async function generateDeterministicRoadmap(
   context: AIGenerationContext
@@ -29,46 +28,22 @@ export async function generateDeterministicRoadmap(
     (c) => !student.completedCourseIds.includes(c.id)
   )
 
-  // Prioritize preferred courses
   const preferredSet = new Set(preferences.preferredCourses || [])
   const avoidSet = new Set(preferences.avoidCourses || [])
 
-  // Convert to CourseWithPrereqs format for prerequisite graph
-  const coursesMap = new Map<string, CourseWithPrereqs>(
-    availableCourses.map((c) => [
-      c.id,
-      {
-        id: c.id,
-        code: c.code,
-        title: c.title,
-        units: c.units,
-        prerequisites: c.prerequisites.map((p) => ({
-          prerequisiteCourseId: p.courseId,
-          type: p.type,
-        })),
-      },
-    ])
-  )
-
-  // Get topological ordering of all courses
-  const orderedCourses = getTopologicalOrder(
+  // Distribute courses with strict prerequisite ordering
+  const semesters = distributeCourses(
     incompleteCourses,
-    coursesMap,
     new Set(student.completedCourseIds),
+    preferences.startSemester,
+    preferences.targetGraduation,
+    preferences.includeSummerTerm,
+    workloadConfig.min,
+    workloadConfig.max,
     preferredSet,
     avoidSet
   )
 
-  // Distribute courses across semesters
-  const semesters = distributeCourses(
-    orderedCourses,
-    preferences.targetGraduation,
-    workloadConfig.min,
-    workloadConfig.max,
-    availableCourses
-  )
-
-  // Calculate totals
   const totalUnits = semesters.reduce((sum, s) => sum + s.totalUnits, 0)
   const meetsRequirements = totalUnits >= universityRules.requiredTotalUnits
 
@@ -81,124 +56,46 @@ export async function generateDeterministicRoadmap(
 }
 
 /**
- * Get topological ordering of courses respecting prerequisites
- */
-function getTopologicalOrder(
-  courses: CourseContext[],
-  coursesMap: Map<string, CourseWithPrereqs>,
-  completedIds: Set<string>,
-  preferredSet: Set<string>,
-  avoidSet: Set<string>
-): CourseContext[] {
-  const remaining = [...courses]
-  const ordered: CourseContext[] = []
-  const scheduledIds = new Set<string>()
-
-  // Priority scoring
-  const getPriority = (course: CourseContext): number => {
-    let priority = 0
-
-    // Preferred courses get highest priority
-    if (preferredSet.has(course.id)) priority += 1000
-
-    // Avoid courses get negative priority
-    if (avoidSet.has(course.id)) priority -= 500
-
-    // Prioritize courses with no remaining prerequisites
-    const prereqCount = course.prerequisites.filter(
-      (p) => !completedIds.has(p.courseId) && !scheduledIds.has(p.courseId)
-    ).length
-    priority -= prereqCount * 10
-
-    // Prioritize foundation courses (courses that unlock others)
-    priority += course.prerequisites.length > 0 ? 5 : 0
-
-    return priority
-  }
-
-  // Keep scheduling until we run out of courses
-  while (remaining.length > 0) {
-    // Find courses with all prerequisites met
-    const eligible = remaining.filter((course) => {
-      const hardPrereqs = course.prerequisites.filter((p) => p.type === "HARD")
-      return hardPrereqs.every(
-        (p) => completedIds.has(p.courseId) || scheduledIds.has(p.courseId)
-      )
-    })
-
-    if (eligible.length === 0) {
-      // No eligible courses - might be circular dependency or missing data
-      // Just take the first remaining course
-      if (remaining.length > 0) {
-        const course = remaining.shift()!
-        ordered.push(course)
-        scheduledIds.add(course.id)
-      }
-      continue
-    }
-
-    // Sort by priority
-    eligible.sort((a, b) => getPriority(b) - getPriority(a))
-
-    // Take the highest priority eligible course
-    const nextCourse = eligible[0]
-    ordered.push(nextCourse)
-    scheduledIds.add(nextCourse.id)
-
-    // Remove from remaining
-    const index = remaining.findIndex((c) => c.id === nextCourse.id)
-    if (index >= 0) {
-      remaining.splice(index, 1)
-    }
-  }
-
-  return ordered
-}
-
-/**
- * Distribute courses across semesters
+ * Distribute courses across semesters ensuring hard prerequisites are completed in earlier terms.
  */
 function distributeCourses(
-  orderedCourses: CourseContext[],
+  allCourses: CourseContext[],
+  completedCourseIds: Set<string>,
+  startSemester: { term: Term; year: number },
   targetGraduation: { term: Term; year: number },
+  includeSummerTerm: boolean,
   minUnits: number,
   maxUnits: number,
-  allCourses: CourseContext[]
+  preferredSet: Set<string>,
+  avoidSet: Set<string>
 ): AISemester[] {
   const semesters: AISemester[] = []
-  const termSequence = generateTermSequence(targetGraduation)
-  let courseIndex = 0
+  const termSequence = generateTermSequence(
+    startSemester,
+    targetGraduation,
+    includeSummerTerm
+  )
+  const remainingCourses = [...allCourses]
+  const completedOrScheduledIds = new Set(completedCourseIds)
 
   for (const { term, year } of termSequence) {
-    if (courseIndex >= orderedCourses.length) {
-      break // All courses scheduled
-    }
+    if (remainingCourses.length === 0) break
 
     const semesterCourses: AICourse[] = []
     let currentUnits = 0
 
-    // Schedule courses for this semester
-    while (courseIndex < orderedCourses.length && currentUnits < maxUnits) {
-      const course = orderedCourses[courseIndex]
+    // Eligible means offered this term and all HARD prereqs completed in earlier semesters.
+    const eligibleCourses = remainingCourses
+      .filter((course) => course.termsOffered.includes(term))
+      .filter((course) => {
+        const hardPrereqs = course.prerequisites.filter((p) => p.type === "HARD")
+        return hardPrereqs.every((p) => completedOrScheduledIds.has(p.courseId))
+      })
+      .sort((a, b) => scoreCourse(b, preferredSet, avoidSet) - scoreCourse(a, preferredSet, avoidSet))
 
-      // Check if course is offered this term
-      if (!course.termsOffered.includes(term)) {
-        // Try next course
-        courseIndex++
-        continue
-      }
+    for (const course of eligibleCourses) {
+      if (currentUnits + course.units > maxUnits) continue
 
-      // Check if adding this course would exceed max units
-      if (currentUnits + course.units > maxUnits) {
-        // Try next course if we haven't reached minimum
-        if (currentUnits >= minUnits) {
-          break // Semester is full enough
-        }
-        courseIndex++
-        continue
-      }
-
-      // Add course to semester
       semesterCourses.push({
         id: course.id,
         code: course.code,
@@ -206,30 +103,29 @@ function distributeCourses(
         units: course.units,
         reasoning: generateReasoning(course, currentUnits === 0),
       })
-
       currentUnits += course.units
-      courseIndex++
+
+      if (currentUnits >= minUnits) break
     }
 
-    // Only add semester if it has courses
-    if (semesterCourses.length > 0) {
-      semesters.push({
-        term,
-        year,
-        courses: semesterCourses,
-        totalUnits: currentUnits,
-        reasoning: generateSemesterReasoning(
-          term,
-          year,
-          currentUnits,
-          semesterCourses.length
-        ),
-      })
-    }
+    if (semesterCourses.length === 0) continue
 
-    // Stop if we've scheduled all courses
-    if (courseIndex >= orderedCourses.length) {
-      break
+    semesters.push({
+      term,
+      year,
+      courses: semesterCourses,
+      totalUnits: currentUnits,
+      reasoning: generateSemesterReasoning(term, year, currentUnits, semesterCourses.length),
+    })
+
+    const semesterScheduledIds = new Set(semesterCourses.map((c) => c.id))
+    semesterScheduledIds.forEach((id) => completedOrScheduledIds.add(id))
+
+    for (const courseId of semesterScheduledIds) {
+      const idx = remainingCourses.findIndex((c) => c.id === courseId)
+      if (idx !== -1) {
+        remainingCourses.splice(idx, 1)
+      }
     }
   }
 
@@ -237,45 +133,29 @@ function distributeCourses(
 }
 
 /**
- * Generate term sequence until target graduation
- * SMU uses Term 1 (Aug-Jan), Term 2 (Jan-Apr), Term 3 (May-Aug)
+ * Generate term sequence between start and target graduation, inclusive.
  */
-function generateTermSequence(targetGraduation: {
-  term: Term
-  year: number
-}): Array<{ term: Term; year: number }> {
-  const terms: Term[] = ["Term 1", "Term 2", "Term 3"]
+function generateTermSequence(
+  startSemester: { term: Term; year: number },
+  targetGraduation: { term: Term; year: number },
+  includeSummerTerm: boolean
+): Array<{ term: Term; year: number }> {
+  const terms: Term[] = includeSummerTerm
+    ? ["Term 1", "Term 2", "Term 3"]
+    : ["Term 1", "Term 2"]
   const sequence: Array<{ term: Term; year: number }> = []
+  const normalizedTarget =
+    !includeSummerTerm && targetGraduation.term === "Term 3"
+      ? { term: "Term 2" as Term, year: targetGraduation.year }
+      : targetGraduation
 
-  const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth()
+  let year = startSemester.year
+  let termIndex = terms.indexOf(startSemester.term)
+  if (termIndex === -1) termIndex = 0
 
-  // Determine starting term based on SMU calendar
-  let startTerm: Term
-  let startYear: number
-
-  if (currentMonth >= 0 && currentMonth < 4) {
-    // January-April: Start with Term 2
-    startTerm = "Term 2"
-    startYear = currentYear
-  } else if (currentMonth >= 4 && currentMonth < 7) {
-    // May-July: Start with Term 3
-    startTerm = "Term 3"
-    startYear = currentYear
-  } else {
-    // August-December: Start with Term 1
-    startTerm = "Term 1"
-    startYear = currentYear
-  }
-
-  let year = startYear
-  let termIndex = terms.indexOf(startTerm)
-
-  // Generate terms until target
   while (
-    year < targetGraduation.year ||
-    (year === targetGraduation.year &&
-      terms[termIndex] !== targetGraduation.term)
+    year < normalizedTarget.year ||
+    (year === normalizedTarget.year && terms[termIndex] !== normalizedTarget.term)
   ) {
     sequence.push({ term: terms[termIndex], year })
 
@@ -285,14 +165,30 @@ function generateTermSequence(targetGraduation: {
       year++
     }
 
-    // Safety check to prevent infinite loop
-    if (sequence.length > 20) break
+    // Safety check
+    if (sequence.length > 24) break
   }
 
-  // Add target term
-  sequence.push({ term: targetGraduation.term, year: targetGraduation.year })
+  sequence.push({ term: normalizedTarget.term, year: normalizedTarget.year })
 
   return sequence
+}
+
+function scoreCourse(
+  course: CourseContext,
+  preferredSet: Set<string>,
+  avoidSet: Set<string>
+): number {
+  let score = 0
+
+  if (preferredSet.has(course.id)) score += 1000
+  if (avoidSet.has(course.id)) score -= 500
+
+  // Prefer unlocking/foundation courses earlier.
+  score += course.prerequisites.length === 0 ? 20 : 0
+  score += course.prerequisites.length > 0 ? -5 * course.prerequisites.length : 0
+
+  return score
 }
 
 /**
@@ -330,8 +226,8 @@ function generateSemesterReasoning(
   courseCount: number
 ): string {
   let workloadDesc = "standard"
-  if (units < 15) workloadDesc = "light"
-  if (units > 17) workloadDesc = "intensive"
+  if (units < 4) workloadDesc = "light"
+  if (units > 5) workloadDesc = "intensive"
 
-  return `${workloadDesc.charAt(0).toUpperCase() + workloadDesc.slice(1)} ${term} ${year} semester with ${courseCount} courses (${units} units)`
+  return `${workloadDesc.charAt(0).toUpperCase() + workloadDesc.slice(1)} ${term} ${year} semester with ${courseCount} courses (${units} CU)`
 }

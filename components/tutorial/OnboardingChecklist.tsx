@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { IconCheck, IconX, IconMinus, IconListCheck, IconArrowRight, IconRoute, IconLock } from "@tabler/icons-react"
-import { CHECKLIST_KEYS, getChecklistState } from "./checklistTracking"
+import { CHECKLIST_KEYS } from "./checklistTracking"
 import type { TourType } from "./tourSteps"
 
 const STEPS = [
@@ -12,28 +12,40 @@ const STEPS = [
   { key: "ADDED_COURSE" as const, label: "Add a course to your plan", href: "/planner", pendingTour: "add-course" as TourType },
 ]
 
-export function OnboardingChecklist() {
-  const [done, setDone] = useState({ VISITED_COURSES: false, CREATED_TERM: false, ADDED_COURSE: false })
-  const [isDismissed, setIsDismissed] = useState(false)
+export function OnboardingChecklist({
+  initialStatus,
+}: {
+  initialStatus?: Record<string, boolean>
+}) {
+  const [done, setDone] = useState({
+    VISITED_COURSES: initialStatus?.VISITED_COURSES ?? false,
+    CREATED_TERM: initialStatus?.CREATED_TERM ?? false,
+    ADDED_COURSE: initialStatus?.ADDED_COURSE ?? false,
+  })
+  const [isDismissed, setIsDismissed] = useState(initialStatus?.DISMISSED ?? false)
   const [isOpen, setIsOpen] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    const state = getChecklistState()
-    if (state.DISMISSED) {
+    
+    // Set initial dismissal state
+    if (initialStatus?.DISMISSED) {
       setIsDismissed(true)
-      return
     }
-    setDone({ VISITED_COURSES: state.VISITED_COURSES, CREATED_TERM: state.CREATED_TERM, ADDED_COURSE: state.ADDED_COURSE })
 
-    const onUpdate = () => {
-      const s = getChecklistState()
-      setDone({ VISITED_COURSES: s.VISITED_COURSES, CREATED_TERM: s.CREATED_TERM, ADDED_COURSE: s.ADDED_COURSE })
+    const onUpdate = (e: Event) => {
+      const detail = (e as CustomEvent<{ key: string; value: boolean }>).detail
+      
+      if (detail && detail.key === "DISMISSED") {
+        setIsDismissed(true)
+      } else if (detail && detail.key) {
+        setDone(prev => ({ ...prev, [detail.key]: detail.value }))
+      }
     }
     window.addEventListener("planr_checklist_update", onUpdate)
     return () => window.removeEventListener("planr_checklist_update", onUpdate)
-  }, [])
+  }, [initialStatus])
 
   if (!mounted || isDismissed) return null
 
@@ -43,9 +55,14 @@ export function OnboardingChecklist() {
   // Auto-hide after all done — show a brief celebration then fade
   if (allDone) return null
 
-  const handleDismiss = () => {
-    localStorage.setItem(CHECKLIST_KEYS.DISMISSED, "true")
+  const handleDismiss = async () => {
     setIsDismissed(true)
+    try {
+      const { updateOnboardingStatus } = await import("@/lib/user/actions")
+      await updateOnboardingStatus("DISMISSED", true)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   if (!isOpen) {

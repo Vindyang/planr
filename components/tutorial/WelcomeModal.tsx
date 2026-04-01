@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog"
 import { IconCalendarEvent, IconBook, IconMessageCircle, IconArrowRight } from "@tabler/icons-react"
 
-const WELCOME_KEY = "planr_welcomed"
+import { markWelcomeAsSeen } from "@/lib/user/actions"
 
 const features = [
   {
@@ -28,18 +28,22 @@ const features = [
   },
 ]
 
-export function WelcomeModal() {
-  const [open, setOpen] = useState(false)
+export function WelcomeModal({ isFirstLogin = false }: { isFirstLogin?: boolean }) {
+  const [open, setOpen] = useState(isFirstLogin)
 
   useEffect(() => {
-    if (!localStorage.getItem(WELCOME_KEY)) {
+    if (isFirstLogin) {
       setOpen(true)
     }
-  }, [])
+  }, [isFirstLogin])
 
-  const handleDismiss = () => {
-    localStorage.setItem(WELCOME_KEY, "true")
+  const handleDismiss = async () => {
     setOpen(false)
+    try {
+      await markWelcomeAsSeen()
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   return (

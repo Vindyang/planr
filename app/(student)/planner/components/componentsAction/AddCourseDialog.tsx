@@ -56,6 +56,13 @@ export function AddCourseDialog({
     }
   }, [open])
 
+  // Listen for global open events
+  React.useEffect(() => {
+    const onOpen = () => setOpen(true)
+    window.addEventListener("planr_open_add_course", onOpen)
+    return () => window.removeEventListener("planr_open_add_course", onOpen)
+  }, [])
+
   // Filter out courses that are already planned
   const eligibleCourses = React.useMemo(() => {
     return availableCourses.filter((course) => !plannedCourseIds.has(course.id))
@@ -90,14 +97,7 @@ export function AddCourseDialog({
 
   return (
     <>
-      <Button
-        variant="outline"
-        onClick={() => setOpen(true)}
-        className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border-[#0A0A0A] hover:bg-[#0A0A0A]/90 hover:text-white text-white gap-2 mt-1 h-9 px-4"
-      >
-        <IconPlus stroke={1.5} size={18} />
-        <span>Add Course</span>
-      </Button>
+      {/* Headless dialog triggered by custom event */}
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>

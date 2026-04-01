@@ -70,6 +70,7 @@ export interface ValidationContext {
   completedCourses: CompletedCourseInfo[]
   allCourses: CourseWithPrereqs[]
   university: string
+  requiredUnits?: number
 }
 
 export interface ValidationResult {

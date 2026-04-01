@@ -155,6 +155,19 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
   }
+  button, 
+  [role="button"],
+  [type="button"],
+  [type="submit"],
+  a {
+    cursor: pointer;
+  }
+  button:disabled,
+  button[disabled],
+  [role="button"][aria-disabled="true"],
+  [data-disabled="true"] {
+    cursor: default;
+  }
 }
 
 @layer utilities {

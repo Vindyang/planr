@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "prisma": {
-    "seed": "bun run prisma/seed-new.ts"
+    "seed": "bun run prisma/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.53",
