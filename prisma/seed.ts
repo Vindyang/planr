@@ -6,6 +6,130 @@ import { hashPassword } from "better-auth/crypto"
 const pool = new Pool({ connectionString: process.env.DATABASE_URL })
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
+const SMU_SCIS_SCHOOL = "School of Computing and Information Systems"
+
+type ScisDepartmentMap = {
+  IS: string
+  CS: string
+  SWE: string
+  CYBER: string
+  DS: string
+  CL: string
+}
+
+function normalizeName(value: string): string {
+  return value.trim().replace(/\s+/g, " ").toLowerCase()
+}
+
+function asStringOrNull(value: unknown): string | null {
+  if (typeof value !== "string") return null
+  const normalized = value.trim()
+  return normalized.length > 0 ? normalized : null
+}
+
+function hasScisSchool(school: unknown): boolean {
+  if (typeof school === "string") {
+    return school.trim() === SMU_SCIS_SCHOOL
+  }
+  if (Array.isArray(school)) {
+    return school.some((entry) => typeof entry === "string" && entry.trim() === SMU_SCIS_SCHOOL)
+  }
+  return false
+}
+
+function inferDepartmentCode(designation: string | null): keyof ScisDepartmentMap {
+  if (!designation) return "CS"
+
+  const label = designation.toLowerCase()
+  if (label.includes("information systems")) return "IS"
+  if (label.includes("software engineering")) return "SWE"
+  if (label.includes("cybersecurity")) return "CYBER"
+  if (label.includes("data science") || label.includes("analytics")) return "DS"
+  if (label.includes("computing") && label.includes("law")) return "CL"
+  return "CS"
+}
+
+async function importScisProfessorsFromFacultyDirectory(
+  universityId: string,
+  departments: ScisDepartmentMap
+) {
+  console.log("🌐 Importing SCIS professors from SMU faculty directory...")
+
+  const response = await fetch("https://GFHORAMCBE-dsn.algolia.net/1/indexes/faculty/query", {
+    method: "POST",
+    headers: {
+      "x-algolia-application-id": "GFHORAMCBE",
+      "x-algolia-api-key": "d3445a7c70671180462260dcf941e7fa",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      params:
+        "hitsPerPage=250&page=0&facetFilters=%5B%5B%22school%3ASchool%20of%20Computing%20and%20Information%20Systems%22%5D%5D",
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch SCIS faculty directory (${response.status})`)
+  }
+
+  const payload: { hits?: unknown } = await response.json()
+  if (!Array.isArray(payload.hits)) {
+    console.log("  ⚠️ No SCIS profiles found from directory response")
+    return
+  }
+
+  const existingProfessors = await prisma.professor.findMany({
+    where: { universityId },
+    select: { id: true, name: true, departmentId: true },
+  })
+  const existingByName = new Map(
+    existingProfessors.map((professor) => [normalizeName(professor.name), professor])
+  )
+
+  let created = 0
+  let updated = 0
+  let unchanged = 0
+  const seenNames = new Set<string>()
+
+  for (const raw of payload.hits) {
+    const hit = raw as { name?: unknown; designation?: unknown; school?: unknown }
+    const name = asStringOrNull(hit.name)
+    if (!name || !hasScisSchool(hit.school)) continue
+
+    const normalizedName = normalizeName(name)
+    if (seenNames.has(normalizedName)) continue
+    seenNames.add(normalizedName)
+
+    const designation = asStringOrNull(hit.designation)
+    const departmentCode = inferDepartmentCode(designation)
+    const departmentId = departments[departmentCode] ?? departments.CS
+
+    const existing = existingByName.get(normalizedName)
+    if (!existing) {
+      await prisma.professor.create({
+        data: {
+          name,
+          universityId,
+          departmentId,
+        },
+      })
+      created += 1
+      continue
+    }
+
+    if (existing.departmentId !== departmentId) {
+      await prisma.professor.update({
+        where: { id: existing.id },
+        data: { departmentId },
+      })
+      updated += 1
+    } else {
+      unchanged += 1
+    }
+  }
+
+  console.log(`  ✅ SCIS directory import complete (created: ${created}, updated: ${updated}, unchanged: ${unchanged})`)
+}
 
 // ============================================================
 // 1. Clear All Data
@@ -1135,41 +1259,68 @@ async function createTestStudents(universityId: string, isDeptId: string, course
 // ============================================================
 // 8. Create Course and Professor Reviews
 // ============================================================
-async function createReviews(student: any, courses: any[], professors: any[]) {
+async function createReviews(students: any[], courses: any[], professors: any[]) {
   console.log("⭐ Creating course and professor reviews...")
 
   const getCourse = (code: string) => courses.find(c => c.code === code)
+  
+  const sophomore = students[1]
+  const junior = students[2]
+  const senior = students[3]
+  const struggling = students[4]
 
   // Course Review for IS101
-  await prisma.courseReview.create({
-    data: {
-      studentId: student.id,
-      courseId: getCourse("IS101")!.id,
-      rating: 5,
-      difficultyRating: 3,
-      workloadRating: 3,
-      content: "Great introductory course! Dr. Johnson explains concepts clearly and the assignments are practical.",
-      term: "Term 1 2023",
-    },
+  await prisma.courseReview.createMany({
+    data: [
+      {
+        studentId: sophomore.id,
+        courseId: getCourse("IS101")!.id,
+        rating: 5,
+        difficultyRating: 3,
+        workloadRating: 3,
+        content: "Great introductory course! Dr. Johnson explains concepts clearly and the assignments are practical.",
+        term: "Term 1 2023",
+      },
+      {
+        studentId: struggling.id,
+        courseId: getCourse("IS101")!.id,
+        rating: 3,
+        difficultyRating: 4,
+        workloadRating: 4,
+        content: "The content was harder than I expected, but still manageable.",
+        term: "Term 1 2022",
+      }
+    ]
   })
 
   // Course Review for CS100 (Programming Fundamentals I)
-  await prisma.courseReview.create({
-    data: {
-      studentId: student.id,
-      courseId: getCourse("CS100")!.id,
-      rating: 4,
-      difficultyRating: 2,
-      workloadRating: 3,
-      content: "Solid introduction to programming. Dr. Priya Sharma is very patient with beginners. The Python assignments gradually build up in complexity.",
-      term: "Term 1 2023",
-    },
+  await prisma.courseReview.createMany({
+    data: [
+      {
+        studentId: sophomore.id,
+        courseId: getCourse("CS100")!.id,
+        rating: 4,
+        difficultyRating: 2,
+        workloadRating: 3,
+        content: "Solid introduction to programming. Dr. Priya Sharma is very patient with beginners. The Python assignments gradually build up in complexity.",
+        term: "Term 1 2023",
+      },
+      {
+        studentId: junior.id,
+        courseId: getCourse("CS100")!.id,
+        rating: 5,
+        difficultyRating: 1,
+        workloadRating: 2,
+        content: "Very accessible for beginners. The project at the end of the term was fun to build.",
+        term: "Term 1 2022",
+      }
+    ]
   })
 
   // Course Review for CS101 (Programming Fundamentals II)
   await prisma.courseReview.create({
     data: {
-      studentId: student.id,
+      studentId: sophomore.id,
       courseId: getCourse("CS101")!.id,
       rating: 4,
       difficultyRating: 4,
@@ -1182,7 +1333,7 @@ async function createReviews(student: any, courses: any[], professors: any[]) {
   // Course Review for CS102 (Mathematical Foundations)
   await prisma.courseReview.create({
     data: {
-      studentId: student.id,
+      studentId: sophomore.id,
       courseId: getCourse("CS102")!.id,
       rating: 3,
       difficultyRating: 4,
@@ -1193,48 +1344,197 @@ async function createReviews(student: any, courses: any[], professors: any[]) {
   })
 
   // Professor Review for Dr. Sarah Johnson (IS101)
-  await prisma.professorReview.create({
-    data: {
-      studentId: student.id,
-      professorId: professors[0].id,
-      courseId: getCourse("IS101")!.id,
-      rating: 5,
-      difficultyRating: 3,
-      workloadRating: 3,
-      content: "Dr. Johnson is an excellent teacher. She's approachable, responsive, and really cares about student learning.",
-      term: "Term 1 2023",
-    },
+  await prisma.professorReview.createMany({
+    data: [
+      {
+        studentId: sophomore.id,
+        professorId: professors[0].id,
+        courseId: getCourse("IS101")!.id,
+        rating: 5,
+        difficultyRating: 3,
+        workloadRating: 3,
+        content: "Dr. Johnson is an excellent teacher. She's approachable, responsive, and really cares about student learning.",
+        term: "Term 1 2023",
+      },
+      {
+        studentId: junior.id,
+        professorId: professors[0].id,
+        courseId: getCourse("IS101")!.id,
+        rating: 4,
+        difficultyRating: 2,
+        workloadRating: 4,
+        content: "Good professor but gives a bit too much homework. Grades fairly though.",
+        term: "Term 1 2022",
+      }
+    ]
   })
 
   // Professor Review for Dr. Priya Sharma (CS100)
-  await prisma.professorReview.create({
-    data: {
-      studentId: student.id,
-      professorId: professors[8].id,
-      courseId: getCourse("CS100")!.id,
-      rating: 4,
-      difficultyRating: 2,
-      workloadRating: 3,
-      content: "Dr. Sharma makes programming accessible even for complete beginners. Very hands-on teaching style with lots of live coding demos.",
-      term: "Term 1 2023",
-    },
+  await prisma.professorReview.createMany({
+    data: [
+      {
+        studentId: sophomore.id,
+        professorId: professors[8].id,
+        courseId: getCourse("CS100")!.id,
+        rating: 4,
+        difficultyRating: 2,
+        workloadRating: 3,
+        content: "Dr. Sharma makes programming accessible even for complete beginners. Very hands-on teaching style with lots of live coding demos.",
+        term: "Term 1 2023",
+      },
+      {
+        studentId: senior.id,
+        professorId: professors[8].id,
+        courseId: getCourse("CS100")!.id,
+        rating: 5,
+        difficultyRating: 2,
+        workloadRating: 2,
+        content: "One of the best introductory profs in SCIS. She actively debugs along with students and creates a very safe learning environment.",
+        term: "Term 1 2021",
+      },
+      {
+        studentId: struggling.id,
+        professorId: professors[8].id,
+        courseId: getCourse("CS100")!.id,
+        rating: 3,
+        difficultyRating: 4,
+        workloadRating: 4,
+        content: "Paces a bit fast towards the end, but her office hours are really a lifesaver.",
+        term: "Term 1 2022",
+      }
+    ]
   })
 
   // Professor Review for Prof. Tan Kian Lee (CS102)
+  await prisma.professorReview.createMany({
+    data: [
+      {
+        studentId: sophomore.id,
+        professorId: professors[3].id,
+        courseId: getCourse("CS102")!.id,
+        rating: 4,
+        difficultyRating: 4,
+        workloadRating: 3,
+        content: "Prof. Tan is knowledgeable and rigorous. His lectures on graph theory and combinatorics are excellent. Office hours are very helpful.",
+        term: "Term 1 2023",
+      },
+      {
+        studentId: struggling.id,
+        professorId: professors[3].id,
+        courseId: getCourse("CS102")!.id,
+        rating: 2,
+        difficultyRating: 5,
+        workloadRating: 5,
+        content: "The exams are punishingly hard and the proofs are mathematically very dense without much real-world tying. Be prepared to hit the books.",
+        term: "Term 1 2022",
+      }
+    ]
+  })
+
+  // Professor Review for Prof. Ng Hwee Tou (CS203)
   await prisma.professorReview.create({
     data: {
-      studentId: student.id,
-      professorId: professors[3].id,
-      courseId: getCourse("CS102")!.id,
-      rating: 4,
-      difficultyRating: 4,
-      workloadRating: 3,
-      content: "Prof. Tan is knowledgeable and rigorous. His lectures on graph theory and combinatorics are excellent. Office hours are very helpful.",
-      term: "Term 1 2023",
+      studentId: junior.id,
+      professorId: professors[5].id, // Index 5 is Prof. Ng Hwee Tou
+      courseId: getCourse("CS203")!.id,
+      rating: 5,
+      difficultyRating: 3,
+      workloadRating: 4,
+      content: "Amazing professor for classical AI and NLP. The projects are extremely well-structured and you learn a ton about heuristics.",
+      term: "Term 2 2025",
     },
   })
 
-  console.log(`✅ Created course and professor reviews`)
+  // Professor Review for Dr. Lim Wei Shi (CS103)
+  await prisma.professorReview.create({
+    data: {
+      studentId: senior.id,
+      professorId: professors[4].id, // Index 4 is Dr. Lim Wei Shi
+      courseId: getCourse("CS103")!.id,
+      rating: 4,
+      difficultyRating: 3,
+      workloadRating: 4,
+      content: "Solid lectures on ML fundamentals. Can be a bit dry sometimes but the material is important.",
+      term: "Term 2 2022",
+    },
+  })
+
+  // Professor Review for Dr. Chan Wai Kay (CS320)
+  await prisma.professorReview.create({
+    data: {
+      studentId: senior.id,
+      professorId: professors[6].id, // Index 6 is Dr. Chan Wai Kay
+      courseId: getCourse("CS320")!.id,
+      rating: 5,
+      difficultyRating: 4,
+      workloadRating: 3,
+      content: "Legendary prof for Cybersecurity. Labs are basically CTFs, highly highly recommend.",
+      term: "Term 2 2024",
+    },
+  })
+
+  // --- Bulk Generate Random Reviews ---
+  console.log("🎲 Generating bulk random reviews for imported professors...")
+  
+  // Fetch all professors except the first 9 manual ones
+  const allProfessors = await prisma.professor.findMany({ skip: 9, take: 60 })
+  
+  const reviewContents = [
+    "Amazing professor! Explains concepts very clearly.",
+    "Decent lectures, but the exams were surprisingly difficult.",
+    "Very engaging classes. Lots of group work.",
+    "Helpful during office hours, but lectures can get a bit dry.",
+    "Reasonable workload and fair grading. Would recommend.",
+    "Expects a lot from students. The project requires massive effort.",
+    "One of the best profs in the school. Really cares about your understanding.",
+    "Lectures are mostly reading off the slides, but the lab assignments are good.",
+    "Very tough grader. Make sure you follow the rubrics precisely."
+  ]
+
+  const bulkReviews = []
+  for (const prof of allProfessors) {
+    const numReviews = Math.floor(Math.random() * 3) + 1 // 1 to 3 reviews per professor
+    
+    // Track students who reviewed this professor to ensure uniqueness
+    const reviewers = new Set<string>()
+
+    for (let i = 0; i < numReviews; i++) {
+      let randomStudent
+      do {
+        randomStudent = students[Math.floor(Math.random() * students.length)]
+      } while (reviewers.has(randomStudent.id))
+      
+      reviewers.add(randomStudent.id)
+      
+      const randomContent = reviewContents[Math.floor(Math.random() * reviewContents.length)]
+      const randomCourse = courses[Math.floor(Math.random() * courses.length)]
+      
+      const rating = Math.floor(Math.random() * 3) + 3 // 3, 4, 5
+      const difficulty = Math.floor(Math.random() * 3) + 2 // 2, 3, 4
+      const workload = Math.floor(Math.random() * 3) + 2 // 2, 3, 4
+      
+      bulkReviews.push({
+        studentId: randomStudent.id,
+        professorId: prof.id,
+        courseId: randomCourse.id, // Randomly assign to a course
+        rating,
+        difficultyRating: difficulty,
+        workloadRating: workload,
+        content: randomContent,
+        term: "Term 1 2024",
+      })
+    }
+  }
+
+  if (bulkReviews.length > 0) {
+    await prisma.professorReview.createMany({
+      data: bulkReviews,
+      skipDuplicates: true
+    })
+  }
+
+  console.log(`✅ Created ${bulkReviews.length} bulk random professor reviews`)
+  console.log(`✅ Completed creating all course and professor reviews`)
 }
 
 // ============================================================
@@ -1314,11 +1614,23 @@ async function main() {
 
   await clearAllData()
 
-  const { smu, isDept, csDept } = await createUniversityAndDepartments()
+  const { smu, isDept, csDept, sweDept, cyberDept, dsDept, clDept } = await createUniversityAndDepartments()
 
   const courses = await createCourses(smu.id, isDept.id, csDept.id)
 
   const professors = await createProfessors(smu.id, isDept.id, csDept.id)
+  try {
+    await importScisProfessorsFromFacultyDirectory(smu.id, {
+      IS: isDept.id,
+      CS: csDept.id,
+      SWE: sweDept.id,
+      CYBER: cyberDept.id,
+      DS: dsDept.id,
+      CL: clDept.id,
+    })
+  } catch (error) {
+    console.warn("  ⚠️ SCIS directory import skipped:", (error as Error).message)
+  }
 
   await createCourseInstructors(courses, professors)
 
@@ -1327,7 +1639,7 @@ async function main() {
   const students = await createTestStudents(smu.id, isDept.id, courses)
 
   if (students && students.length > 0) {
-    await createReviews(students[1], courses, professors)
+    await createReviews(students, courses, professors)
   }
 
   await createAdminUsers(smu.id, isDept.id)
