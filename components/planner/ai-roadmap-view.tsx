@@ -116,13 +116,13 @@ export function AIRoadmapView({
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Total Units</p>
+            <p className="text-xs text-gray-500">Total CU</p>
             <p className="mt-1 text-2xl font-bold text-gray-900">
               {roadmap.totalUnits}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Avg Units/Semester</p>
+            <p className="text-xs text-gray-500">Avg CU/Semester</p>
             <p className="mt-1 text-2xl font-bold text-gray-900">
               {validation.statistics.averageUnitsPerSemester.toFixed(1)}
             </p>
@@ -226,7 +226,7 @@ function SemesterCard({
             <p className="mt-1 text-sm text-gray-600">{semester.reasoning}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-gray-500">Total Units</p>
+            <p className="text-xs text-gray-500">Total CU</p>
             <p className="text-lg font-bold text-gray-900">{semester.totalUnits}</p>
           </div>
         </div>
@@ -265,7 +265,7 @@ function CourseRow({
               {course.code}: {course.title}
             </p>
             <Badge variant="outline" className="text-xs">
-              {course.units} units
+              {course.units} CU
             </Badge>
             {hasError && (
               <Tooltip>

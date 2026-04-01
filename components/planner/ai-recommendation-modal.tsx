@@ -17,6 +17,7 @@ import type { UserPreferences, GenerateRecommendationResponse } from "@/lib/ai/t
 interface AIRecommendationModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  majorName?: string | null
 }
 
 type ModalStep = "preferences" | "roadmap"
@@ -24,6 +25,7 @@ type ModalStep = "preferences" | "roadmap"
 export function AIRecommendationModal({
   open,
   onOpenChange,
+  majorName,
 }: AIRecommendationModalProps) {
   const router = useRouter()
   const [step, setStep] = useState<ModalStep>("preferences")
@@ -221,6 +223,7 @@ export function AIRecommendationModal({
           {step === "preferences" && (
             <AIPreferencesForm
               onSubmit={handlePreferencesSubmit}
+              majorName={majorName}
               isLoading={isGenerating}
             />
           )}

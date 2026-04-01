@@ -33,6 +33,7 @@ type PlannerClientProps = {
   currentGpa?: number | null
   initialValidation: ValidationResult
   requiredUnits?: number
+  majorName?: string | null
 }
 
 type AvailableCourse = {
@@ -73,7 +74,15 @@ type OptimisticAction =
   | { type: 'MOVE_COURSE'; courseId: string; targetPlanId: string }
   | { type: 'CREATE_PLAN'; term: string; year: number }
 
-export default function PlannerClient({ initialData, allCourses, completedUnits = 0, currentGpa, initialValidation, requiredUnits = 120 }: PlannerClientProps) {
+export default function PlannerClient({
+  initialData,
+  allCourses,
+  completedUnits = 0,
+  currentGpa,
+  initialValidation,
+  requiredUnits = 120,
+  majorName,
+}: PlannerClientProps) {
   const [, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
 
@@ -499,6 +508,7 @@ export default function PlannerClient({ initialData, allCourses, completedUnits 
       <AIRecommendationModal
         open={isAIModalOpen}
         onOpenChange={setIsAIModalOpen}
+        majorName={majorName}
       />
     </>
   )

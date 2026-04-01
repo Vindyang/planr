@@ -36,6 +36,7 @@ export default async function PlannerPage() {
         currentGpa={student.gpa}
         initialValidation={validationResult}
         requiredUnits={student.major.requiredUnits}
+        majorName={student.major.name}
       />
     </div>
   )

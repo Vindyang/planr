@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useRef, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
@@ -8,19 +8,21 @@ import {
   type UserPreferences,
   WORKLOAD_CONFIG,
 } from "@/lib/ai/types"
+import { getMajorTrackOptions } from "@/lib/ai/major-tracks"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Select } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 
 interface AIPreferencesFormProps {
   onSubmit: (preferences: UserPreferences) => void
+  majorName?: string | null
   isLoading?: boolean
 }
 
 export function AIPreferencesForm({
   onSubmit,
+  majorName,
   isLoading = false,
 }: AIPreferencesFormProps) {
   const currentYear = new Date().getFullYear()
@@ -31,8 +33,6 @@ export function AIPreferencesForm({
   const defaultTerm =
     currentMonth >= 0 && currentMonth < 4 ? "Term 2" :
     currentMonth >= 4 && currentMonth < 7 ? "Term 3" : "Term 1"
-  const defaultYear = currentMonth >= 0 && currentMonth < 7 ? currentYear : currentYear + 1
-
   const {
     register,
     handleSubmit,
@@ -51,13 +51,14 @@ export function AIPreferencesForm({
         term: defaultTerm,
         year: currentYear + 4,
       },
-      careerTrack: "",
+      majorTrack: "",
       includeSummerTerm: false,
       preferredCourses: [],
       avoidCourses: [],
     },
   })
 
+  const majorTrackOptions = getMajorTrackOptions(majorName)
   const workloadLevel = watch("workloadLevel")
   const workloadInfo = WORKLOAD_CONFIG[workloadLevel]
 
@@ -85,9 +86,9 @@ export function AIPreferencesForm({
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
           disabled={isLoading}
         >
-          <option value="Easy">Easy ({WORKLOAD_CONFIG.Easy.min}-{WORKLOAD_CONFIG.Easy.max} units/semester)</option>
-          <option value="Balanced">Balanced ({WORKLOAD_CONFIG.Balanced.min}-{WORKLOAD_CONFIG.Balanced.max} units/semester)</option>
-          <option value="Challenging">Challenging ({WORKLOAD_CONFIG.Challenging.min}-{WORKLOAD_CONFIG.Challenging.max} units/semester)</option>
+          <option value="Easy">Easy ({WORKLOAD_CONFIG.Easy.min}-{WORKLOAD_CONFIG.Easy.max} CU/semester)</option>
+          <option value="Balanced">Balanced ({WORKLOAD_CONFIG.Balanced.min}-{WORKLOAD_CONFIG.Balanced.max} CU/semester)</option>
+          <option value="Challenging">Challenging ({WORKLOAD_CONFIG.Challenging.min}-{WORKLOAD_CONFIG.Challenging.max} CU/semester)</option>
         </select>
         {workloadInfo && (
           <p className="text-xs text-gray-500">{workloadInfo.description}</p>
@@ -190,29 +191,30 @@ export function AIPreferencesForm({
         </p>
       </div>
 
-      {/* Career Track (Optional) */}
+      {/* Major Track (Optional) */}
       <div className="space-y-3">
-        <Label htmlFor="careerTrack" className="text-sm font-medium">
-          Career Track <span className="text-gray-400">(Optional)</span>
+        <Label htmlFor="majorTrack" className="text-sm font-medium">
+          Major Track <span className="text-gray-400">(Optional)</span>
         </Label>
         <select
-          id="careerTrack"
-          {...register("careerTrack")}
+          id="majorTrack"
+          {...register("majorTrack")}
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
           disabled={isLoading}
         >
-          <option value="">Select a track...</option>
-          <option value="Software Engineering">Software Engineering</option>
-          <option value="Data Science">Data Science & Analytics</option>
-          <option value="Cybersecurity">Cybersecurity</option>
-          <option value="AI/ML">Artificial Intelligence & Machine Learning</option>
-          <option value="Finance">Finance & Fintech</option>
-          <option value="Product Management">Product Management</option>
-          <option value="Consulting">Consulting</option>
-          <option value="Research">Research & Academia</option>
+          <option value="">
+            {majorTrackOptions.length > 0
+              ? "Select a major track..."
+              : "No major track options available"}
+          </option>
+          {majorTrackOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
         <p className="text-xs text-gray-500">
-          Help the AI prioritize courses aligned with your career goals
+          Track options are based on your major and the SCIS Undergraduate Brochure 2026.
         </p>
       </div>
 

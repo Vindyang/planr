@@ -20,7 +20,7 @@ export const userPreferencesSchema = z.object({
   workloadLevel: workloadLevelSchema,
   startSemester: targetGraduationSchema, // When to start planning from
   targetGraduation: targetGraduationSchema, // When to graduate
-  careerTrack: z.string().optional(),
+  majorTrack: z.string().optional(),
   includeSummerTerm: z.boolean(), // Whether to include Term 3 (summer)
   preferredCourses: z.array(z.string()).optional(), // Course IDs
   avoidCourses: z.array(z.string()).optional(), // Course IDs
@@ -125,7 +125,7 @@ export interface AIGenerationContext {
 // --- Workload Configuration ---
 
 export const WORKLOAD_CONFIG = {
-  Easy: { min: 12, max: 14, description: "Light course load" },
-  Balanced: { min: 15, max: 17, description: "Standard course load" },
-  Challenging: { min: 18, max: 21, description: "Intensive course load" },
+  Easy: { min: 3, max: 4, description: "Light load (about 3-4 modules/term)" },
+  Balanced: { min: 4, max: 5, description: "Standard load (about 4-5 modules/term)" },
+  Challenging: { min: 5, max: 6, description: "Intensive load (about 5-6 modules/term)" },
 } as const

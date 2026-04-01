@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { UserRole } from "@prisma/client"
 import { requireRole } from "@/lib/auth-utils"
-import { generateAIRoadmap } from "@/lib/ai/recommendation"
+import { buildGenerationContext, generateAIRoadmap } from "@/lib/ai/recommendation"
 import { validateWithRetry } from "@/lib/ai/validation"
 import {
   userPreferencesSchema,
@@ -67,13 +67,7 @@ export async function POST(request: Request) {
     console.log("✅ AI generation completed")
 
     // 5. Build generation context for validation retry
-    const { buildGenerationContext } = await import(
-      "@/lib/ai/recommendation"
-    )
-    const generationContext = await (buildGenerationContext as any)(
-      student.id,
-      preferences
-    )
+    const generationContext = await buildGenerationContext(student.id, preferences)
 
     // 6. Validate and potentially retry
     const { roadmap: validatedRoadmap, validation } = await validateWithRetry(
@@ -81,6 +75,18 @@ export async function POST(request: Request) {
       student.id,
       generationContext
     )
+
+    if (!validation.isValid) {
+      return NextResponse.json(
+        {
+          error: "Unable to generate a valid plan",
+          message:
+            "Please try again with a different workload preference or timeline.",
+          violations: validation.violations,
+        },
+        { status: 422 }
+      )
+    }
 
     // 7. Return response
     const response: GenerateRecommendationResponse = {

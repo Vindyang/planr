@@ -1,10 +1,4 @@
-import type {
-  AIGenerationContext,
-  CourseContext,
-  StudentContext,
-  UserPreferences,
-  WorkloadLevel,
-} from "./types"
+import type { AIGenerationContext, CourseContext } from "./types"
 import { WORKLOAD_CONFIG } from "./types"
 
 /**
@@ -32,14 +26,15 @@ export function buildSystemPrompt(context: AIGenerationContext): string {
 
   return `You are an expert academic advisor creating a course plan for ${planStartTerm} ${planStartYear} to ${planEndTerm} ${planEndYear}.
 
-PLAN SCOPE: Need ${remainingUnits} units across approximately ${estimatedSemesters} semesters (${avgUnitsPerSemester.toFixed(0)} units/semester average).
+PLAN SCOPE: Need ${remainingUnits} CU across approximately ${estimatedSemesters} semesters (${avgUnitsPerSemester.toFixed(0)} CU/semester average).
 
 ## CRITICAL RULES (violations make plan invalid)
 1. **NO DUPLICATES** (most common error): Track which courses you've used. Each course appears ONCE ONLY.
 2. **Term Offerings**: Only schedule courses in terms they're offered (check "Offered:" line)
 3. **Prerequisites**: Schedule prerequisite courses in EARLIER semesters (check "Prerequisites:" line)
-4. **Units**: ${workloadConfig.min}-${workloadConfig.max} units per semester
+4. **Units**: ${workloadConfig.min}-${workloadConfig.max} CU per semester
 5. **No Summer**: ${preferences.includeSummerTerm ? "May use Term 3 if course is offered" : "Only use Term 1 and Term 2 (NO Term 3)"}
+6. **CRITICAL UNIT RULE**: Use the EXACT CU shown in AVAILABLE COURSES for each module (SMU modules here are typically 1 CU). Never assume 3 or 4 CU.
 
 ## HOW TO AVOID DUPLICATES
 1. Keep a mental list of ALL courses you've already scheduled
@@ -48,12 +43,12 @@ PLAN SCOPE: Need ${remainingUnits} units across approximately ${estimatedSemeste
 4. When planning later semesters, remember courses from earlier years
 
 ## WHEN TO STOP PLANNING
-STOP adding semesters when you reach ${remainingUnits} total units (approximately ${estimatedSemesters} semesters).
+STOP adding semesters when you reach ${remainingUnits} total CU (approximately ${estimatedSemesters} semesters).
 Do NOT create more semesters than needed just to fill the time period.
 
 ## STUDENT
-Year ${student.year}, GPA ${student.gpa.toFixed(2)}, ${student.completedUnits}/${universityRules.requiredTotalUnits} units complete
-${completedCourseCodes.length > 0 ? `Completed: ${completedCourseCodes.join(", ")}` : `No courses completed yet`}${preferences.careerTrack ? `\nFocus: ${preferences.careerTrack}` : ""}
+Year ${student.year}, GPA ${student.gpa.toFixed(2)}, ${student.completedUnits}/${universityRules.requiredTotalUnits} CU complete
+${completedCourseCodes.length > 0 ? `Completed: ${completedCourseCodes.join(", ")}` : `No courses completed yet`}${preferences.majorTrack ? `\nFocus: ${preferences.majorTrack}` : ""}
 
 ## AVAILABLE COURSES
 ${formatAvailableCourses(availableCourses, student.completedCourseIds)}
@@ -76,16 +71,16 @@ Return JSON matching this structure (use course UUIDs from "ID:" lines above, NO
           "id": "uuid-from-available-courses",
           "code": "CS101",
           "title": "Introduction to Computer Science",
-          "units": 4,
+          "units": 1,
           "reasoning": "Brief reason for including this course"
         }
       ],
-      "totalUnits": 16,
+      "totalUnits": 4,
       "reasoning": "Brief semester summary"
     }
   ],
   "totalSemesters": 8,
-  "totalUnits": 120,
+  "totalUnits": 36,
   "meetsRequirements": true
 }`
 }
@@ -115,7 +110,7 @@ function formatAvailableCourses(
           ? `\n  Difficulty: ${course.difficultyRating.toFixed(1)}/5, Workload: ${course.workloadRating.toFixed(1)}/5`
           : ""
 
-      return `- ${course.code}: ${course.title} (${course.units} units)
+      return `- ${course.code}: ${course.title} (${course.units} CU)
   ID: ${course.id}
   Offered: ${course.termsOffered.join(", ")}${prereqInfo}${difficultyInfo}`
     })
@@ -182,30 +177,30 @@ export const FEW_SHOT_EXAMPLE = `
           "id": "course-uuid-1",
           "code": "CS101",
           "title": "Introduction to Computer Science",
-          "units": 4,
+          "units": 1,
           "reasoning": "Foundational course required for major, no prerequisites needed"
         },
         {
           "id": "course-uuid-2",
           "code": "MATH141",
           "title": "Calculus I",
-          "units": 4,
+          "units": 1,
           "reasoning": "Required math foundation for CS track"
         },
         {
           "id": "course-uuid-3",
           "code": "ENG101",
           "title": "English Composition",
-          "units": 3,
+          "units": 1,
           "reasoning": "General education requirement"
         }
       ],
-      "totalUnits": 11,
+      "totalUnits": 3,
       "reasoning": "Light first semester to adjust to university, focusing on foundational courses"
     }
   ],
   "totalSemesters": 6,
-  "totalUnits": 120,
+  "totalUnits": 36,
   "meetsRequirements": true
 }
 `
