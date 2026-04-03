@@ -71,7 +71,6 @@ type OptimisticAction =
   | { type: 'ADD_COURSE'; planId: string; course: AvailableCourse }
   | { type: 'ADD_COURSES'; planId: string; courses: AvailableCourse[] }
   | { type: 'MOVE_COURSE'; courseId: string; targetPlanId: string }
-  | { type: 'CREATE_PLAN'; term: string; year: number }
 
 export default function PlannerClient({
   initialData,
@@ -94,7 +93,7 @@ export default function PlannerClient({
 
 
   // Optimistic state management with useOptimistic
-  const [optimisticData, addOptimisticUpdate] = useOptimistic(
+  const [optimisticData] = useOptimistic(
     initialData,
     (state: PlannerState, action: OptimisticAction) => {
       switch (action.type) {
@@ -184,22 +183,6 @@ export default function PlannerClient({
                       (pc) => pc.id !== action.courseId
                     ),
             })),
-          }
-
-        case 'CREATE_PLAN':
-          return {
-            ...state,
-            semesterPlans: [
-              ...state.semesterPlans,
-              {
-                id: `temp-${Date.now()}`,
-                term: action.term,
-                year: action.year,
-                plannedCourses: [],
-                createdAt: new Date(),
-                updatedAt: new Date(),
-              },
-            ],
           }
 
         default:
@@ -342,9 +325,6 @@ export default function PlannerClient({
      }
 
      startTransition(async () => {
-         // Optimistically add the empty term to UI immediately
-         addOptimisticUpdate({ type: 'CREATE_PLAN', term, year })
-
          try {
              await createSemesterPlan(term, year)
              markChecklistItem("CREATED_TERM")
