@@ -78,6 +78,10 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
     )
   }
 
+  const hasNoRequirementsToShow =
+    course.prerequisites.length === 0 &&
+    (!eligibility || eligibility.eligibility.isEligible)
+
   return (
     <div className="flex flex-col space-y-8 bg-background min-h-screen -m-6 p-10 md:-m-8 md:p-12">
       {/* Back link */}
@@ -231,6 +235,18 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             <TabsContent value="requirements" className="mt-0">
               <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
                 <div className="md:col-span-2 space-y-12">
+                  {hasNoRequirementsToShow && (
+                    <div className="space-y-4">
+                      <h2 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                        Requirements
+                      </h2>
+                      <div className="border border-border bg-card p-6 text-center">
+                        <p className="text-sm text-muted-foreground">
+                          No prerequisite or eligibility requirements for this course.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Eligibility Issues */}
                   {eligibility && !eligibility.eligibility.isEligible && (

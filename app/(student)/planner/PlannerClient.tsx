@@ -68,7 +68,6 @@ type PlannerState = {
 type OptimisticAction =
   | { type: 'REMOVE_COURSE'; courseId: string }
   | { type: 'REMOVE_COURSES'; courseIds: string[] }
-  | { type: 'DELETE_PLAN'; planId: string }
   | { type: 'ADD_COURSE'; planId: string; course: AvailableCourse }
   | { type: 'ADD_COURSES'; planId: string; courses: AvailableCourse[] }
   | { type: 'MOVE_COURSE'; courseId: string; targetPlanId: string }
@@ -119,14 +118,6 @@ export default function PlannerClient({
                 (pc) => !action.courseIds.includes(pc.id)
               ),
             })),
-          }
-
-        case 'DELETE_PLAN':
-          return {
-            ...state,
-            semesterPlans: state.semesterPlans.filter(
-              (plan) => plan.id !== action.planId
-            ),
           }
 
         case 'ADD_COURSE':
@@ -325,10 +316,7 @@ export default function PlannerClient({
       // Close the dialog immediately
       setPlanToDelete(null)
 
-      // Optimistically update the UI (auto-reverts on error)
       startTransition(async () => {
-        addOptimisticUpdate({ type: 'DELETE_PLAN', planId: planToDelete })
-
         try {
           await deleteSemesterPlan(planToDelete)
           toast.success("Term deleted", {
