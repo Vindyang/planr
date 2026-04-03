@@ -26,12 +26,14 @@ type CreateSemesterDialogProps = {
   onCreate: (term: string, year: number) => Promise<void>
   defaultYear?: number
   defaultTerm?: string
+  disabled?: boolean
 }
 
 export function CreateSemesterDialog({ 
   onCreate, 
   defaultYear = new Date().getFullYear(),
   defaultTerm = "Term 1",
+  disabled = false,
   children
 }: CreateSemesterDialogProps & { children?: React.ReactNode }) {
   const [open, setOpen] = useState(false)
@@ -56,9 +58,12 @@ export function CreateSemesterDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(nextOpen) => {
+      if (disabled && nextOpen) return
+      setOpen(nextOpen)
+    }}>
       <DialogTrigger asChild>
-        {children || <Button>+ Add Term</Button>}
+        {children || <Button disabled={disabled}>+ Add Term</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -72,7 +77,7 @@ export function CreateSemesterDialog({
             <Label htmlFor="term" className="text-right">
               Term
             </Label>
-            <Select value={term} onValueChange={setTerm}>
+            <Select value={term} onValueChange={setTerm} disabled={loading || disabled}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select term" />
               </SelectTrigger>
@@ -93,15 +98,16 @@ export function CreateSemesterDialog({
               value={year}
               onChange={(e) => setYear(e.target.value)}
               className="col-span-3"
+              disabled={loading || disabled}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading || disabled}>
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={loading}>
-            {loading ? "Creating..." : "Create Term"}
+          <Button onClick={handleCreate} disabled={loading || disabled}>
+            {loading || disabled ? "Creating..." : "Create Term"}
           </Button>
         </DialogFooter>
       </DialogContent>

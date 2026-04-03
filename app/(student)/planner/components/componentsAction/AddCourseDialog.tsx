@@ -1,5 +1,5 @@
 import * as React from "react"
-import { IconPlus, IconArrowLeft, IconCheck } from "@tabler/icons-react"
+import { IconArrowLeft, IconCheck } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
@@ -30,8 +30,9 @@ interface AddCourseDialogProps {
   availableCourses: AvailableCourse[]
   plannedCourseIds: Set<string>
   semesterPlans: SemesterPlanOption[]
-  onAddCourse: (planId: string, courseId: string) => void
-  onAddCourses: (planId: string, courseIds: string[]) => void
+  onAddCourse: (planId: string, courseId: string) => Promise<void>
+  onAddCourses: (planId: string, courseIds: string[]) => Promise<void>
+  isMutating: boolean
 }
 
 export function AddCourseDialog({
@@ -40,10 +41,12 @@ export function AddCourseDialog({
   semesterPlans,
   onAddCourse,
   onAddCourses,
+  isMutating,
 }: AddCourseDialogProps) {
   const [open, setOpen] = React.useState(false)
   const [selectedCourseIds, setSelectedCourseIds] = React.useState<Set<string>>(new Set())
   const [step, setStep] = React.useState<"courses" | "semesters">("courses")
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   // Reset state when dialog fully closes
   React.useEffect(() => {
@@ -52,16 +55,19 @@ export function AddCourseDialog({
       setTimeout(() => {
           setSelectedCourseIds(new Set())
           setStep("courses")
+          setIsSubmitting(false)
       }, 300)
     }
   }, [open])
 
   // Listen for global open events
   React.useEffect(() => {
-    const onOpen = () => setOpen(true)
+    const onOpen = () => {
+      if (!isMutating) setOpen(true)
+    }
     window.addEventListener("planr_open_add_course", onOpen)
     return () => window.removeEventListener("planr_open_add_course", onOpen)
-  }, [])
+  }, [isMutating])
 
   // Filter out courses that are already planned
   const eligibleCourses = React.useMemo(() => {
@@ -95,6 +101,27 @@ export function AddCourseDialog({
       }
   }
 
+  const handleSelectTerm = async (planId: string) => {
+    if (isMutating || isSubmitting) return
+
+    const selected = Array.from(selectedCourseIds)
+    if (selected.length === 0) return
+
+    setIsSubmitting(true)
+    try {
+      if (selected.length === 1) {
+        await onAddCourse(planId, selected[0])
+      } else {
+        await onAddCourses(planId, selected)
+      }
+      setOpen(false)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const isBusy = isMutating || isSubmitting
+
   return (
     <>
       {/* Headless dialog triggered by custom event */}
@@ -120,6 +147,7 @@ export function AddCourseDialog({
                                     "flex items-center gap-3 py-3 cursor-pointer",
                                     isSelected && "bg-[#F4F1ED]" // optional visual highlight
                                 )}
+                                disabled={isBusy}
                             >
                                 <div className={cn(
                                     "w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 transition-colors",
@@ -144,8 +172,11 @@ export function AddCourseDialog({
                         <Button 
                             className="w-full bg-[#0A0A0A] text-white hover:bg-[#0A0A0A]/90"
                             onClick={handleContinue}
+                            disabled={isBusy}
                         >
-                            Continue ({selectedCourseIds.size} selected)
+                            {isBusy
+                              ? "Adding..."
+                              : `Continue (${selectedCourseIds.size} selected)`}
                         </Button>
                     </div>
                 )}
@@ -155,7 +186,8 @@ export function AddCourseDialog({
                 <div className="flex items-center border-b px-3 gap-2 py-2">
                     <button 
                          onClick={() => setStep("courses")}
-                         className="p-1 hover:bg-[#F4F1ED] rounded-sm transition-colors text-[#666460] hover:text-[#0A0A0A]"
+                         className="p-1 hover:bg-[#F4F1ED] rounded-sm transition-colors text-[#666460] hover:text-[#0A0A0A] disabled:opacity-60 disabled:cursor-not-allowed"
+                         disabled={isBusy}
                     >
                         <IconArrowLeft size={16} />
                     </button>
@@ -176,17 +208,15 @@ export function AddCourseDialog({
                         key={plan.id}
                         value={`${plan.term} ${plan.year}`}
                         onSelect={() => {
-                            if (selectedCourseIds.size === 1) {
-                                onAddCourse(plan.id, Array.from(selectedCourseIds)[0])
-                            } else {
-                                onAddCourses(plan.id, Array.from(selectedCourseIds))
-                            }
-                            setOpen(false)
+                          void handleSelectTerm(plan.id)
                         }}
-                        className="flex py-3 cursor-pointer items-center justify-between"
+                        className="flex py-3 cursor-pointer items-center justify-between disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={isBusy}
                     >
                         <span className="font-medium text-sm text-[#0A0A0A]">{plan.term} {plan.year}</span>
-                        <span className="text-xs text-muted-foreground uppercase tracking-widest">{plan.plannedCourses.length} Courses</span>
+                        <span className="text-xs text-muted-foreground uppercase tracking-widest">
+                          {isSubmitting ? "Adding..." : `${plan.plannedCourses.length} Courses`}
+                        </span>
                     </CommandItem>
                     )) : (
                         <div className="p-4 text-center text-sm text-muted-foreground">

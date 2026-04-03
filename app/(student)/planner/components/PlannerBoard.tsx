@@ -43,6 +43,9 @@ type PlannerBoardProps = {
   onCancelSelection: () => void
   onOpenAIModal: () => void
   requiredUnits?: number
+  isMutating: boolean
+  deletingCourseId: string | null
+  deletingPlanId: string | null
 }
 
 export function PlannerBoard({
@@ -64,6 +67,9 @@ export function PlannerBoard({
   onCancelSelection,
   onOpenAIModal,
   requiredUnits = 120,
+  isMutating,
+  deletingCourseId,
+  deletingPlanId,
 }: PlannerBoardProps) {
   
   // Find active item for overlay
@@ -137,8 +143,9 @@ export function PlannerBoard({
                             <>
                                 {/* AI Recommendation Button - Always show */}
                                 <button
-                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                     onClick={onOpenAIModal}
+                                    disabled={isMutating}
                                 >
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -154,12 +161,14 @@ export function PlannerBoard({
                                             semesterPlans={data.semesterPlans}
                                             onAddCourse={onAddCourse}
                                             onAddCourses={onAddCourses}
+                                            isMutating={isMutating}
                                         />
                                         {/* Select Courses Button */}
                                         {plannedCourseIds.size > 0 && (
                                             <button
-                                                className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
+                                                className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                                 onClick={onToggleSelectionMode}
+                                                disabled={isMutating}
                                             >
                                                 <IconChecks size={18} stroke={1.5} />
                                                 <span>Select Courses</span>
@@ -174,8 +183,9 @@ export function PlannerBoard({
                             <>
                                 {/* Cancel Selection Button */}
                                 <button
-                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
+                                    className="uppercase text-xs tracking-[0.1em] font-medium bg-white border border-[#DAD6CF] hover:bg-[#F4F1ED] text-[#0A0A0A] gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                     onClick={onCancelSelection}
+                                    disabled={isMutating}
                                 >
                                     <IconX size={18} stroke={1.5} />
                                     <span>Cancel</span>
@@ -185,18 +195,20 @@ export function PlannerBoard({
                                 {selectedCourses.size > 0 && (
                                     <button
                                         onClick={onBulkDelete}
-                                        className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
+                                        className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                        disabled={isMutating}
                                     >
                                         <IconTrash size={16} stroke={1.5} />
-                                        <span>Delete {selectedCourses.size} Course{selectedCourses.size > 1 ? 's' : ''}</span>
+                                        <span>{isMutating ? "Deleting..." : `Delete ${selectedCourses.size} Course${selectedCourses.size > 1 ? 's' : ''}`}</span>
                                     </button>
                                 )}
                             </>
                         )}
                         {/* Sidebar Toggle Button */}
                         <button
-                            className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer"
+                            className="uppercase text-xs tracking-[0.1em] font-medium bg-[#0A0A0A] border border-[#0A0A0A] hover:bg-[#0A0A0A]/90 text-white gap-2 mt-1 h-9 px-4 flex items-center justify-center rounded-sm transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            disabled={isMutating}
                         >
                             {isSidebarOpen ? (
                                 <>
@@ -221,7 +233,7 @@ export function PlannerBoard({
                         </div>
                         <h3 className="text-lg font-serif italic mb-2">Start Planning</h3>
                         <p className="text-[#666460] mb-6 text-sm max-w-md">Create your first term to start adding courses to your academic plan.</p>
-                        <CreateSemesterDialog onCreate={onCreatePlan} />
+                        <CreateSemesterDialog onCreate={onCreatePlan} disabled={isMutating} />
                      </div>
                 )}
 
@@ -238,6 +250,9 @@ export function PlannerBoard({
                             isSelectionMode={isSelectionMode}
                             selectedCourses={selectedCourses}
                             onToggleSelection={onToggleSelection}
+                            isMutating={isMutating}
+                            deletingCourseId={deletingCourseId}
+                            deletingPlanId={deletingPlanId}
                         />
                     ))}
 
@@ -246,13 +261,16 @@ export function PlannerBoard({
                         <div className="pt-12 pb-8">
                             <button
                                 onClick={() => onCreatePlan("Term 1", sortedYears[sortedYears.length - 1] + 1)}
-                                className="flex items-center w-full group cursor-pointer"
+                                className="flex items-center w-full group cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                                disabled={isMutating}
                             >
                                 <div className="flex-1 h-px bg-[#DAD6CF] group-hover:bg-[#0A0A0A] transition-colors" />
                                 <div className="px-6 py-2 border border-[#DAD6CF] rounded-full mx-8 flex items-center gap-2 group-hover:border-[#0A0A0A] transition-colors bg-[#F4F1ED] group-hover:bg-white text-[#666460] group-hover:text-[#0A0A0A]">
                                     <IconPlus size={14} stroke={2} className="transition-colors" />
                                     <span className="text-xs uppercase tracking-[0.1em] font-medium transition-colors">
-                                        Add Academic Year {sortedYears[sortedYears.length - 1] + 1}
+                                        {isMutating
+                                          ? "Creating..."
+                                          : `Add Academic Year ${sortedYears[sortedYears.length - 1] + 1}`}
                                     </span>
                                 </div>
                                 <div className="flex-1 h-px bg-[#DAD6CF] group-hover:bg-[#0A0A0A] transition-colors" />

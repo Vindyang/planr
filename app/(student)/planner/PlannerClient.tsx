@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useOptimistic } from "react"
+import { useEffect, useRef, useState, useTransition, useOptimistic } from "react"
 import {
   DndContext,
   useSensor,
@@ -83,6 +83,14 @@ export default function PlannerClient({
 }: PlannerClientProps) {
   const [, startTransition] = useTransition()
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [isMutating, setIsMutating] = useState(false)
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null)
+  const [deletingPlanId, setDeletingPlanId] = useState<string | null>(null)
+  const createTermLockRef = useRef(false)
+  const [pendingCreatedTerm, setPendingCreatedTerm] = useState<{ term: string; year: number } | null>(null)
+  const [pendingDeletedPlanId, setPendingDeletedPlanId] = useState<string | null>(null)
+  const [pendingAddedCourses, setPendingAddedCourses] = useState<{ planId: string; courseIds: string[] } | null>(null)
+  const [pendingRemovedCourseIds, setPendingRemovedCourseIds] = useState<string[] | null>(null)
 
   // Selection mode state
   const [isSelectionMode, setIsSelectionMode] = useState(false)
@@ -194,6 +202,69 @@ export default function PlannerClient({
   // Dialog States
   const [planToDelete, setPlanToDelete] = useState<string | null>(null)
 
+  // Keep term creation locked until the new term is visible in frontend state.
+  useEffect(() => {
+    if (!pendingCreatedTerm) return
+
+    const createdTermVisible = optimisticData.semesterPlans.some(
+      (plan) => plan.term === pendingCreatedTerm.term && plan.year === pendingCreatedTerm.year
+    )
+
+    if (createdTermVisible) {
+      setPendingCreatedTerm(null)
+      createTermLockRef.current = false
+      setIsMutating(false)
+    }
+  }, [optimisticData.semesterPlans, pendingCreatedTerm])
+
+  // Keep term deletion locked until the deleted term is removed from frontend state.
+  useEffect(() => {
+    if (!pendingDeletedPlanId) return
+
+    const deletedTermGone = !optimisticData.semesterPlans.some(
+      (plan) => plan.id === pendingDeletedPlanId
+    )
+
+    if (deletedTermGone) {
+      setPendingDeletedPlanId(null)
+      setDeletingPlanId(null)
+      setIsMutating(false)
+    }
+  }, [optimisticData.semesterPlans, pendingDeletedPlanId])
+
+  // Keep course additions locked until added courses are visible in the target term.
+  useEffect(() => {
+    if (!pendingAddedCourses) return
+
+    const targetPlan = optimisticData.semesterPlans.find((plan) => plan.id === pendingAddedCourses.planId)
+    if (!targetPlan) return
+
+    const addedCoursesVisible = pendingAddedCourses.courseIds.every((courseId) =>
+      targetPlan.plannedCourses.some((pc) => pc.course.id === courseId)
+    )
+
+    if (addedCoursesVisible) {
+      setPendingAddedCourses(null)
+      setIsMutating(false)
+    }
+  }, [optimisticData.semesterPlans, pendingAddedCourses])
+
+  // Keep course removals locked until removed courses disappear from frontend state.
+  useEffect(() => {
+    if (!pendingRemovedCourseIds || pendingRemovedCourseIds.length === 0) return
+
+    const remainingPlannedCourseIds = new Set(
+      optimisticData.semesterPlans.flatMap((plan) => plan.plannedCourses.map((pc) => pc.id))
+    )
+
+    const allRemoved = pendingRemovedCourseIds.every((id) => !remainingPlannedCourseIds.has(id))
+    if (allRemoved) {
+      setPendingRemovedCourseIds(null)
+      setDeletingCourseId(null)
+      setIsMutating(false)
+    }
+  }, [optimisticData.semesterPlans, pendingRemovedCourseIds])
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -210,7 +281,7 @@ export default function PlannerClient({
     const { active, over } = event
     setActiveId(null)
 
-    if (!over) return
+    if (!over || isMutating) return
 
     const activeData = active.data.current as
       | { type?: "new-course" | "course"; courseId?: string }
@@ -218,24 +289,33 @@ export default function PlannerClient({
     const overId = over.id as string // This is the planId (droppable)
 
     startTransition(async () => {
+        let waitForCourseSync = false
         try {
+            setIsMutating(true)
             if (activeData?.type === "new-course") {
                 // Dragging from drawer - optimistically add to UI
                 const courseId = activeData.courseId
                 if (!courseId) return
 
-                const course = allCourses.find(c => c.id === courseId)
-
-                toast.promise(
-                  addCourseToPlan(overId, courseId).then(() => {
-                    markChecklistItem("ADDED_COURSE")
-                  }),
-                  {
-                    loading: "Adding course...",
-                    success: "Course added",
-                    error: (err) => `Failed to add course: ${(err as Error).message}`
+                let addSucceeded = false
+                const addPromise = addCourseToPlan(overId, courseId).then(() => {
+                  addSucceeded = true
+                  waitForCourseSync = true
+                  setPendingAddedCourses({ planId: overId, courseIds: [courseId] })
+                  markChecklistItem("ADDED_COURSE")
+                })
+                toast.promise(addPromise, {
+                  loading: "Adding course...",
+                  success: "Course added",
+                  error: (err) => `Failed to add course: ${(err as Error).message}`
+                })
+                try {
+                  await addPromise
+                } finally {
+                  if (!addSucceeded) {
+                    setIsMutating(false)
                   }
-                )
+                }
             } else if (activeData?.type === "course") {
                 // Find the current term plan for this course
                 const currentPlan = optimisticData.semesterPlans.find((plan) =>
@@ -248,25 +328,32 @@ export default function PlannerClient({
                 }
 
                 // Moving existing course
-                toast.promise(
-                  moveCourse(active.id as string, overId),
-                  {
-                    loading: "Moving course...",
-                    success: "Course moved",
-                    error: (err) => `Failed to move course: ${err.message}`
-                  }
-                )
+                const movePromise = moveCourse(active.id as string, overId)
+                toast.promise(movePromise, {
+                  loading: "Moving course...",
+                  success: "Course moved",
+                  error: (err) => `Failed to move course: ${err.message}`
+                })
+                await movePromise
             }
         } catch (error) {
             console.error("Move failed", error)
             toast.error("Failed to move course", {
                 description: (error as Error).message
             })
+        } finally {
+            // For add-course, unlock waits for frontend sync in effect above.
+            // For move-course and failures, unlock immediately.
+            if (!waitForCourseSync) {
+              setIsMutating(false)
+            }
         }
     })
   }
 
   const handleRemoveCourse = (courseId: string) => {
+    if (isMutating) return
+
     // Find the course data before deletion for potential undo
     const courseToRemove = optimisticData.semesterPlans
       .flatMap((plan) =>
@@ -279,42 +366,63 @@ export default function PlannerClient({
 
     if (!courseToRemove) return
 
-    const { semesterPlanId, course } = courseToRemove
-
-    // Remove course immediately
-    startTransition(() => {
-      toast.promise(
-        removeCourseFromPlan(courseId),
-        {
-          loading: "Removing course...",
-          success: () => "Course removed",
-          error: (err) => `Failed to remove course: ${err.message}`
-        }
-      )
+    // Show loading state immediately before request starts
+    setIsMutating(true)
+    setDeletingCourseId(courseId)
+    let removeSucceeded = false
+    const removePromise = removeCourseFromPlan(courseId)
+    toast.promise(removePromise, {
+      loading: "Removing course...",
+      success: () => "Course removed",
+      error: (err) => `Failed to remove course: ${err.message}`
+    })
+    void removePromise.then(() => {
+      removeSucceeded = true
+      setPendingRemovedCourseIds([courseId])
+    }).finally(() => {
+      if (!removeSucceeded) {
+        setDeletingCourseId(null)
+        setIsMutating(false)
+      }
     })
   }
 
   const confirmDeletePlan = () => {
-    if (planToDelete) {
+    if (planToDelete && !isMutating) {
+      const targetPlanId = planToDelete
       // Close the dialog immediately
       setPlanToDelete(null)
 
-      startTransition(async () => {
-        try {
-          await deleteSemesterPlan(planToDelete)
+      // Show loading state immediately before request starts
+      setIsMutating(true)
+      setDeletingPlanId(targetPlanId)
+      let deleteSucceeded = false
+      const deletePromise = deleteSemesterPlan(targetPlanId)
+      void deletePromise
+        .then(() => {
+          deleteSucceeded = true
+          setPendingDeletedPlanId(targetPlanId)
           toast.success("Term deleted", {
             description: "Successfully deleted term and all its courses",
           })
-        } catch (error) {
+        })
+        .catch((error) => {
           toast.error("Failed to delete term", {
             description: (error as Error).message,
           })
-        }
-      })
+        })
+        .finally(() => {
+          if (!deleteSucceeded) {
+            setDeletingPlanId(null)
+            setIsMutating(false)
+          }
+        })
     }
   }
 
   const handleCreatePlan = async (term: string, year: number) => {
+     if (isMutating || createTermLockRef.current || pendingCreatedTerm) return
+
      // Check if year already has 4 terms
      const yearPlans = optimisticData.semesterPlans.filter((p) => p.year === year)
      if (yearPlans.length >= 4) {
@@ -324,48 +432,79 @@ export default function PlannerClient({
          return
      }
 
-     startTransition(async () => {
-         try {
-             await createSemesterPlan(term, year)
-             markChecklistItem("CREATED_TERM")
-             toast.success("Term created", {
-               description: `Successfully created ${term} ${year}`,
-             })
-         } catch (e) {
-             toast.error("Failed to create term", {
-                 description: (e as Error).message
-             })
+     // Show loading state immediately before request starts
+     createTermLockRef.current = true
+     setIsMutating(true)
+     let createSucceeded = false
+     const createPromise = createSemesterPlan(term, year)
+     void createPromise
+       .then(() => {
+         createSucceeded = true
+         setPendingCreatedTerm({ term, year })
+         markChecklistItem("CREATED_TERM")
+         toast.success("Term created", {
+           description: `Successfully created ${term} ${year}`,
+         })
+       })
+       .catch((e) => {
+         toast.error("Failed to create term", {
+           description: (e as Error).message
+         })
+       })
+       .finally(() => {
+         if (!createSucceeded) {
+           createTermLockRef.current = false
+           setIsMutating(false)
          }
-     })
+       })
   }
 
 
   const handleAddCourse = async (planId: string, courseId: string) => {
-    startTransition(() => {
-      toast.promise(
-        addCourseToPlan(planId, courseId).then(() => {
-          markChecklistItem("ADDED_COURSE")
-        }),
-        {
-          loading: "Adding course...",
-          success: "Course added",
-          error: (err) => `Failed to add course: ${(err as Error).message}`
-        }
-      )
+    if (isMutating) return
+
+    setIsMutating(true)
+    let addSucceeded = false
+    const addPromise = addCourseToPlan(planId, courseId).then(() => {
+      addSucceeded = true
+      setPendingAddedCourses({ planId, courseIds: [courseId] })
+      markChecklistItem("ADDED_COURSE")
     })
+    toast.promise(addPromise, {
+      loading: "Adding course...",
+      success: "Course added",
+      error: (err) => `Failed to add course: ${(err as Error).message}`
+    })
+    try {
+      await addPromise
+    } finally {
+      if (!addSucceeded) {
+        setIsMutating(false)
+      }
+    }
   }
 
   const handleAddCourses = async (planId: string, courseIds: string[]) => {
-    startTransition(() => {
-      toast.promise(
-        addCoursesToPlan(planId, courseIds),
-        {
-          loading: "Adding courses...",
-          success: `${courseIds.length} course${courseIds.length > 1 ? 's' : ''} added`,
-          error: (err) => `Failed to add courses: ${(err as Error).message}`
-        }
-      )
+    if (isMutating) return
+
+    setIsMutating(true)
+    let addManySucceeded = false
+    const addManyPromise = addCoursesToPlan(planId, courseIds).then(() => {
+      addManySucceeded = true
+      setPendingAddedCourses({ planId, courseIds })
     })
+    toast.promise(addManyPromise, {
+      loading: "Adding courses...",
+      success: `${courseIds.length} course${courseIds.length > 1 ? 's' : ''} added`,
+      error: (err) => `Failed to add courses: ${(err as Error).message}`
+    })
+    try {
+      await addManyPromise
+    } finally {
+      if (!addManySucceeded) {
+        setIsMutating(false)
+      }
+    }
   }
 
   const handleToggleSelection = (courseId: string) => {
@@ -381,37 +520,34 @@ export default function PlannerClient({
   }
 
   const handleBulkDelete = () => {
-    if (selectedCourses.size === 0) return
+    if (selectedCourses.size === 0 || isMutating) return
 
     const courseIds = Array.from(selectedCourses)
-
-    // Capture all courses data before deletion for potential undo
-    const coursesToRemove = optimisticData.semesterPlans
-      .flatMap((plan) =>
-        plan.plannedCourses
-          .filter((pc) => courseIds.includes(pc.id))
-          .map((pc) => ({
-            plannedCourseId: pc.id,
-            courseId: pc.course.id,
-            semesterPlanId: plan.id,
-            course: pc.course
-          }))
-      )
 
     // Clear selection and exit selection mode immediately
     setSelectedCourses(new Set())
     setIsSelectionMode(false)
 
     // Update the UI
-    startTransition(() => {
-      toast.promise(
-        removeCoursesFromPlan(courseIds),
-        {
-          loading: "Removing courses...",
-          success: `Successfully removed ${courseIds.length} course${courseIds.length > 1 ? 's' : ''}`,
-          error: (err) => `Failed to remove courses: ${err.message}`
+    startTransition(async () => {
+      setIsMutating(true)
+      let removeManySucceeded = false
+      const removeManyPromise = removeCoursesFromPlan(courseIds).then(() => {
+        removeManySucceeded = true
+        setPendingRemovedCourseIds(courseIds)
+      })
+      toast.promise(removeManyPromise, {
+        loading: "Removing courses...",
+        success: `Successfully removed ${courseIds.length} course${courseIds.length > 1 ? 's' : ''}`,
+        error: (err) => `Failed to remove courses: ${err.message}`
+      })
+      try {
+        await removeManyPromise
+      } finally {
+        if (!removeManySucceeded) {
+          setIsMutating(false)
         }
-      )
+      }
     })
   }
 
@@ -451,6 +587,9 @@ export default function PlannerClient({
           onBulkDelete={handleBulkDelete}
           onCancelSelection={handleCancelSelection}
           onOpenAIModal={() => setIsAIModalOpen(true)}
+          isMutating={isMutating}
+          deletingCourseId={deletingCourseId}
+          deletingPlanId={deletingPlanId}
         />
       </DndContext>
 
